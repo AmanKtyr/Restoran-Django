@@ -30,7 +30,7 @@
         }
 
         .sidebar {
-            background-color: var(--secondary-color);
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #1a2942 100%);
             min-height: 100vh;
             position: fixed;
             top: 0;
@@ -39,6 +39,29 @@
             z-index: 100;
             padding-top: 60px;
             transition: all 0.3s;
+            overflow-y: auto; /* Always allow scrolling */
+            box-shadow: 3px 0 10px rgba(0,0,0,0.2);
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+            height: 100vh; /* Ensure it takes full height */
+        }
+
+        /* Custom scrollbar for webkit browsers */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(255, 255, 255, 0.3);
         }
 
         .sidebar-collapsed {
@@ -46,30 +69,92 @@
         }
 
         .sidebar .nav-link {
-            color: #fff;
-            padding: 10px 20px;
+            color: rgba(255, 255, 255, 0.85);
+            padding: 12px 20px;
             margin-bottom: 5px;
             border-radius: 5px;
             transition: all 0.3s;
+            font-size: 14px;
+            letter-spacing: 0.3px;
         }
 
         .sidebar .nav-link:hover {
             background-color: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            transform: translateX(3px);
         }
 
         .sidebar .nav-link.active {
-            background-color: var(--primary-color);
+            background: linear-gradient(90deg, var(--primary-color) 0%, #ffb347 100%);
             color: var(--secondary-color);
             font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            border-left: 4px solid #fff;
+            padding-left: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar .nav-link.active:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shine 2s infinite;
+        }
+
+        @keyframes shine {
+            100% {
+                left: 100%;
+            }
+        }
+
+        .sidebar .nav-link.active i {
+            color: var(--secondary-color) !important;
         }
 
         .sidebar .nav-link i {
             margin-right: 10px;
             width: 20px;
             text-align: center;
+            transition: all 0.3s;
+        }
+
+        .sidebar .nav-link:hover i {
+            transform: scale(1.2);
         }
 
         .sidebar-collapsed .nav-link span {
+            display: none;
+        }
+
+        .sidebar-category {
+            color: var(--primary-color);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            padding: 20px 20px 8px;
+            letter-spacing: 1.2px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 10px;
+            opacity: 0.9;
+            position: relative;
+        }
+
+        .sidebar-category:after {
+            content: '';
+            position: absolute;
+            left: 20px;
+            bottom: -1px;
+            width: 30px;
+            height: 2px;
+            background-color: var(--primary-color);
+        }
+
+        .sidebar-collapsed .sidebar-category {
             display: none;
         }
 
@@ -85,13 +170,15 @@
 
         .navbar {
             background-color: #fff;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             position: fixed;
             top: 0;
             right: 0;
             left: 250px;
             z-index: 99;
             transition: all 0.3s;
+            height: 60px;
+            padding: 0;
         }
 
         .navbar-expanded {
@@ -208,6 +295,33 @@
             .navbar-expanded {
                 left: 0;
             }
+
+            /* Mobile specific styles */
+            .sidebar {
+                padding-bottom: 50px;
+                overflow-y: auto; /* Always show scrollbar on mobile */
+            }
+
+            /* Smaller scrollbar for mobile */
+            .sidebar::-webkit-scrollbar {
+                width: 3px;
+            }
+
+            .sidebar-category {
+                text-align: center;
+                padding: 15px 5px 8px;
+            }
+
+            .sidebar-category:after {
+                left: 50%;
+                transform: translateX(-50%);
+                width: 20px;
+            }
+
+            .sidebar .nav-link.active {
+                border-left: 2px solid #fff;
+                padding-left: 18px;
+            }
         }
     </style>
 
@@ -216,109 +330,152 @@
 <body>
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
-        <div class="d-flex justify-content-center mb-4">
-            <h4 class="text-white">Restaurant Admin</h4>
+        <div class="d-flex justify-content-center align-items-center mb-4 px-3">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-utensils text-primary me-2" style="font-size: 24px;"></i>
+                <h4 class="text-white mb-0" style="font-weight: 600; letter-spacing: 0.5px;">Restaurant Admin</h4>
+            </div>
         </div>
         <ul class="nav flex-column">
             <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'admin_panel:dashboard' %}">
-                    <i class="fas fa-tachometer-alt"></i>
+                    <i class="fas fa-tachometer-alt" style="color: #4e73df;"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
+
+            <div class="sidebar-category">Restaurant Operations</div>
             <li class="nav-item">
                 <a class="nav-link {% if 'menu' in request.path %}active{% endif %}" href="{% url 'admin_panel:menu_list' %}">
-                    <i class="fas fa-utensils"></i>
+                    <i class="fas fa-utensils" style="color: #36b9cc;"></i>
                     <span>Menu Management</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {% if 'bookings' in request.path %}active{% endif %}" href="{% url 'admin_panel:booking_list' %}">
-                    <i class="fas fa-calendar-alt"></i>
+                    <i class="fas fa-calendar-alt" style="color: #1cc88a;"></i>
                     <span>Bookings</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {% if 'orders' in request.path %}active{% endif %}" href="{% url 'admin_panel:order_list' %}">
-                    <i class="fas fa-shopping-cart"></i>
+                    <i class="fas fa-shopping-cart" style="color: #f6c23e;"></i>
                     <span>Orders</span>
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link {% if 'services' in request.path %}active{% endif %}" href="{% url 'admin_panel:service_list' %}">
+                    <i class="fas fa-concierge-bell" style="color: #e74a3b;"></i>
+                    <span>Services</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'events' in request.path %}active{% endif %}" href="{% url 'admin_panel:booking_list' %}?type=events">
+                    <i class="fas fa-calendar-day" style="color: #fd7e14;"></i>
+                    <span>Events & Special Dates</span>
+                </a>
+            </li>
+
+            <div class="sidebar-category">Customer Management</div>
+            <li class="nav-item">
                 <a class="nav-link {% if 'users' in request.path %}active{% endif %}" href="{% url 'admin_panel:user_list' %}">
-                    <i class="fas fa-users"></i>
+                    <i class="fas fa-users" style="color: #4e73df;"></i>
                     <span>Users</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {% if 'reviews' in request.path %}active{% endif %}" href="{% url 'admin_panel:review_list' %}">
-                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star" style="color: #f6c23e;"></i>
                     <span>Reviews</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {% if 'team' in request.path %}active{% endif %}" href="{% url 'admin_panel:team_list' %}">
-                    <i class="fas fa-user-tie"></i>
-                    <span>Team</span>
-                </a>
-            </li>
-            <li class="nav-item">
                 <a class="nav-link {% if 'testimonials' in request.path %}active{% endif %}" href="{% url 'admin_panel:testimonial_list' %}">
-                    <i class="fas fa-quote-right"></i>
+                    <i class="fas fa-quote-right" style="color: #1cc88a;"></i>
                     <span>Testimonials</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {% if 'services' in request.path %}active{% endif %}" href="{% url 'admin_panel:service_list' %}">
-                    <i class="fas fa-concierge-bell"></i>
-                    <span>Services</span>
-                </a>
-            </li>
-            <li class="nav-item">
                 <a class="nav-link {% if 'messages' in request.path %}active{% endif %}" href="{% url 'admin_panel:message_list' %}">
-                    <i class="fas fa-envelope"></i>
+                    <i class="fas fa-envelope" style="color: #e74a3b;"></i>
                     <span>Messages</span>
+                    {% if unread_messages > 0 %}
+                    <span class="position-absolute top-50 start-100 translate-middle badge rounded-pill bg-danger" style="margin-top: -2px; margin-left: -15px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.5);">
+                        {{ unread_messages }}
+                        <span class="visually-hidden">unread messages</span>
+                    </span>
+                    {% endif %}
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {% if 'marketing/campaigns' in request.path %}active{% endif %}" href="{% url 'admin_panel:campaign_list' %}">
-                    <i class="fas fa-bullhorn"></i>
+                    <i class="fas fa-bullhorn" style="color: #36b9cc;"></i>
                     <span>Marketing</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{% url 'kitchen:dashboard' %}">
-                    <i class="fas fa-fire"></i>
-                    <span>Kitchen</span>
+                <a class="nav-link {% if 'loyalty' in request.path %}active{% endif %}" href="{% url 'admin_panel:dashboard' %}?section=loyalty">
+                    <i class="fas fa-award" style="color: #f6c23e;"></i>
+                    <span>Loyalty Program</span>
+                </a>
+            </li>
+
+            <div class="sidebar-category">Staff & Operations</div>
+            <li class="nav-item">
+                <a class="nav-link {% if 'team' in request.path %}active{% endif %}" href="{% url 'admin_panel:team_list' %}">
+                    <i class="fas fa-user-tie" style="color: #4e73df;"></i>
+                    <span>Team</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{% url 'inventory:dashboard' %}">
-                    <i class="fas fa-boxes"></i>
-                    <span>Inventory</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'staffing:dashboard' %}">
-                    <i class="fas fa-id-card"></i>
+                <a class="nav-link {% if 'staffing' in request.path %}active{% endif %}" href="{% url 'admin_panel:staffing_dashboard' %}">
+                    <i class="fas fa-id-card" style="color: #1cc88a;"></i>
                     <span>Staffing</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{% url 'analytics:dashboard' %}">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Analytics</span>
+                <a class="nav-link {% if 'kitchen' in request.path %}active{% endif %}" href="{% url 'admin_panel:kitchen_dashboard' %}">
+                    <i class="fas fa-fire" style="color: #e74a3b;"></i>
+                    <span>Kitchen</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{% url 'loyalty:dashboard' %}">
-                    <i class="fas fa-award"></i>
-                    <span>Loyalty</span>
+                <a class="nav-link {% if 'inventory' in request.path %}active{% endif %}" href="{% url 'admin_panel:inventory_dashboard' %}">
+                    <i class="fas fa-boxes" style="color: #f6c23e;"></i>
+                    <span>Inventory</span>
+                    {% if low_stock_items > 0 %}
+                    <span class="position-absolute top-50 start-100 translate-middle badge rounded-pill bg-warning text-dark" style="margin-top: -2px; margin-left: -15px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.5);">
+                        {{ low_stock_items }}
+                        <span class="visually-hidden">low stock items</span>
+                    </span>
+                    {% endif %}
                 </a>
             </li>
+
+            <div class="sidebar-category">Reports & Analytics</div>
+            <li class="nav-item">
+                <a class="nav-link {% if 'analytics/dashboard' in request.path %}active{% endif %}" href="{% url 'admin_panel:analytics_dashboard' %}">
+                    <i class="fas fa-chart-line" style="color: #4e73df;"></i>
+                    <span>Analytics Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'analytics/reports' in request.path %}active{% endif %}" href="{% url 'admin_panel:analytics_reports' %}">
+                    <i class="fas fa-file-alt" style="color: #1cc88a;"></i>
+                    <span>Reports</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'analytics/sales' in request.path %}active{% endif %}" href="{% url 'admin_panel:analytics_sales' %}">
+                    <i class="fas fa-dollar-sign" style="color: #36b9cc;"></i>
+                    <span>Sales Analytics</span>
+                </a>
+            </li>
+
+            <div class="sidebar-category">System</div>
             <li class="nav-item">
                 <a class="nav-link {% if 'settings' in request.path %}active{% endif %}" href="{% url 'admin_panel:settings' %}">
-                    <i class="fas fa-cog"></i>
+                    <i class="fas fa-cog" style="color: #e74a3b;"></i>
                     <span>Settings</span>
                 </a>
             </li>
@@ -329,11 +486,11 @@
     <nav class="navbar navbar-expand-lg" id="navbar">
         <div class="container-fluid">
             <div class="d-flex align-items-center">
-                <span class="toggle-sidebar me-3" id="toggleSidebar">
+                <span class="toggle-sidebar me-3" id="toggleSidebar" style="cursor: pointer; font-size: 1.2rem; color: #4e73df; background: rgba(78, 115, 223, 0.1); width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-bars"></i>
                 </span>
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Admin</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}" style="color: #4e73df; font-weight: 500;">Admin</a></li>
                     {% block breadcrumb %}
                     <li class="breadcrumb-item active">Dashboard</li>
                     {% endblock %}
@@ -341,13 +498,14 @@
             </div>
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="background: rgba(78, 115, 223, 0.1); border-radius: 8px; padding: 8px 15px; color: #4e73df;">
                         <i class="fas fa-user-circle me-1"></i> {{ request.user.get_full_name|default:request.user.username }}
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" href="{% url 'core:home' %}"><i class="fas fa-home me-2"></i> View Site</a></li>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="navbarDropdown" style="border-radius: 8px; border: none; margin-top: 10px;">
+                        <li><a class="dropdown-item" href="{% url 'core:home' %}"><i class="fas fa-home me-2 text-primary"></i> View Site</a></li>
+                        <li><a class="dropdown-item" href="/admin/" target="_blank"><i class="fas fa-tools me-2 text-primary"></i> Django Admin</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{% url 'admin_panel:logout' %}"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                        <li><a class="dropdown-item" href="{% url 'admin_panel:logout' %}" style="color: #e74a3b;"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
                     </ul>
                 </li>
             </ul>
@@ -380,11 +538,73 @@
             const mainContent = document.getElementById('mainContent');
             const navbar = document.getElementById('navbar');
             const toggleSidebar = document.getElementById('toggleSidebar');
+            const sidebarCategories = document.querySelectorAll('.sidebar-category');
+            const navLinks = document.querySelectorAll('.sidebar .nav-link');
+
+            // Highlight current section in sidebar
+            const currentPath = window.location.pathname;
+            navLinks.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
+
+            // Ensure sidebar is always scrollable
+            sidebar.style.overflowY = 'auto';
 
             toggleSidebar.addEventListener('click', function() {
+                // Add smooth transition
+                sidebar.style.transition = 'all 0.3s ease';
+                mainContent.style.transition = 'all 0.3s ease';
+                navbar.style.transition = 'all 0.3s ease';
+
                 sidebar.classList.toggle('sidebar-collapsed');
                 mainContent.classList.toggle('main-content-expanded');
                 navbar.classList.toggle('navbar-expanded');
+
+                // Handle sidebar collapse state
+                if (sidebar.classList.contains('sidebar-collapsed')) {
+                    sidebarCategories.forEach(category => {
+                        category.style.display = 'none';
+                    });
+
+                    // Add tooltip functionality for collapsed mode
+                    navLinks.forEach(link => {
+                        const text = link.querySelector('span').textContent;
+                        link.setAttribute('title', text);
+                    });
+
+                    // Keep sidebar scrollable in collapsed mode
+                    sidebar.style.overflowY = 'auto';
+                } else {
+                    sidebarCategories.forEach(category => {
+                        category.style.display = 'block';
+                    });
+
+                    // Remove tooltips in expanded mode
+                    navLinks.forEach(link => {
+                        link.removeAttribute('title');
+                    });
+
+                    // Keep sidebar scrollable in expanded mode
+                    sidebar.style.overflowY = 'auto';
+                }
+            });
+
+            // Add some padding at the bottom to ensure we can scroll to see all menu items
+            sidebar.style.paddingBottom = '50px';
+
+            // Ensure sidebar is always scrollable
+            sidebar.style.overflowY = 'auto';
+
+            // Add hover effect to toggle sidebar button
+            toggleSidebar.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.1)';
+                this.style.transition = 'all 0.2s ease';
+            });
+
+            toggleSidebar.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
             });
         });
     </script>

@@ -1,0 +1,137 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Reports{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Reports</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Reports</h1>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Report Type</h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="mb-3">
+                        <div class="form-group">
+                            <label for="type">Select Report Type</label>
+                            <select class="form-control" id="type" name="type" onchange="this.form.submit()">
+                                <option value="sales" {% if report_type == 'sales' %}selected{% endif %}>Sales Report</option>
+                                <option value="menu" {% if report_type == 'menu' %}selected{% endif %}>Menu Item Performance</option>
+                            </select>
+                        </div>
+                    </form>
+
+                    <form method="get" class="mb-0">
+                        <input type="hidden" name="type" value="{{ report_type }}">
+                        <div class="form-row">
+                            <div class="col">
+                                <div class="form-group">
+                                    <label for="start_date">Start Date</label>
+                                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}">
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <label for="end_date">End Date</label>
+                                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}">
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        {% if report_type == 'sales' %}
+                            Sales Report
+                        {% elif report_type == 'menu' %}
+                            Menu Item Performance
+                        {% endif %}
+                    </h6>
+                    <div class="dropdown no-arrow">
+                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                            <div class="dropdown-header">Export Options:</div>
+                            <a class="dropdown-item" href="#"><i class="fas fa-file-csv mr-2"></i>CSV</a>
+                            <a class="dropdown-item" href="#"><i class="fas fa-file-excel mr-2"></i>Excel</a>
+                            <a class="dropdown-item" href="#"><i class="fas fa-file-pdf mr-2"></i>PDF</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if report_type == 'sales' %}
+                        {% if report_data %}
+                            <div class="table-responsive">
+                                <table class="table table-bordered" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Total Sales</th>
+                                            <th>Orders</th>
+                                            <th>Average Order Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for data in report_data %}
+                                        <tr>
+                                            <td>{{ data.date|date:"M d, Y" }}</td>
+                                            <td>${{ data.total_sales|floatformat:2 }}</td>
+                                            <td>{{ data.order_count }}</td>
+                                            <td>${{ data.total_sales|floatformat:2 }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="text-center">No sales data available for the selected period.</p>
+                        {% endif %}
+                    {% elif report_type == 'menu' %}
+                        {% if report_data %}
+                            <div class="table-responsive">
+                                <table class="table table-bordered" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>Item Name</th>
+                                            <th>Quantity Sold</th>
+                                            <th>Revenue</th>
+                                            <th>Average Price</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for data in report_data %}
+                                        <tr>
+                                            <td>{{ data.item_name }}</td>
+                                            <td>{{ data.quantity_sold }}</td>
+                                            <td>${{ data.revenue|floatformat:2 }}</td>
+                                            <td>${{ data.revenue|floatformat:2 }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="text-center">No menu data available for the selected period.</p>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

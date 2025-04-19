@@ -1,0 +1,124 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Kitchen Dashboard{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Kitchen Dashboard</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Kitchen Dashboard</h1>
+    
+    <div class="row">
+        {% if active_alerts %}
+        <div class="col-12 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Active Alerts</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% for alert in active_alerts %}
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-exclamation-triangle mr-2"></i> {{ alert.message }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-bell fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Kitchen Stations</h6>
+                </div>
+                <div class="card-body">
+                    {% if stations %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>Station</th>
+                                        <th>Status</th>
+                                        <th>Assigned Staff</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for station in stations %}
+                                    <tr>
+                                        <td>{{ station.name }}</td>
+                                        <td>
+                                            {% if station.is_operational %}
+                                            <span class="badge bg-success text-white">Operational</span>
+                                            {% else %}
+                                            <span class="badge bg-danger text-white">Not Operational</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ station.assigned_staff.count }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-center">No kitchen stations found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Active Orders</h6>
+                </div>
+                <div class="card-body">
+                    {% if active_orders %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>Order #</th>
+                                        <th>Item</th>
+                                        <th>Status</th>
+                                        <th>Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for order_status in active_orders %}
+                                    <tr>
+                                        <td>{{ order_status.order_item.order.id }}</td>
+                                        <td>{{ order_status.order_item.menu_item.name }}</td>
+                                        <td>
+                                            {% if order_status.status == 'pending' %}
+                                            <span class="badge bg-warning text-dark">Pending</span>
+                                            {% elif order_status.status == 'in_progress' %}
+                                            <span class="badge bg-info text-white">In Progress</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ order_status.created_at|timesince }} ago</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-center">No active orders.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

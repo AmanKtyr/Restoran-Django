@@ -75,4 +75,14 @@ urlpatterns = [
     path('marketing/campaigns/edit/<int:pk>/', views.campaign_edit, name='campaign_edit'),
     path('marketing/campaigns/delete/<int:pk>/', views.campaign_delete, name='campaign_delete'),
     path('marketing/campaigns/<int:pk>/add-performance/', views.add_campaign_performance, name='add_campaign_performance'),
+
+    # Staff & Operations
+    path('staffing/', views.staffing_dashboard, name='staffing_dashboard'),
+    path('kitchen/', views.kitchen_dashboard, name='kitchen_dashboard'),
+    path('inventory/', views.inventory_dashboard, name='inventory_dashboard'),
+
+    # Reports & Analytics
+    path('analytics/dashboard/', views.analytics_dashboard, name='analytics_dashboard'),
+    path('analytics/reports/', views.analytics_reports, name='analytics_reports'),
+    path('analytics/sales/', views.analytics_sales, name='analytics_sales'),
 ]

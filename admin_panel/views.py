@@ -2,22 +2,43 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from django.db.models import Count, Sum, Avg
+from django.db.models import Sum, Avg, F, Count
 from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib.auth.models import User
 from menu.models import Category, MenuItem
-from booking.models import Booking
+from booking.models import Booking, BookingSettings
 from orders.models import Order, OrderItem
 from reviews.models import Review
 from core.models import TeamMember, Testimonial, ContactMessage, Service, RestaurantSettings
 from analytics.models import MarketingCampaign, CampaignPerformance
 
+# Import models from other apps
+try:
+    from inventory.models import InventoryItem, PurchaseOrder, InventoryCheck
+except ImportError:
+    pass
+
+try:
+    from kitchen.models import KitchenStation, OrderItemStatus, KitchenAlert
+except ImportError:
+    pass
+
+try:
+    from staffing.models import StaffProfile, Department, Position, Shift, TimeOffRequest
+except ImportError:
+    pass
+
 # Helper function to check if user is admin
 def is_admin(user):
     return user.is_authenticated and (user.is_staff or user.is_superuser)
+
+# Helper function to check if models are available
+def is_app_installed(app_name):
+    from django.apps import apps
+    return apps.is_installed(app_name)
 
 # Admin authentication views
 def admin_login(request):
@@ -81,6 +102,17 @@ def dashboard(request):
     unread_messages = ContactMessage.objects.filter(is_read=False).count()
     recent_messages = ContactMessage.objects.order_by('-created_at')[:5]
 
+    # Inventory statistics
+    try:
+        from inventory.models import InventoryItem
+        from django.db.models import F
+        low_stock_items = InventoryItem.objects.filter(
+            is_active=True,
+            current_stock__lte=F('minimum_stock')
+        ).count()
+    except (ImportError, Exception):
+        low_stock_items = 0
+
     context = {
         'total_orders': total_orders,
         'recent_orders': recent_orders,
@@ -98,6 +130,8 @@ def dashboard(request):
         'recent_reviews': recent_reviews,
         'unread_messages': unread_messages,
         'recent_messages': recent_messages,
+        'low_stock_items': low_stock_items,
+        'today': today,
     }
 
     return render(request, 'admin_panel/dashboard.html', context)
@@ -745,6 +779,9 @@ def settings(request):
     # Get or create settings
     settings_obj = RestaurantSettings.get_settings()
 
+    # Get or create booking settings
+    booking_settings, created = BookingSettings.objects.get_or_create(id=1)
+
     if request.method == 'POST':
         # Determine which settings section is being updated
         section = request.POST.get('section', 'general')
@@ -827,13 +864,33 @@ def settings(request):
             settings_obj.maintenance_mode = 'maintenance_mode' in request.POST
             settings_obj.maintenance_message = request.POST.get('maintenance_message')
 
+        elif section == 'booking':
+            # Update booking settings
+            booking_settings.min_booking_notice_hours = request.POST.get('min_booking_notice_hours')
+            booking_settings.max_booking_days_ahead = request.POST.get('max_booking_days_ahead')
+            booking_settings.default_booking_duration_mins = request.POST.get('default_booking_duration_mins')
+            booking_settings.auto_confirm_bookings = 'auto_confirm_bookings' in request.POST
+            booking_settings.send_confirmation_emails = 'send_confirmation_emails' in request.POST
+            booking_settings.send_reminder_emails = 'send_reminder_emails' in request.POST
+            booking_settings.reminder_hours_before = request.POST.get('reminder_hours_before')
+            booking_settings.max_party_size = request.POST.get('max_party_size')
+            booking_settings.min_party_size = request.POST.get('min_party_size')
+            booking_settings.allow_online_cancellation = 'allow_online_cancellation' in request.POST
+            booking_settings.cancellation_deadline_hours = request.POST.get('cancellation_deadline_hours')
+            booking_settings.require_deposit = 'require_deposit' in request.POST
+            booking_settings.deposit_amount = request.POST.get('deposit_amount')
+            booking_settings.deposit_percentage = request.POST.get('deposit_percentage')
+
+            # Save booking settings
+            booking_settings.save()
+
         # Save settings
         settings_obj.save()
 
         messages.success(request, 'Settings updated successfully!')
         return redirect('admin_panel:settings')
 
-    return render(request, 'admin_panel/settings.html', {'settings': settings_obj})
+    return render(request, 'admin_panel/settings.html', {'settings': settings_obj, 'booking_settings': booking_settings})
 
 # Marketing campaign views
 @login_required
@@ -975,3 +1032,218 @@ def add_campaign_performance(request, pk):
         return redirect('admin_panel:campaign_detail', pk=campaign.id)
 
     return redirect('admin_panel:campaign_detail', pk=campaign.id)
+
+# Staff & Operations views
+@login_required
+@user_passes_test(is_admin)
+def staffing_dashboard(request):
+    """Staffing dashboard view"""
+    context = {}
+
+    if is_app_installed('staffing'):
+        from staffing.models import StaffProfile, Department, Shift, TimeOffRequest
+
+        # Get staffing statistics
+        context['total_staff'] = StaffProfile.objects.filter(is_active=True).count()
+        context['departments'] = Department.objects.filter(is_active=True)
+
+        # Get upcoming shifts
+        today = timezone.now()
+        context['upcoming_shifts'] = Shift.objects.filter(
+            start_time__gte=today
+        ).order_by('start_time')[:10]
+
+        # Get pending time off requests
+        context['pending_requests'] = TimeOffRequest.objects.filter(status='pending').order_by('start_date')[:5]
+
+    return render(request, 'admin_panel/staffing/dashboard.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def kitchen_dashboard(request):
+    """Kitchen dashboard view"""
+    context = {}
+
+    if is_app_installed('kitchen'):
+        from kitchen.models import KitchenStation, OrderItemStatus, KitchenAlert
+
+        # Get kitchen statistics
+        context['stations'] = KitchenStation.objects.filter(is_active=True)
+
+        # Get active orders
+        context['active_orders'] = OrderItemStatus.objects.filter(
+            status__in=['pending', 'in_progress']
+        ).select_related('order_item', 'order_item__order').order_by('created_at')
+
+        # Get active alerts
+        context['active_alerts'] = KitchenAlert.objects.filter(
+            is_active=True,
+            expires_at__gt=timezone.now()
+        ).order_by('-priority', '-created_at')
+
+    return render(request, 'admin_panel/kitchen/dashboard.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def inventory_dashboard(request):
+    """Inventory dashboard view"""
+    context = {}
+
+    if is_app_installed('inventory'):
+        from inventory.models import InventoryItem, PurchaseOrder, InventoryCheck
+        from django.db.models import F
+
+        # Get inventory statistics
+        context['total_items'] = InventoryItem.objects.filter(is_active=True).count()
+
+        # Get low stock items
+        low_stock_items = InventoryItem.objects.filter(
+            is_active=True,
+            current_stock__lte=F('minimum_stock')
+        )
+        context['low_stock_items'] = low_stock_items.count()
+        context['low_stock_items_list'] = low_stock_items[:10]
+
+        # Get recent purchase orders
+        context['recent_orders'] = PurchaseOrder.objects.order_by('-created_at')[:5]
+
+        # Get recent inventory checks
+        context['recent_checks'] = InventoryCheck.objects.order_by('-created_at')[:5]
+
+    return render(request, 'admin_panel/inventory/dashboard.html', context)
+
+# Reports & Analytics views
+@login_required
+@user_passes_test(is_admin)
+def analytics_dashboard(request):
+    """Analytics dashboard view"""
+    # Get date range for analytics
+    end_date = timezone.now().date()
+    start_date = end_date - timedelta(days=30)
+
+    # Get sales data
+    total_sales = Order.objects.filter(
+        created_at__date__range=[start_date, end_date],
+        status='completed',
+        payment_status='paid'
+    ).aggregate(total=Sum('total'))['total'] or 0
+
+    # Get order data
+    total_orders = Order.objects.filter(
+        created_at__date__range=[start_date, end_date],
+        status='completed'
+    ).count()
+
+    # Get customer data
+    total_customers = Order.objects.filter(
+        created_at__date__range=[start_date, end_date],
+        user__isnull=False
+    ).values('user').distinct().count()
+
+    # Get average order value
+    avg_order_value = total_sales / total_orders if total_orders > 0 else 0
+
+    # Get top selling menu items
+    top_items = OrderItem.objects.filter(
+        order__created_at__date__range=[start_date, end_date],
+        order__status='completed'
+    ).values('menu_item__name').annotate(
+        total_quantity=Sum('quantity')
+    ).order_by('-total_quantity')[:5]
+
+    context = {
+        'total_sales': total_sales,
+        'total_orders': total_orders,
+        'total_customers': total_customers,
+        'avg_order_value': avg_order_value,
+        'top_items': top_items,
+        'start_date': start_date,
+        'end_date': end_date,
+    }
+    return render(request, 'admin_panel/analytics/dashboard.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def analytics_reports(request):
+    """Reports view"""
+    # Get date range
+    end_date = timezone.now().date()
+    start_date = end_date - timedelta(days=30)
+
+    # Get report type
+    report_type = request.GET.get('type', 'sales')
+
+    # Prepare context
+    context = {
+        'report_type': report_type,
+        'start_date': start_date,
+        'end_date': end_date,
+    }
+
+    # Add report data based on type
+    if report_type == 'sales':
+        # Daily sales data
+        sales_data = Order.objects.filter(
+            created_at__date__range=[start_date, end_date],
+            status='completed',
+            payment_status='paid'
+        ).values('created_at__date').annotate(
+            date=F('created_at__date'),
+            total_sales=Sum('total'),
+            order_count=Count('id')
+        ).order_by('date')
+
+        context['report_data'] = sales_data
+
+    elif report_type == 'menu':
+        # Menu item performance
+        menu_data = OrderItem.objects.filter(
+            order__created_at__date__range=[start_date, end_date],
+            order__status='completed'
+        ).values('menu_item__name').annotate(
+            item_name=F('menu_item__name'),
+            quantity_sold=Sum('quantity'),
+            revenue=Sum(F('price') * F('quantity'))
+        ).order_by('-quantity_sold')
+
+        context['report_data'] = menu_data
+
+    return render(request, 'admin_panel/analytics/reports.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def analytics_sales(request):
+    """Sales analytics view"""
+    # Get date range
+    end_date = timezone.now().date()
+    start_date = end_date - timedelta(days=30)
+
+    # Get sales by date
+    daily_sales = Order.objects.filter(
+        created_at__date__range=[start_date, end_date],
+        status='completed',
+        payment_status='paid'
+    ).values('created_at__date').annotate(
+        date=F('created_at__date'),
+        total_sales=Sum('total'),
+        order_count=Count('id'),
+        avg_order_value=Sum('total') / Count('id')
+    ).order_by('date')
+
+    # Get sales by payment method
+    payment_method_sales = Order.objects.filter(
+        created_at__date__range=[start_date, end_date],
+        status='completed',
+        payment_status='paid'
+    ).values('payment_method').annotate(
+        total_sales=Sum('total'),
+        order_count=Count('id')
+    ).order_by('-total_sales')
+
+    context = {
+        'daily_sales': daily_sales,
+        'payment_method_sales': payment_method_sales,
+        'start_date': start_date,
+        'end_date': end_date,
+    }
+    return render(request, 'admin_panel/analytics/sales.html', context)

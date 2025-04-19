@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Your Cart - Restoran{% endblock %}
+{% block page_title %}Your Cart{% endblock %}
+{% block breadcrumb_active %}Cart{% endblock %}
+
+{% block content %}
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-8">
+                <div class="bg-light rounded p-4 mb-4">
+                    <h3 class="mb-4">Your Cart Items</h3>
+                    
+                    {% if cart_items %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Price</th>
+                                        <th>Quantity</th>
+                                        <th>Total</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in cart_items %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if item.menu_item.image %}
+                                                <img src="{{ item.menu_item.image.url }}" alt="{{ item.menu_item.name }}" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                                                {% else %}
+                                                <div class="bg-secondary rounded me-3" style="width: 60px; height: 60px;"></div>
+                                                {% endif %}
+                                                <div>
+                                                    <h6 class="mb-0">{{ item.menu_item.name }}</h6>
+                                                    <small class="text-muted">{{ item.menu_item.category.name }}</small>
+                                                    {% if item.special_instructions %}
+                                                    <p class="small text-muted mb-0">Note: {{ item.special_instructions }}</p>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>${{ item.menu_item.price }}</td>
+                                        <td>
+                                            <form method="post" action="{% url 'orders:update_cart_item' item.id %}" class="d-flex align-items-center">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="update">
+                                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="99" class="form-control form-control-sm" style="width: 60px;">
+                                                <button type="submit" class="btn btn-sm btn-outline-primary ms-2">
+                                                    <i class="fa fa-sync-alt"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                        <td>${{ item.get_total_price }}</td>
+                                        <td>
+                                            <form method="post" action="{% url 'orders:update_cart_item' item.id %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="remove">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'menu:menu_list' %}" class="btn btn-outline-primary">
+                                <i class="fa fa-arrow-left me-2"></i>Continue Shopping
+                            </a>
+                            <a href="{% url 'orders:checkout' %}" class="btn btn-primary">
+                                Proceed to Checkout<i class="fa fa-arrow-right ms-2"></i>
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fa fa-shopping-cart fa-4x text-muted mb-3"></i>
+                            <h4>Your cart is empty</h4>
+                            <p class="text-muted">Looks like you haven't added any items to your cart yet.</p>
+                            <a href="{% url 'menu:menu_list' %}" class="btn btn-primary mt-3">Browse Menu</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="bg-light rounded p-4 mb-4">
+                    <h3 class="mb-4">Order Summary</h3>
+                    
+                    {% if cart_items %}
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal</span>
+                            <span>${{ cart.get_total_price }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tax (10%)</span>
+                            <span>${{ cart.get_total_price|floatformat:2|multiply:0.1 }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Delivery Fee</span>
+                            <span>$5.00</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-4">
+                            <strong>Total</strong>
+                            <strong>${{ cart.get_total_price|add:5|add:cart.get_total_price|floatformat:2|multiply:0.1 }}</strong>
+                        </div>
+                        
+                        <a href="{% url 'orders:checkout' %}" class="btn btn-primary w-100">
+                            Proceed to Checkout
+                        </a>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p class="text-muted">Add items to your cart to see the order summary.</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="bg-light rounded p-4">
+                    <h5 class="mb-3">Need Help?</h5>
+                    <p class="small text-muted">If you have any questions about your order, please contact our customer service.</p>
+                    <p class="small mb-0">
+                        <i class="fa fa-phone-alt me-2 text-primary"></i> +012 345 67890
+                    </p>
+                    <p class="small mb-0">
+                        <i class="fa fa-envelope me-2 text-primary"></i> info@example.com
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Custom template filter for multiplication
+    function multiply(value, arg) {
+        return parseFloat(value) * parseFloat(arg);
+    }
+</script>
+{% endblock %}

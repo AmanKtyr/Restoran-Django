@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Booking Success - Restoran{% endblock %}
+
+{% block page_title %}Booking Success{% endblock %}
+{% block breadcrumb_active %}Success{% endblock %}
+
+{% block content %}
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+            <h5 class="section-title ff-secondary text-center text-primary fw-normal">Thank You</h5>
+            <h1 class="mb-5">Your Booking Has Been Confirmed!</h1>
+            <p class="mb-4">We have received your booking request and will contact you shortly to confirm the details.</p>
+            <a href="{% url 'core:home' %}" class="btn btn-primary py-3 px-5">Return to Home</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

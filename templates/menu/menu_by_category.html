@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ category.name }} - Restoran{% endblock %}
+
+{% block page_title %}{{ category.name }} Menu{% endblock %}
+{% block breadcrumb_active %}{{ category.name }}{% endblock %}
+
+{% block content %}
+<!-- Menu Start -->
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+            <h5 class="section-title ff-secondary text-center text-primary fw-normal">Food Menu</h5>
+            <h1 class="mb-5">{{ category.name }} Items</h1>
+        </div>
+        <div class="tab-class text-center wow fadeInUp" data-wow-delay="0.1s">
+            <ul class="nav nav-pills d-inline-flex justify-content-center border-bottom mb-5">
+                {% for cat in categories %}
+                <li class="nav-item">
+                    <a class="d-flex align-items-center text-start mx-3 {% if cat.id == category.id %}ms-0 active{% endif %} pb-3" href="{% url 'menu:menu_by_category' cat.slug %}">
+                        <i class="fa {{ cat.icon_class }} fa-2x text-primary"></i>
+                        <div class="ps-3">
+                            <small class="text-body">{{ cat.small_description }}</small>
+                            <h6 class="mt-n1 mb-0">{{ cat.name }}</h6>
+                        </div>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane fade show active p-0">
+                    <div class="row g-4">
+                        {% for item in menu_items %}
+                        <div class="col-lg-6">
+                            <div class="d-flex align-items-center">
+                                {% if item.image %}
+                                <img class="flex-shrink-0 img-fluid rounded" src="{{ item.image.url }}" alt="{{ item.name }}" style="width: 80px;">
+                                {% else %}
+                                <img class="flex-shrink-0 img-fluid rounded" src="{% static 'img/menu-1.jpg' %}" alt="{{ item.name }}" style="width: 80px;">
+                                {% endif %}
+                                <div class="w-100 d-flex flex-column text-start ps-4">
+                                    <h5 class="d-flex justify-content-between border-bottom pb-2">
+                                        <span>{{ item.name }}</span>
+                                        <span class="text-primary">${{ item.price }}</span>
+                                    </h5>
+                                    <small class="fst-italic">{{ item.description|truncatechars:100 }}</small>
+                                    <div class="mt-2">
+                                        <a href="{% url 'menu:menu_item_detail' item.id %}" class="btn btn-sm btn-outline-primary">View Details</a>
+                                        <form method="post" action="{% url 'orders:add_to_cart' item.id %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="quantity" value="1">
+                                            <button type="submit" class="btn btn-sm btn-primary ms-1">
+                                                <i class="fa fa-shopping-cart"></i> Add to Cart
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12 text-center">
+                            <p>No menu items found in this category.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Menu End -->
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login - Restoran{% endblock %}
+{% block page_title %}Login{% endblock %}
+{% block breadcrumb_active %}Login{% endblock %}
+
+{% block content %}
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="row g-5 align-items-center">
+            <div class="col-lg-6">
+                <div class="row g-3">
+                    <div class="col-12 text-start">
+                        <img class="img-fluid rounded w-100 wow zoomIn" data-wow-delay="0.1s" src="{% static 'img/about-2.jpg' %}">
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <h1 class="mb-4">Welcome Back</h1>
+                <p class="mb-4">Login to your account to access your profile, order history, and make reservations.</p>
+                
+                <form method="post" class="mb-4">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="form-floating">
+                                {{ form.username }}
+                                <label for="{{ form.username.id_for_label }}">Username</label>
+                            </div>
+                            {% if form.username.errors %}
+                            <div class="text-danger">
+                                {% for error in form.username.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12">
+                            <div class="form-floating">
+                                {{ form.password }}
+                                <label for="{{ form.password.id_for_label }}">Password</label>
+                            </div>
+                            {% if form.password.errors %}
+                            <div class="text-danger">
+                                {% for error in form.password.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12">
+                            <button class="btn btn-primary w-100 py-3" type="submit">Login</button>
+                        </div>
+                    </div>
+                </form>
+                <div class="text-center">
+                    <p>Don't have an account? <a href="{% url 'accounts:register' %}">Register here</a></p>
+                    <p><a href="#">Forgot your password?</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

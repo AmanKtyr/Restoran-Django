@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Menu - Restoran{% endblock %}
+
+{% block page_title %}Food Menu{% endblock %}
+{% block breadcrumb_active %}Menu{% endblock %}
+
+{% block content %}
+<!-- Menu Start -->
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+            <h5 class="section-title ff-secondary text-center text-primary fw-normal">Food Menu</h5>
+            <h1 class="mb-5">Most Popular Items</h1>
+        </div>
+
+        <div class="row mb-5 wow fadeInUp" data-wow-delay="0.2s">
+            <div class="col-lg-12">
+                <div class="bg-light rounded p-4">
+                    <h4 class="mb-4">Filter Options</h4>
+                    <form id="menuFilterForm" method="get" action="{% url 'menu:menu_list' %}">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Dietary Preferences</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="vegetarian" name="vegetarian" value="1" {% if request.GET.vegetarian %}checked{% endif %}>
+                                    <label class="form-check-label" for="vegetarian">
+                                        <i class="fa fa-leaf text-success me-1"></i> Vegetarian
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="vegan" name="vegan" value="1" {% if request.GET.vegan %}checked{% endif %}>
+                                    <label class="form-check-label" for="vegan">
+                                        <i class="fa fa-seedling text-success me-1"></i> Vegan
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="gluten_free" name="gluten_free" value="1" {% if request.GET.gluten_free %}checked{% endif %}>
+                                    <label class="form-check-label" for="gluten_free">
+                                        <i class="fa fa-wheat-alt text-warning me-1"></i> Gluten-Free
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Spice Level</label>
+                                <select class="form-select" name="spice_level">
+                                    <option value="">Any Spice Level</option>
+                                    <option value="0" {% if request.GET.spice_level == '0' %}selected{% endif %}>Not Spicy</option>
+                                    <option value="1" {% if request.GET.spice_level == '1' %}selected{% endif %}>Mild</option>
+                                    <option value="2" {% if request.GET.spice_level == '2' %}selected{% endif %}>Medium</option>
+                                    <option value="3" {% if request.GET.spice_level == '3' %}selected{% endif %}>Hot</option>
+                                    <option value="4" {% if request.GET.spice_level == '4' %}selected{% endif %}>Very Hot</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Price Range</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" name="min_price" placeholder="Min" value="{{ request.GET.min_price }}">
+                                    <span class="input-group-text">-</span>
+                                    <input type="number" class="form-control" name="max_price" placeholder="Max" value="{{ request.GET.max_price }}">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Sort By</label>
+                                <select class="form-select" name="sort_by">
+                                    <option value="name" {% if request.GET.sort_by == 'name' %}selected{% endif %}>Name (A-Z)</option>
+                                    <option value="-name" {% if request.GET.sort_by == '-name' %}selected{% endif %}>Name (Z-A)</option>
+                                    <option value="price" {% if request.GET.sort_by == 'price' %}selected{% endif %}>Price (Low to High)</option>
+                                    <option value="-price" {% if request.GET.sort_by == '-price' %}selected{% endif %}>Price (High to Low)</option>
+                                    <option value="-is_popular" {% if request.GET.sort_by == '-is_popular' %}selected{% endif %}>Popularity</option>
+                                </select>
+                            </div>
+                            <div class="col-12 text-center mt-4">
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="fa fa-filter me-2"></i> Apply Filters
+                                </button>
+                                <a href="{% url 'menu:menu_list' %}" class="btn btn-outline-secondary px-4 ms-2">
+                                    <i class="fa fa-redo me-2"></i> Reset Filters
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% if filter_count < total_count %}
+        <div class="alert alert-info text-center mb-4 wow fadeInUp" data-wow-delay="0.1s">
+            Showing {{ filter_count }} of {{ total_count }} menu items based on your filters.
+            <a href="{% url 'menu:menu_list' %}" class="alert-link">Clear all filters</a>
+        </div>
+        {% endif %}
+
+        <div class="tab-class text-center wow fadeInUp" data-wow-delay="0.1s">
+            <ul class="nav nav-pills d-inline-flex justify-content-center border-bottom mb-5">
+                {% for category in categories %}
+                <li class="nav-item">
+                    <a class="d-flex align-items-center text-start mx-3 {% if forloop.first %}ms-0 active{% endif %} pb-3" data-bs-toggle="pill" href="#tab-{{ category.id }}">
+                        <i class="fa {{ category.icon_class }} fa-2x text-primary"></i>
+                        <div class="ps-3">
+                            <small class="text-body">{{ category.small_description }}</small>
+                            <h6 class="mt-n1 mb-0">{{ category.name }}</h6>
+                        </div>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            <div class="tab-content">
+                {% for category in categories %}
+                <div id="tab-{{ category.id }}" class="tab-pane fade show {% if forloop.first %}active{% endif %} p-0">
+                    <div class="row g-4">
+                        {% for item in menu_items %}
+                        {% if item.category == category %}
+                        <div class="col-lg-6">
+                            <div class="d-flex align-items-center">
+                                {% if item.image %}
+                                <img class="flex-shrink-0 img-fluid rounded" src="{{ item.image.url }}" alt="{{ item.name }}" style="width: 80px;">
+                                {% else %}
+                                <img class="flex-shrink-0 img-fluid rounded" src="{% static 'img/menu-1.jpg' %}" alt="{{ item.name }}" style="width: 80px;">
+                                {% endif %}
+                                <div class="w-100 d-flex flex-column text-start ps-4">
+                                    <h5 class="d-flex justify-content-between border-bottom pb-2">
+                                        <span>{{ item.name }}</span>
+                                        <span class="text-primary">${{ item.price }}</span>
+                                    </h5>
+                                    <small class="fst-italic">{{ item.description|truncatechars:100 }}</small>
+                                    <div class="mt-2">
+                                        <a href="{% url 'menu:menu_item_detail' item.id %}" class="btn btn-sm btn-outline-primary">View Details</a>
+                                        <form method="post" action="{% url 'orders:add_to_cart' item.id %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="quantity" value="1">
+                                            <button type="submit" class="btn btn-sm btn-primary ms-1">
+                                                <i class="fa fa-shopping-cart"></i> Add to Cart
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Menu End -->
+{% endblock %}

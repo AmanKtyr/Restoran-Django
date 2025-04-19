@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Review - Restoran{% endblock %}
+{% block page_title %}Delete Review{% endblock %}
+{% block breadcrumb_active %}Delete Review{% endblock %}
+
+{% block content %}
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="bg-light rounded p-4 mb-4">
+                    <h3 class="mb-4 text-center">Delete Review</h3>
+                    
+                    <div class="alert alert-warning mb-4">
+                        <i class="fa fa-exclamation-triangle me-2"></i>
+                        Are you sure you want to delete your review for <strong>{{ review.menu_item.name }}</strong>? This action cannot be undone.
+                    </div>
+                    
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="d-flex mb-3">
+                                <div class="flex-shrink-0">
+                                    {% if review.user.profile.profile_picture %}
+                                    <img src="{{ review.user.profile.profile_picture.url }}" alt="{{ review.user.get_full_name }}" class="rounded-circle" width="50" height="50">
+                                    {% else %}
+                                    <img src="{% static 'img/user-default.jpg' %}" alt="{{ review.user.get_full_name }}" class="rounded-circle" width="50" height="50">
+                                    {% endif %}
+                                </div>
+                                <div class="ms-3">
+                                    <h5 class="mb-0">{{ review.user.get_full_name|default:review.user.username }}</h5>
+                                    <div class="text-muted small">{{ review.created_at|date:"F d, Y" }}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-2">
+                                {% for i in "12345" %}
+                                {% if forloop.counter <= review.rating %}
+                                <i class="fa fa-star text-primary"></i>
+                                {% else %}
+                                <i class="fa fa-star text-muted"></i>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                            
+                            <h5 class="mb-2">{{ review.title }}</h5>
+                            <p class="mb-3">{{ review.content }}</p>
+                            
+                            {% if review.image %}
+                            <img src="{{ review.image.url }}" alt="Review Image" class="img-fluid rounded mb-3" style="max-height: 200px;">
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <form method="post" class="text-center">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger py-3 px-5">
+                            Delete Review
+                        </button>
+                        <a href="{% url 'menu:menu_item_detail' review.menu_item.id %}" class="btn btn-outline-secondary py-3 px-5 ms-2">
+                            Cancel
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

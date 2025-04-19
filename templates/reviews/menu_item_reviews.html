@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Reviews for {{ menu_item.name }} - Restoran{% endblock %}
+{% block page_title %}Reviews for {{ menu_item.name }}{% endblock %}
+{% block breadcrumb_active %}Reviews{% endblock %}
+
+{% block content %}
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-4">
+                <div class="position-relative h-100">
+                    {% if menu_item.image %}
+                    <img class="img-fluid rounded w-100" src="{{ menu_item.image.url }}" alt="{{ menu_item.name }}">
+                    {% else %}
+                    <img class="img-fluid rounded w-100" src="{% static 'img/menu-1.jpg' %}" alt="{{ menu_item.name }}">
+                    {% endif %}
+                    
+                    <div class="bg-light rounded p-4 mt-4">
+                        <h3 class="mb-3">{{ menu_item.name }}</h3>
+                        <p class="mb-2"><strong>Category:</strong> {{ menu_item.category.name }}</p>
+                        <p class="mb-2"><strong>Price:</strong> ${{ menu_item.price }}</p>
+                        <p class="mb-0">{{ menu_item.description }}</p>
+                        
+                        <div class="d-grid gap-2 mt-4">
+                            <a href="{% url 'menu:menu_item_detail' menu_item.id %}" class="btn btn-primary">
+                                View Item Details
+                            </a>
+                            {% if user.is_authenticated and not user_review %}
+                            <a href="{% url 'reviews:add_review' menu_item.id %}" class="btn btn-outline-primary">
+                                Write a Review
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-8">
+                <div class="bg-light rounded p-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="mb-0">Customer Reviews</h3>
+                        <div>
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    {% for i in "12345" %}
+                                    {% if forloop.counter <= avg_rating|floatformat:"0" %}
+                                    <i class="fa fa-star text-primary"></i>
+                                    {% else %}
+                                    <i class="fa fa-star text-muted"></i>
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <div>
+                                    <span class="fw-bold">{{ avg_rating|floatformat:"1" }}</span>
+                                    <span class="text-muted">out of 5</span>
+                                </div>
+                            </div>
+                            <div class="small text-muted">Based on {{ reviews.count }} reviews</div>
+                        </div>
+                    </div>
+                    
+                    {% if user_review %}
+                    <div class="alert alert-info mb-4">
+                        <div class="d-flex align-items-center">
+                            <div>
+                                <i class="fa fa-info-circle me-2"></i>
+                                You have already reviewed this item.
+                            </div>
+                            <div class="ms-auto">
+                                <a href="{% url 'reviews:edit_review' user_review.id %}" class="btn btn-sm btn-outline-primary me-2">
+                                    Edit Review
+                                </a>
+                                <a href="{% url 'reviews:delete_review' user_review.id %}" class="btn btn-sm btn-outline-danger">
+                                    Delete Review
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if reviews %}
+                        {% for review in reviews %}
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <div class="d-flex mb-3">
+                                    <div class="flex-shrink-0">
+                                        {% if review.user.profile.profile_picture %}
+                                        <img src="{{ review.user.profile.profile_picture.url }}" alt="{{ review.user.get_full_name }}" class="rounded-circle" width="50" height="50">
+                                        {% else %}
+                                        <img src="{% static 'img/user-default.jpg' %}" alt="{{ review.user.get_full_name }}" class="rounded-circle" width="50" height="50">
+                                        {% endif %}
+                                    </div>
+                                    <div class="ms-3">
+                                        <h5 class="mb-0">{{ review.user.get_full_name|default:review.user.username }}</h5>
+                                        <div class="text-muted small">{{ review.created_at|date:"F d, Y" }}</div>
+                                    </div>
+                                    {% if review.order_item %}
+                                    <div class="ms-auto">
+                                        <span class="badge bg-success">Verified Purchase</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-2">
+                                    {% for i in "12345" %}
+                                    {% if forloop.counter <= review.rating %}
+                                    <i class="fa fa-star text-primary"></i>
+                                    {% else %}
+                                    <i class="fa fa-star text-muted"></i>
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
+                                
+                                <h5 class="mb-2">{{ review.title }}</h5>
+                                <p class="mb-3">{{ review.content }}</p>
+                                
+                                {% if review.image %}
+                                <img src="{{ review.image.url }}" alt="Review Image" class="img-fluid rounded mb-3" style="max-height: 200px;">
+                                {% endif %}
+                                
+                                <div class="d-flex align-items-center">
+                                    <form method="post" action="{% url 'reviews:like_review' review.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                                            {% if user.is_authenticated and user in review.likes.all|map:'user' %}
+                                            <i class="fa fa-thumbs-up"></i> Liked
+                                            {% else %}
+                                            <i class="fa fa-thumbs-up"></i> Like
+                                            {% endif %}
+                                            ({{ review.likes.count }})
+                                        </button>
+                                    </form>
+                                    
+                                    {% if user == review.user %}
+                                    <div class="ms-auto">
+                                        <a href="{% url 'reviews:edit_review' review.id %}" class="btn btn-sm btn-outline-primary me-2">
+                                            <i class="fa fa-edit"></i> Edit
+                                        </a>
+                                        <a href="{% url 'reviews:delete_review' review.id %}" class="btn btn-sm btn-outline-danger">
+                                            <i class="fa fa-trash"></i> Delete
+                                        </a>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fa fa-comment fa-4x text-muted mb-3"></i>
+                            <h4>No reviews yet</h4>
+                            <p class="text-muted">Be the first to review this item!</p>
+                            {% if user.is_authenticated %}
+                            <a href="{% url 'reviews:add_review' menu_item.id %}" class="btn btn-primary mt-3">
+                                Write a Review
+                            </a>
+                            {% else %}
+                            <a href="{% url 'accounts:login' %}?next={% url 'reviews:add_review' menu_item.id %}" class="btn btn-primary mt-3">
+                                Login to Write a Review
+                            </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

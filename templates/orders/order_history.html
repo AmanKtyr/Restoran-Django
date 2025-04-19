@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Order History - Restoran{% endblock %}
+{% block page_title %}Order History{% endblock %}
+{% block breadcrumb_active %}Order History{% endblock %}
+
+{% block content %}
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-3">
+                <div class="bg-light rounded p-4 mb-4">
+                    <h4 class="mb-4">My Account</h4>
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'accounts:profile' %}" class="list-group-item list-group-item-action bg-transparent">
+                            <i class="fa fa-user me-2"></i> My Profile
+                        </a>
+                        <a href="{% url 'orders:order_history' %}" class="list-group-item list-group-item-action bg-transparent active">
+                            <i class="fa fa-history me-2"></i> Order History
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action bg-transparent">
+                            <i class="fa fa-bookmark me-2"></i> Saved Items
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action bg-transparent">
+                            <i class="fa fa-calendar me-2"></i> My Reservations
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action bg-transparent">
+                            <i class="fa fa-star me-2"></i> My Reviews
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action bg-transparent">
+                            <i class="fa fa-cog me-2"></i> Account Settings
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-9">
+                <div class="bg-light rounded p-4 mb-4">
+                    <h3 class="mb-4">Your Order History</h3>
+                    
+                    {% if orders %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Order #</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Total</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for order in orders %}
+                                    <tr>
+                                        <td>{{ order.order_number }}</td>
+                                        <td>{{ order.created_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            {% if order.status == 'pending' %}
+                                                <span class="badge bg-warning">{{ order.get_status_display }}</span>
+                                            {% elif order.status == 'preparing' %}
+                                                <span class="badge bg-info">{{ order.get_status_display }}</span>
+                                            {% elif order.status == 'ready' %}
+                                                <span class="badge bg-primary">{{ order.get_status_display }}</span>
+                                            {% elif order.status == 'on_the_way' %}
+                                                <span class="badge bg-info">{{ order.get_status_display }}</span>
+                                            {% elif order.status == 'delivered' or order.status == 'completed' %}
+                                                <span class="badge bg-success">{{ order.get_status_display }}</span>
+                                            {% elif order.status == 'cancelled' %}
+                                                <span class="badge bg-danger">{{ order.get_status_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>${{ order.total }}</td>
+                                        <td>
+                                            <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-sm btn-outline-primary">
+                                                View Details
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fa fa-shopping-bag fa-4x text-muted mb-3"></i>
+                            <h4>No orders yet</h4>
+                            <p class="text-muted">You haven't placed any orders yet.</p>
+                            <a href="{% url 'menu:menu_list' %}" class="btn btn-primary mt-3">Browse Menu</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ menu_item.name }} - Restoran{% endblock %}
+{% block page_title %}{{ menu_item.name }}{% endblock %}
+{% block breadcrumb_active %}{{ menu_item.name }}{% endblock %}
+
+{% block content %}
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-6">
+                <div class="position-relative h-100">
+                    {% if menu_item.image %}
+                    <img class="img-fluid rounded w-100 h-100" src="{{ menu_item.image.url }}" alt="{{ menu_item.name }}" style="object-fit: cover;">
+                    {% else %}
+                    <img class="img-fluid rounded w-100 h-100" src="{% static 'img/menu-1.jpg' %}" alt="{{ menu_item.name }}" style="object-fit: cover;">
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <h1 class="mb-3">{{ menu_item.name }}</h1>
+                <div class="d-flex mb-3">
+                    <span class="text-primary me-2">Category:</span>
+                    <a href="{% url 'menu:menu_by_category' menu_item.category.slug %}" class="text-decoration-none">{{ menu_item.category.name }}</a>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <h3 class="text-primary mb-0">${{ menu_item.price }}</h3>
+                    <div class="ms-4">
+                        <a href="{% url 'reviews:menu_item_reviews' menu_item.id %}" class="text-decoration-none">
+                            {% if menu_item.reviews.count > 0 %}
+                                {% with avg_rating=menu_item.reviews.all|dictsort:"rating"|last %}
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= avg_rating.rating %}
+                                            <i class="fa fa-star text-primary"></i>
+                                        {% else %}
+                                            <i class="fa fa-star text-muted"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endwith %}
+                                <span class="ms-2">{{ menu_item.reviews.count }} review{{ menu_item.reviews.count|pluralize }}</span>
+                            {% else %}
+                                <span class="text-muted">No reviews yet</span>
+                            {% endif %}
+                        </a>
+                    </div>
+                </div>
+                <p class="mb-4">{{ menu_item.description }}</p>
+
+                {% with dietary_tags=menu_item.get_dietary_tags %}
+                {% if dietary_tags %}
+                <div class="mb-4">
+                    {% for tag in dietary_tags %}
+                    <span class="badge bg-light text-dark border me-2 mb-2 py-2 px-3">
+                        {% if tag == 'Vegetarian' %}
+                            <i class="fa fa-leaf text-success me-1"></i>
+                        {% elif tag == 'Vegan' %}
+                            <i class="fa fa-seedling text-success me-1"></i>
+                        {% elif tag == 'Gluten-Free' %}
+                            <i class="fa fa-wheat-alt text-warning me-1"></i>
+                        {% elif 'Spicy' in tag %}
+                            <i class="fa fa-pepper-hot text-danger me-1"></i>
+                        {% endif %}
+                        {{ tag }}
+                    </span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
+
+                {% if menu_item.calories or menu_item.ingredients or menu_item.allergens %}
+                <div class="accordion mb-4" id="menuItemDetails">
+                    {% if menu_item.ingredients %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingIngredients">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIngredients" aria-expanded="false" aria-controls="collapseIngredients">
+                                <i class="fa fa-list-ul me-2"></i> Ingredients
+                            </button>
+                        </h2>
+                        <div id="collapseIngredients" class="accordion-collapse collapse" aria-labelledby="headingIngredients" data-bs-parent="#menuItemDetails">
+                            <div class="accordion-body">
+                                {{ menu_item.ingredients|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if menu_item.allergens %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingAllergens">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAllergens" aria-expanded="false" aria-controls="collapseAllergens">
+                                <i class="fa fa-exclamation-triangle me-2"></i> Allergens
+                            </button>
+                        </h2>
+                        <div id="collapseAllergens" class="accordion-collapse collapse" aria-labelledby="headingAllergens" data-bs-parent="#menuItemDetails">
+                            <div class="accordion-body">
+                                {{ menu_item.allergens|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if menu_item.calories %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingNutrition">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNutrition" aria-expanded="false" aria-controls="collapseNutrition">
+                                <i class="fa fa-info-circle me-2"></i> Nutritional Information
+                            </button>
+                        </h2>
+                        <div id="collapseNutrition" class="accordion-collapse collapse" aria-labelledby="headingNutrition" data-bs-parent="#menuItemDetails">
+                            <div class="accordion-body">
+                                <p><strong>Calories:</strong> {{ menu_item.calories }} kcal per serving</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <form method="post" action="{% url 'orders:add_to_cart' menu_item.id %}" class="mb-4">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input type="number" class="form-control" id="quantity" name="quantity" min="1" max="99" value="1">
+                                <label for="quantity">Quantity</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <textarea class="form-control" id="special_instructions" name="special_instructions" style="height: 100px" placeholder="Special Instructions"></textarea>
+                                <label for="special_instructions">Special Instructions</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary py-3 px-5">
+                                <i class="fa fa-shopping-cart me-2"></i> Add to Cart
+                            </button>
+                            <a href="{% url 'menu:menu_list' %}" class="btn btn-outline-primary py-3 px-5 ms-2">
+                                <i class="fa fa-arrow-left me-2"></i> Back to Menu
+                            </a>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="d-flex pt-2">
+                    <strong class="text-dark me-2">Share:</strong>
+                    <div class="d-inline-flex">
+                        <a class="btn btn-sm btn-outline-primary btn-sm-square rounded-circle me-2" href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a class="btn btn-sm btn-outline-primary btn-sm-square rounded-circle me-2" href="#"><i class="fab fa-twitter"></i></a>
+                        <a class="btn btn-sm btn-outline-primary btn-sm-square rounded-circle me-2" href="#"><i class="fab fa-linkedin-in"></i></a>
+                        <a class="btn btn-sm btn-outline-primary btn-sm-square rounded-circle" href="#"><i class="fab fa-pinterest"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="bg-light rounded p-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="mb-0">Customer Reviews</h3>
+                        <a href="{% url 'reviews:menu_item_reviews' menu_item.id %}" class="btn btn-outline-primary">
+                            View All Reviews
+                        </a>
+                    </div>
+
+                    {% if menu_item.reviews.count > 0 %}
+                        {% with reviews=menu_item.reviews.all|slice:":3" %}
+                            {% for review in reviews %}
+                                <div class="card mb-3 {% if forloop.last %}mb-0{% endif %}">
+                                    <div class="card-body">
+                                        <div class="d-flex mb-3">
+                                            <div class="flex-shrink-0">
+                                                {% if review.user.profile.profile_picture %}
+                                                <img src="{{ review.user.profile.profile_picture.url }}" alt="{{ review.user.get_full_name }}" class="rounded-circle" width="50" height="50">
+                                                {% else %}
+                                                <img src="{% static 'img/user-default.jpg' %}" alt="{{ review.user.get_full_name }}" class="rounded-circle" width="50" height="50">
+                                                {% endif %}
+                                            </div>
+                                            <div class="ms-3">
+                                                <h5 class="mb-0">{{ review.user.get_full_name|default:review.user.username }}</h5>
+                                                <div class="text-muted small">{{ review.created_at|date:"F d, Y" }}</div>
+                                            </div>
+                                            {% if review.order_item %}
+                                            <div class="ms-auto">
+                                                <span class="badge bg-success">Verified Purchase</span>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="mb-2">
+                                            {% for i in "12345" %}
+                                            {% if forloop.counter <= review.rating %}
+                                            <i class="fa fa-star text-primary"></i>
+                                            {% else %}
+                                            <i class="fa fa-star text-muted"></i>
+                                            {% endif %}
+                                            {% endfor %}
+                                        </div>
+
+                                        <h5 class="mb-2">{{ review.title }}</h5>
+                                        <p class="mb-0">{{ review.content|truncatechars:150 }}</p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% endwith %}
+
+                        <div class="text-center mt-4">
+                            <a href="{% url 'reviews:menu_item_reviews' menu_item.id %}" class="btn btn-outline-primary">
+                                View All {{ menu_item.reviews.count }} Review{{ menu_item.reviews.count|pluralize }}
+                            </a>
+                            {% if user.is_authenticated %}
+                                {% if not user_review %}
+                                <a href="{% url 'reviews:add_review' menu_item.id %}" class="btn btn-primary ms-2">
+                                    Write a Review
+                                </a>
+                                {% endif %}
+                            {% else %}
+                            <a href="{% url 'accounts:login' %}?next={% url 'reviews:add_review' menu_item.id %}" class="btn btn-primary ms-2">
+                                Login to Write a Review
+                            </a>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fa fa-comment fa-4x text-muted mb-3"></i>
+                            <h4>No reviews yet</h4>
+                            <p class="text-muted">Be the first to review this item!</p>
+                            {% if user.is_authenticated %}
+                            <a href="{% url 'reviews:add_review' menu_item.id %}" class="btn btn-primary mt-3">
+                                Write a Review
+                            </a>
+                            {% else %}
+                            <a href="{% url 'accounts:login' %}?next={% url 'reviews:add_review' menu_item.id %}" class="btn btn-primary mt-3">
+                                Login to Write a Review
+                            </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="bg-light rounded p-4">
+                    <h3 class="mb-4">You May Also Like</h3>
+                    <div class="row g-4">
+                        {% for item in related_items %}
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                {% if item.image %}
+                                <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.name }}" style="height: 200px; object-fit: cover;">
+                                {% else %}
+                                <img src="{% static 'img/menu-1.jpg' %}" class="card-img-top" alt="{{ item.name }}" style="height: 200px; object-fit: cover;">
+                                {% endif %}
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ item.name }}</h5>
+                                    <p class="card-text text-primary mb-0">${{ item.price }}</p>
+                                    <p class="card-text small text-muted">{{ item.description|truncatechars:80 }}</p>
+                                    <a href="{% url 'menu:menu_item_detail' item.id %}" class="btn btn-sm btn-outline-primary">View Details</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

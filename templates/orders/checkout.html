@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Checkout - Restoran{% endblock %}
+{% block page_title %}Checkout{% endblock %}
+{% block breadcrumb_active %}Checkout{% endblock %}
+
+{% block content %}
+<div class="container-xxl py-5">
+    <div class="container">
+        <form method="post" action="{% url 'orders:checkout' %}">
+            {% csrf_token %}
+            <div class="row g-5">
+                <div class="col-lg-8">
+                    <div class="bg-light rounded p-4 mb-4">
+                        <h3 class="mb-4">Delivery Information</h3>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" id="full_name" name="full_name" placeholder="Full Name" value="{{ user.get_full_name }}" required>
+                                    <label for="full_name">Full Name</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="email" class="form-control" id="email" name="email" placeholder="Email" value="{{ user.email }}" required>
+                                    <label for="email">Email</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="tel" class="form-control" id="phone" name="phone" placeholder="Phone" value="{{ user.profile.phone }}" required>
+                                    <label for="phone">Phone</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <select class="form-select" id="order_type" name="order_type">
+                                        <option value="delivery">Delivery</option>
+                                        <option value="pickup">Pickup</option>
+                                    </select>
+                                    <label for="order_type">Order Type</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="delivery_details" class="mt-4">
+                            <h5 class="mb-3">Delivery Address</h5>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="address" name="address" placeholder="Address" value="{{ user.profile.address }}">
+                                        <label for="address">Address</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="city" name="city" placeholder="City" value="{{ user.profile.city }}">
+                                        <label for="city">City</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="state" name="state" placeholder="State" value="{{ user.profile.state }}">
+                                        <label for="state">State</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="postal_code" name="postal_code" placeholder="Postal Code" value="{{ user.profile.postal_code }}">
+                                        <label for="postal_code">Postal Code</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-light rounded p-4 mb-4">
+                        <h3 class="mb-4">Payment Method</h3>
+                        
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="payment_cash" value="cash" checked>
+                                    <label class="form-check-label" for="payment_cash">
+                                        Cash on Delivery
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="payment_card" value="card">
+                                    <label class="form-check-label" for="payment_card">
+                                        Credit/Debit Card
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="payment_paypal" value="paypal">
+                                    <label class="form-check-label" for="payment_paypal">
+                                        PayPal
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="card_details" class="mt-4 d-none">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="card_number" placeholder="Card Number">
+                                        <label for="card_number">Card Number</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="card_expiry" placeholder="MM/YY">
+                                        <label for="card_expiry">Expiry Date (MM/YY)</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="card_cvv" placeholder="CVV">
+                                        <label for="card_cvv">CVV</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-light rounded p-4 mb-4">
+                        <h3 class="mb-4">Special Instructions</h3>
+                        
+                        <div class="form-floating">
+                            <textarea class="form-control" id="special_instructions" name="special_instructions" style="height: 100px"></textarea>
+                            <label for="special_instructions">Special Instructions</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="bg-light rounded p-4 mb-4">
+                        <h3 class="mb-4">Order Summary</h3>
+                        
+                        <div class="table-responsive">
+                            <table class="table">
+                                <tbody>
+                                    {% for item in cart_items %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <span class="me-2">{{ item.quantity }}x</span>
+                                                <div>
+                                                    <h6 class="mb-0">{{ item.menu_item.name }}</h6>
+                                                    {% if item.special_instructions %}
+                                                    <small class="text-muted">{{ item.special_instructions }}</small>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-end">${{ item.get_total_price }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal</span>
+                            <span>${{ subtotal }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tax (10%)</span>
+                            <span>${{ tax }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Delivery Fee</span>
+                            <span>${{ delivery_fee }}</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-4">
+                            <strong>Total</strong>
+                            <strong>${{ total }}</strong>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100 py-3">
+                            Place Order
+                        </button>
+                        
+                        <div class="text-center mt-3">
+                            <a href="{% url 'orders:cart' %}" class="text-decoration-none">
+                                <i class="fa fa-arrow-left me-1"></i> Back to Cart
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-light rounded p-4">
+                        <h5 class="mb-3">Need Help?</h5>
+                        <p class="small text-muted">If you have any questions about your order, please contact our customer service.</p>
+                        <p class="small mb-0">
+                            <i class="fa fa-phone-alt me-2 text-primary"></i> +012 345 67890
+                        </p>
+                        <p class="small mb-0">
+                            <i class="fa fa-envelope me-2 text-primary"></i> info@example.com
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Toggle delivery details based on order type
+        $('#order_type').change(function() {
+            if ($(this).val() === 'delivery') {
+                $('#delivery_details').removeClass('d-none');
+            } else {
+                $('#delivery_details').addClass('d-none');
+            }
+        });
+        
+        // Toggle card details based on payment method
+        $('input[name="payment_method"]').change(function() {
+            if ($(this).val() === 'card') {
+                $('#card_details').removeClass('d-none');
+            } else {
+                $('#card_details').addClass('d-none');
+            }
+        });
+    });
+</script>
+{% endblock %}

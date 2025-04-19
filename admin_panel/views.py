@@ -12,6 +12,7 @@ from booking.models import Booking
 from orders.models import Order, OrderItem
 from reviews.models import Review
 from core.models import TeamMember, Testimonial, ContactMessage, Service
+from analytics.models import MarketingCampaign, CampaignPerformance
 
 # Helper function to check if user is admin
 def is_admin(user):
@@ -741,3 +742,144 @@ def message_delete(request, pk):
 @user_passes_test(is_admin)
 def settings(request):
     return render(request, 'admin_panel/settings.html')
+
+# Marketing campaign views
+@login_required
+@user_passes_test(is_admin)
+def campaign_list(request):
+    campaigns = MarketingCampaign.objects.all().order_by('-start_date')
+    return render(request, 'admin_panel/marketing/campaign_list.html', {'campaigns': campaigns})
+
+@login_required
+@user_passes_test(is_admin)
+def campaign_add(request):
+    if request.method == 'POST':
+        # Get form data
+        name = request.POST.get('name')
+        description = request.POST.get('description')
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+        budget = request.POST.get('budget')
+        target_audience = request.POST.get('target_audience')
+        promotion_code = request.POST.get('promotion_code')
+        discount_percentage = request.POST.get('discount_percentage')
+        is_active = 'is_active' in request.POST
+
+        # Create campaign
+        campaign = MarketingCampaign.objects.create(
+            name=name,
+            description=description,
+            start_date=start_date,
+            end_date=end_date,
+            budget=budget,
+            target_audience=target_audience,
+            promotion_code=promotion_code,
+            discount_percentage=discount_percentage,
+            is_active=is_active,
+            created_by=request.user
+        )
+
+        messages.success(request, 'Marketing campaign created successfully!')
+        return redirect('admin_panel:campaign_detail', pk=campaign.id)
+
+    return render(request, 'admin_panel/marketing/campaign_form.html')
+
+@login_required
+@user_passes_test(is_admin)
+def campaign_detail(request, pk):
+    campaign = get_object_or_404(MarketingCampaign, pk=pk)
+    today = timezone.now().date().isoformat()
+
+    # Calculate campaign duration
+    campaign_duration = (campaign.end_date - campaign.start_date).days + 1
+
+    # Get performance metrics
+    performances = CampaignPerformance.objects.filter(campaign=campaign).order_by('-date')
+
+    # Calculate totals and averages
+    total_impressions = performances.aggregate(Sum('impressions'))['impressions__sum'] or 0
+    total_clicks = performances.aggregate(Sum('clicks'))['clicks__sum'] or 0
+    total_conversions = performances.aggregate(Sum('conversions'))['conversions__sum'] or 0
+    total_revenue = performances.aggregate(Sum('revenue'))['revenue__sum'] or 0
+    total_cost = performances.aggregate(Sum('cost'))['cost__sum'] or 0
+
+    # Calculate derived metrics
+    conversion_rate = (total_conversions / total_clicks * 100) if total_clicks > 0 else 0
+    average_roi = performances.aggregate(Avg('roi'))['roi__avg'] or 0
+
+    context = {
+        'campaign': campaign,
+        'today': today,
+        'campaign_duration': campaign_duration,
+        'performances': performances,
+        'total_impressions': total_impressions,
+        'total_clicks': total_clicks,
+        'total_conversions': total_conversions,
+        'total_revenue': total_revenue,
+        'total_cost': total_cost,
+        'conversion_rate': round(conversion_rate, 2),
+        'average_roi': round(average_roi, 2),
+    }
+
+    return render(request, 'admin_panel/marketing/campaign_detail.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def campaign_edit(request, pk):
+    campaign = get_object_or_404(MarketingCampaign, pk=pk)
+
+    if request.method == 'POST':
+        # Get form data
+        campaign.name = request.POST.get('name')
+        campaign.description = request.POST.get('description')
+        campaign.start_date = request.POST.get('start_date')
+        campaign.end_date = request.POST.get('end_date')
+        campaign.budget = request.POST.get('budget')
+        campaign.target_audience = request.POST.get('target_audience')
+        campaign.promotion_code = request.POST.get('promotion_code')
+        campaign.discount_percentage = request.POST.get('discount_percentage')
+        campaign.is_active = 'is_active' in request.POST
+
+        campaign.save()
+        messages.success(request, 'Marketing campaign updated successfully!')
+        return redirect('admin_panel:campaign_detail', pk=campaign.id)
+
+    return render(request, 'admin_panel/marketing/campaign_form.html', {'campaign': campaign})
+
+@login_required
+@user_passes_test(is_admin)
+def campaign_delete(request, pk):
+    campaign = get_object_or_404(MarketingCampaign, pk=pk)
+    campaign.delete()
+    messages.success(request, 'Marketing campaign deleted successfully!')
+    return redirect('admin_panel:campaign_list')
+
+@login_required
+@user_passes_test(is_admin)
+def add_campaign_performance(request, pk):
+    campaign = get_object_or_404(MarketingCampaign, pk=pk)
+
+    if request.method == 'POST':
+        # Get form data
+        date = request.POST.get('date')
+        impressions = int(request.POST.get('impressions'))
+        clicks = int(request.POST.get('clicks'))
+        conversions = int(request.POST.get('conversions'))
+        revenue = float(request.POST.get('revenue'))
+        cost = float(request.POST.get('cost'))
+
+        # Create performance record
+        performance = CampaignPerformance.objects.create(
+            campaign=campaign,
+            date=date,
+            impressions=impressions,
+            clicks=clicks,
+            conversions=conversions,
+            revenue=revenue,
+            cost=cost
+        )
+
+        messages.success(request, 'Performance data added successfully!')
+        return redirect('admin_panel:campaign_detail', pk=campaign.id)
+
+    return redirect('admin_panel:campaign_detail', pk=campaign.id)

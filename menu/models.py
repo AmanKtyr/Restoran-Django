@@ -36,6 +36,7 @@ class MenuItem(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    cost_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, help_text="Cost price for profitability tracking")
     image = models.ImageField(upload_to='menu_items/', blank=True, null=True)
 
     # Dietary information
@@ -75,3 +76,12 @@ class MenuItem(models.Model):
         if self.spice_level > 0:
             tags.append(f"{self.get_spice_level_display()} Spicy")
         return tags
+
+    def get_profit_margin(self):
+        """Calculate the profit margin percentage"""
+        if not self.cost_price or self.cost_price <= 0:
+            return None
+
+        profit = self.price - self.cost_price
+        margin = (profit / self.price) * 100
+        return round(margin, 2)

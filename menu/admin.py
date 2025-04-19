@@ -11,17 +11,21 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(MenuItem)
 class MenuItemAdmin(admin.ModelAdmin):
-    list_display = ('name', 'category', 'price', 'is_vegetarian', 'is_vegan', 'is_gluten_free', 'is_popular', 'is_active')
+    list_display = ('name', 'category', 'price', 'cost_price', 'profit_margin_display', 'is_vegetarian', 'is_vegan', 'is_gluten_free', 'is_popular', 'is_active')
     list_filter = (
         'category', 'is_popular', 'is_active', 'is_featured', 'is_seasonal',
         'is_vegetarian', 'is_vegan', 'is_gluten_free', 'spice_level'
     )
     search_fields = ('name', 'description', 'ingredients', 'allergens')
-    list_editable = ('price', 'is_vegetarian', 'is_vegan', 'is_gluten_free', 'is_popular', 'is_active')
+    list_editable = ('price', 'cost_price', 'is_vegetarian', 'is_vegan', 'is_gluten_free', 'is_popular', 'is_active')
     autocomplete_fields = ('category',)
     fieldsets = (
         ('Basic Information', {
             'fields': ('category', 'name', 'description', 'price', 'image')
+        }),
+        ('Cost & Pricing', {
+            'fields': ('cost_price',),
+            'description': 'Used for profitability tracking and analytics.'
         }),
         ('Dietary Information', {
             'fields': ('is_vegetarian', 'is_vegan', 'is_gluten_free', 'spice_level', 'calories', 'ingredients', 'allergens')
@@ -30,3 +34,10 @@ class MenuItemAdmin(admin.ModelAdmin):
             'fields': ('is_popular', 'is_featured', 'is_seasonal', 'is_active')
         }),
     )
+
+    def profit_margin_display(self, obj):
+        margin = obj.get_profit_margin()
+        if margin is None:
+            return 'N/A'
+        return f"{margin}%"
+    profit_margin_display.short_description = 'Profit Margin'

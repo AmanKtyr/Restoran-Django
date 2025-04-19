@@ -1,0 +1,316 @@
+{% extends 'kitchen/base.html' %}
+
+{% block title %}{{ station.name }} - Kitchen Display System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="station-header">
+        <div>
+            <h1 class="station-name">{{ station.name }}</h1>
+            <p class="mb-0">{{ station.description }}</p>
+        </div>
+        <div class="station-stats">
+            <div class="station-stat">
+                <div class="station-stat-value">{{ order_items_status.count }}</div>
+                <div class="station-stat-label">Active Items</div>
+            </div>
+            <div class="station-stat">
+                <div class="station-stat-value">{{ order_items_status.filter.status.in_progress.count }}</div>
+                <div class="station-stat-label">In Progress</div>
+            </div>
+            <div class="station-stat">
+                <div class="station-stat-value">{{ order_items_status.filter.status.pending.count }}</div>
+                <div class="station-stat-label">Pending</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Pending Items</h5>
+                    <span class="badge bg-secondary">{{ order_items_status.filter.status.pending.count }}</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for item_status in order_items_status %}
+                        {% if item_status.status == 'pending' %}
+                        <div class="list-group-item order-card priority-{{ item_status.order_item.order.priority }}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">{{ item_status.order_item.menu_item.name }}</h5>
+                                <span class="badge bg-secondary">Pending</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <div>
+                                    <span class="badge bg-info me-1">Qty: {{ item_status.order_item.quantity }}</span>
+                                    <small class="text-muted">
+                                        Order #{{ item_status.order_item.order.order_number }}
+                                    </small>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-primary" onclick="updateItemStatus({{ item_status.id }}, 'in_progress')">
+                                    Start Preparing
+                                </button>
+                            </div>
+                            {% if item_status.order_item.special_instructions %}
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    <strong>Special Instructions:</strong> {{ item_status.order_item.special_instructions }}
+                                </small>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        {% empty %}
+                        <div class="list-group-item text-center py-4">
+                            <p class="mb-0 text-muted">No pending items</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">In Progress</h5>
+                    <span class="badge bg-primary">{{ order_items_status.filter.status.in_progress.count }}</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for item_status in order_items_status %}
+                        {% if item_status.status == 'in_progress' %}
+                        <div class="list-group-item order-card priority-{{ item_status.order_item.order.priority }}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">{{ item_status.order_item.menu_item.name }}</h5>
+                                <div>
+                                    <span class="countdown-timer me-2" data-target-time="{{ item_status.estimated_completion_time|date:'c' }}">
+                                        --:--
+                                    </span>
+                                    <span class="badge bg-info">In Progress</span>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <div>
+                                    <span class="badge bg-info me-1">Qty: {{ item_status.order_item.quantity }}</span>
+                                    <small class="text-muted">
+                                        Order #{{ item_status.order_item.order.order_number }}
+                                    </small>
+                                </div>
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-success" onclick="updateItemStatus({{ item_status.id }}, 'ready')">
+                                        Mark Ready
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelModal{{ item_status.id }}">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% if item_status.order_item.special_instructions %}
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    <strong>Special Instructions:</strong> {{ item_status.order_item.special_instructions }}
+                                </small>
+                            </div>
+                            {% endif %}
+                            <div class="progress mt-2" style="height: 5px;">
+                                {% if item_status.started_at and item_status.estimated_completion_time %}
+                                {% with total_time=item_status.estimated_completion_time|timeuntil:item_status.started_at elapsed_time=now|timeuntil:item_status.started_at %}
+                                {% if total_time and elapsed_time %}
+                                {% with progress=elapsed_time|floatformat:0|add:0|default:0 %}
+                                <div class="progress-bar" role="progressbar" style="width: {{ progress }}%" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                {% endwith %}
+                                {% endif %}
+                                {% endwith %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Cancel Modal -->
+                        <div class="modal fade" id="cancelModal{{ item_status.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Cancel Item</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Are you sure you want to cancel this item?</p>
+                                        <p><strong>{{ item_status.order_item.menu_item.name }}</strong> for Order #{{ item_status.order_item.order.order_number }}</p>
+                                        <div class="mb-3">
+                                            <label for="cancelReason{{ item_status.id }}" class="form-label">Reason for cancellation</label>
+                                            <textarea class="form-control" id="cancelReason{{ item_status.id }}" rows="2"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        <button type="button" class="btn btn-danger" onclick="cancelItem({{ item_status.id }})">Cancel Item</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% empty %}
+                        <div class="list-group-item text-center py-4">
+                            <p class="mb-0 text-muted">No items in progress</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recently Completed Items</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Order #</th>
+                                    <th>Quantity</th>
+                                    <th>Started</th>
+                                    <th>Completed</th>
+                                    <th>Duration</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item_status in completed_items %}
+                                <tr>
+                                    <td>{{ item_status.order_item.menu_item.name }}</td>
+                                    <td>{{ item_status.order_item.order.order_number }}</td>
+                                    <td>{{ item_status.order_item.quantity }}</td>
+                                    <td>{{ item_status.started_at|date:"H:i:s" }}</td>
+                                    <td>{{ item_status.completed_at|date:"H:i:s" }}</td>
+                                    <td>
+                                        {% if item_status.started_at and item_status.completed_at %}
+                                        {{ item_status.completed_at|timeuntil:item_status.started_at }}
+                                        {% else %}
+                                        --
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if item_status.status == 'ready' %}bg-success{% elif item_status.status == 'cancelled' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                            {{ item_status.get_status_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">No recently completed items</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Function to update item status
+    function updateItemStatus(itemStatusId, newStatus) {
+        const formData = new FormData();
+        formData.append('status', newStatus);
+        
+        fetch(`/kitchen/item-status/${itemStatusId}/update/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Reload the page to reflect changes
+                window.location.reload();
+            } else {
+                alert('Error updating status: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating the status');
+        });
+    }
+    
+    // Function to cancel an item
+    function cancelItem(itemStatusId) {
+        const reasonElement = document.getElementById(`cancelReason${itemStatusId}`);
+        const reason = reasonElement ? reasonElement.value : '';
+        
+        const formData = new FormData();
+        formData.append('status', 'cancelled');
+        formData.append('notes', reason);
+        
+        fetch(`/kitchen/item-status/${itemStatusId}/update/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Reload the page to reflect changes
+                window.location.reload();
+            } else {
+                alert('Error cancelling item: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while cancelling the item');
+        });
+    }
+    
+    // Polling for updates
+    let lastUpdateTime = new Date().toISOString();
+    
+    function pollForUpdates() {
+        fetch(`{% url 'kitchen:get_updates' %}?last_update=${encodeURIComponent(lastUpdateTime)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                lastUpdateTime = data.timestamp;
+                
+                // Check if there are any updates for this station
+                const stationId = {{ station.id }};
+                const hasUpdates = data.updated_statuses.some(status => 
+                    status.station_id === stationId || 
+                    data.updated_orders.some(order => 
+                        order.id === status.order_item__order__id
+                    )
+                );
+                
+                if (hasUpdates || data.new_alerts.length > 0) {
+                    // Play notification sound
+                    const audio = new Audio('/static/sounds/notification.mp3');
+                    audio.play().catch(e => console.log('Audio play failed:', e));
+                    
+                    // Reload the page to show updates
+                    window.location.reload();
+                }
+            }
+        })
+        .catch(error => console.error('Error polling for updates:', error));
+    }
+    
+    // Poll every 15 seconds
+    setInterval(pollForUpdates, 15000);
+</script>
+{% endblock %}

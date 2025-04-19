@@ -1,0 +1,518 @@
+{% extends 'kitchen/base.html' %}
+
+{% block title %}Order #{{ order.order_number }} - Kitchen Display System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">Order #{{ order.order_number }}</h1>
+                <div>
+                    <span class="badge {% if order.status == 'pending' %}bg-secondary{% elif order.status == 'confirmed' %}bg-info{% elif order.status == 'preparing' %}bg-primary{% elif order.status == 'ready' %}bg-success{% elif order.status == 'on_the_way' %}bg-warning{% elif order.status == 'delivered' or order.status == 'completed' %}bg-success{% else %}bg-danger{% endif %} me-2">
+                        {{ order.get_status_display }}
+                    </span>
+                    <span class="badge bg-dark">{{ order.get_order_type_display }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Order Items</h5>
+                    <span class="badge bg-primary">{{ order_items.count }}</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Quantity</th>
+                                    <th>Status</th>
+                                    <th>Station</th>
+                                    <th>Started</th>
+                                    <th>Completed</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order_items %}
+                                <tr class="{% if item.kitchen_status_obj.status == 'in_progress' %}table-primary{% elif item.kitchen_status_obj.status == 'ready' %}table-success{% elif item.kitchen_status_obj.status == 'cancelled' %}table-danger{% endif %}">
+                                    <td>
+                                        <strong>{{ item.menu_item.name }}</strong>
+                                        {% if item.special_instructions %}
+                                        <br>
+                                        <small class="text-muted">{{ item.special_instructions }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>
+                                        {% if item.kitchen_status_obj %}
+                                        <span class="status-badge status-{{ item.kitchen_status_obj.status }}">
+                                            {{ item.kitchen_status_obj.get_status_display }}
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Not Tracked</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.kitchen_status_obj and item.kitchen_status_obj.station %}
+                                        {{ item.kitchen_status_obj.station.name }}
+                                        {% else %}
+                                        <span class="text-muted">Unassigned</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.kitchen_status_obj and item.kitchen_status_obj.started_at %}
+                                        {{ item.kitchen_status_obj.started_at|date:"H:i:s" }}
+                                        {% else %}
+                                        --
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.kitchen_status_obj and item.kitchen_status_obj.completed_at %}
+                                        {{ item.kitchen_status_obj.completed_at|date:"H:i:s" }}
+                                        {% else %}
+                                        --
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.kitchen_status_obj %}
+                                        <div class="btn-group btn-group-sm">
+                                            {% if item.kitchen_status_obj.status == 'pending' %}
+                                            <button type="button" class="btn btn-outline-primary" onclick="updateItemStatus({{ item.kitchen_status_obj.id }}, 'in_progress')">
+                                                Start
+                                            </button>
+                                            {% elif item.kitchen_status_obj.status == 'in_progress' %}
+                                            <button type="button" class="btn btn-outline-success" onclick="updateItemStatus({{ item.kitchen_status_obj.id }}, 'ready')">
+                                                Ready
+                                            </button>
+                                            {% endif %}
+                                            
+                                            {% if item.kitchen_status_obj.status != 'cancelled' and item.kitchen_status_obj.status != 'delivered' %}
+                                            <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                {% if not item.kitchen_status_obj.station %}
+                                                <li><h6 class="dropdown-header">Assign to Station</h6></li>
+                                                {% for station in stations %}
+                                                <li>
+                                                    <a class="dropdown-item" href="#" onclick="assignItemToStation({{ item.kitchen_status_obj.id }}, {{ station.id }})">
+                                                        {{ station.name }}
+                                                    </a>
+                                                </li>
+                                                {% endfor %}
+                                                <li><hr class="dropdown-divider"></li>
+                                                {% endif %}
+                                                
+                                                <li>
+                                                    <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#cancelModal{{ item.id }}">
+                                                        <i class="fas fa-times me-1"></i> Cancel Item
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- Cancel Modal -->
+                                        <div class="modal fade" id="cancelModal{{ item.id }}" tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Cancel Item</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p>Are you sure you want to cancel this item?</p>
+                                                        <p><strong>{{ item.menu_item.name }}</strong></p>
+                                                        <div class="mb-3">
+                                                            <label for="cancelReason{{ item.id }}" class="form-label">Reason for cancellation</label>
+                                                            <textarea class="form-control" id="cancelReason{{ item.id }}" rows="2"></textarea>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                        <button type="button" class="btn btn-danger" onclick="cancelItem({{ item.kitchen_status_obj.id }}, {{ item.id }})">Cancel Item</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% else %}
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="createKitchenStatus({{ item.id }})">
+                                            Track Item
+                                        </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">No items in this order</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Kitchen Logs</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for log in logs %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="badge {% if log.event_type == 'status_change' %}bg-primary{% elif log.event_type == 'assignment' %}bg-info{% elif log.event_type == 'note' %}bg-secondary{% else %}bg-warning{% endif %} me-2">
+                                        {{ log.get_event_type_display }}
+                                    </span>
+                                    {{ log.event_description }}
+                                </div>
+                                <small class="text-muted">
+                                    {{ log.timestamp|date:"M d, H:i:s" }}
+                                    {% if log.user %}
+                                    by {{ log.user.get_full_name|default:log.user.username }}
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="list-group-item text-center py-4">
+                            <p class="mb-0 text-muted">No logs for this order</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Order Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="mb-1">Customer</h6>
+                        <p class="mb-0">{{ order.name }}</p>
+                        <p class="mb-0">{{ order.email }}</p>
+                        <p class="mb-0">{{ order.phone }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="mb-1">Order Type</h6>
+                        <p class="mb-0">{{ order.get_order_type_display }}</p>
+                    </div>
+                    
+                    {% if order.order_type == 'delivery' %}
+                    <div class="mb-3">
+                        <h6 class="mb-1">Delivery Address</h6>
+                        <p class="mb-0">{{ order.address }}</p>
+                        {% if order.address_line2 %}
+                        <p class="mb-0">{{ order.address_line2 }}</p>
+                        {% endif %}
+                        <p class="mb-0">{{ order.city }}, {{ order.state }} {{ order.zip_code }}</p>
+                        <p class="mb-0">{{ order.country }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if order.order_type == 'dine_in' %}
+                    <div class="mb-3">
+                        <h6 class="mb-1">Table Information</h6>
+                        <p class="mb-0">Table #{{ order.table_number }}</p>
+                        <p class="mb-0">{{ order.number_of_guests }} guests</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <h6 class="mb-1">Order Timing</h6>
+                        <p class="mb-0"><strong>Created:</strong> {{ order.created_at|date:"M d, H:i:s" }}</p>
+                        {% if order.confirmed_at %}
+                        <p class="mb-0"><strong>Confirmed:</strong> {{ order.confirmed_at|date:"M d, H:i:s" }}</p>
+                        {% endif %}
+                        {% if order.estimated_delivery_time %}
+                        <p class="mb-0"><strong>Estimated Delivery:</strong> {{ order.estimated_delivery_time|date:"M d, H:i:s" }}</p>
+                        {% endif %}
+                        {% if order.actual_delivery_time %}
+                        <p class="mb-0"><strong>Delivered:</strong> {{ order.actual_delivery_time|date:"M d, H:i:s" }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    {% if order.special_request %}
+                    <div class="mb-3">
+                        <h6 class="mb-1">Special Requests</h6>
+                        <p class="mb-0">{{ order.special_request }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <h6 class="mb-1">Order Totals</h6>
+                        <div class="d-flex justify-content-between">
+                            <span>Subtotal:</span>
+                            <span>${{ order.subtotal }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Tax:</span>
+                            <span>${{ order.tax }}</span>
+                        </div>
+                        {% if order.delivery_fee > 0 %}
+                        <div class="d-flex justify-content-between">
+                            <span>Delivery Fee:</span>
+                            <span>${{ order.delivery_fee }}</span>
+                        </div>
+                        {% endif %}
+                        {% if order.service_fee > 0 %}
+                        <div class="d-flex justify-content-between">
+                            <span>Service Fee:</span>
+                            <span>${{ order.service_fee }}</span>
+                        </div>
+                        {% endif %}
+                        {% if order.tip_amount > 0 %}
+                        <div class="d-flex justify-content-between">
+                            <span>Tip:</span>
+                            <span>${{ order.tip_amount }}</span>
+                        </div>
+                        {% endif %}
+                        {% if order.discount_amount > 0 %}
+                        <div class="d-flex justify-content-between">
+                            <span>Discount:</span>
+                            <span>-${{ order.discount_amount }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="d-flex justify-content-between fw-bold mt-2">
+                            <span>Total:</span>
+                            <span>${{ order.total }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="mb-1">Payment Information</h6>
+                        <p class="mb-0"><strong>Method:</strong> {{ order.get_payment_method_display }}</p>
+                        <p class="mb-0"><strong>Status:</strong> {{ order.get_payment_status_display }}</p>
+                        {% if order.transaction_id %}
+                        <p class="mb-0"><strong>Transaction ID:</strong> {{ order.transaction_id }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Order Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if order.status == 'pending' %}
+                        <button type="button" class="btn btn-primary" onclick="updateOrderStatus('confirmed')">
+                            <i class="fas fa-check me-1"></i> Confirm Order
+                        </button>
+                        {% elif order.status == 'confirmed' %}
+                        <button type="button" class="btn btn-primary" onclick="updateOrderStatus('preparing')">
+                            <i class="fas fa-fire me-1"></i> Start Preparing
+                        </button>
+                        {% elif order.status == 'preparing' %}
+                        <button type="button" class="btn btn-success" onclick="updateOrderStatus('ready')">
+                            <i class="fas fa-check-circle me-1"></i> Mark as Ready
+                        </button>
+                        {% elif order.status == 'ready' %}
+                        {% if order.order_type == 'delivery' %}
+                        <button type="button" class="btn btn-warning" onclick="updateOrderStatus('on_the_way')">
+                            <i class="fas fa-truck me-1"></i> Mark as On the Way
+                        </button>
+                        {% else %}
+                        <button type="button" class="btn btn-success" onclick="updateOrderStatus('delivered')">
+                            <i class="fas fa-utensils me-1"></i> Mark as Served
+                        </button>
+                        {% endif %}
+                        {% elif order.status == 'on_the_way' %}
+                        <button type="button" class="btn btn-success" onclick="updateOrderStatus('delivered')">
+                            <i class="fas fa-check-double me-1"></i> Mark as Delivered
+                        </button>
+                        {% elif order.status == 'delivered' %}
+                        <button type="button" class="btn btn-success" onclick="updateOrderStatus('completed')">
+                            <i class="fas fa-flag-checkered me-1"></i> Complete Order
+                        </button>
+                        {% endif %}
+                        
+                        {% if order.status != 'cancelled' and order.status != 'completed' %}
+                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
+                            <i class="fas fa-times me-1"></i> Cancel Order
+                        </button>
+                        {% endif %}
+                        
+                        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#addNoteModal">
+                            <i class="fas fa-sticky-note me-1"></i> Add Note
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Order Modal -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cancel Order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to cancel this order?</p>
+                <p><strong>Order #{{ order.order_number }}</strong></p>
+                <div class="mb-3">
+                    <label for="cancelOrderReason" class="form-label">Reason for cancellation</label>
+                    <textarea class="form-control" id="cancelOrderReason" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger" onclick="cancelOrder()">Cancel Order</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Note Modal -->
+<div class="modal fade" id="addNoteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Note</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="noteText" class="form-label">Note</label>
+                    <textarea class="form-control" id="noteText" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="addNote()">Add Note</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Function to update item status
+    function updateItemStatus(itemStatusId, newStatus) {
+        const formData = new FormData();
+        formData.append('status', newStatus);
+        
+        fetch(`/kitchen/item-status/${itemStatusId}/update/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Reload the page to reflect changes
+                window.location.reload();
+            } else {
+                alert('Error updating status: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating the status');
+        });
+    }
+    
+    // Function to cancel an item
+    function cancelItem(itemStatusId, itemId) {
+        const reasonElement = document.getElementById(`cancelReason${itemId}`);
+        const reason = reasonElement ? reasonElement.value : '';
+        
+        const formData = new FormData();
+        formData.append('status', 'cancelled');
+        formData.append('notes', reason);
+        
+        fetch(`/kitchen/item-status/${itemStatusId}/update/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Reload the page to reflect changes
+                window.location.reload();
+            } else {
+                alert('Error cancelling item: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while cancelling the item');
+        });
+    }
+    
+    // Function to assign item to station
+    function assignItemToStation(itemStatusId, stationId) {
+        const formData = new FormData();
+        formData.append('station_id', stationId);
+        
+        fetch(`/kitchen/item-status/${itemStatusId}/assign/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Reload the page to reflect changes
+                window.location.reload();
+            } else {
+                alert('Error assigning item: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while assigning the item');
+        });
+    }
+    
+    // Function to create kitchen status for an item
+    function createKitchenStatus(itemId) {
+        // This would be implemented in the backend
+        alert('This functionality is not yet implemented');
+    }
+    
+    // Function to update order status
+    function updateOrderStatus(newStatus) {
+        // This would be implemented in the backend
+        alert('This functionality is not yet implemented');
+    }
+    
+    // Function to cancel order
+    function cancelOrder() {
+        // This would be implemented in the backend
+        alert('This functionality is not yet implemented');
+    }
+    
+    // Function to add note
+    function addNote() {
+        // This would be implemented in the backend
+        alert('This functionality is not yet implemented');
+    }
+</script>
+{% endblock %}

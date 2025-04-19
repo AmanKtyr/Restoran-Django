@@ -1,0 +1,396 @@
+{% extends 'kitchen/base.html' %}
+
+{% block title %}Kitchen Dashboard - Restaurant{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">Kitchen Dashboard</h1>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createAlertModal">
+                    <i class="fas fa-bell me-1"></i> Create Alert
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Active Orders</h5>
+                    <span class="badge bg-primary">{{ active_orders.count }}</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for order in active_orders %}
+                        <a href="{% url 'kitchen:order_detail' order.id %}" class="list-group-item list-group-item-action order-card priority-{{ order.priority }}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">{{ order.order_number }}</h6>
+                                <span class="badge {% if order.status == 'confirmed' %}bg-info{% else %}bg-warning{% endif %}">
+                                    {{ order.get_status_display }}
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <small class="text-muted">
+                                    {{ order.created_at|date:"H:i" }} - {{ order.get_order_type_display }}
+                                </small>
+                                <small class="badge bg-secondary">
+                                    {{ order.get_priority_display }}
+                                </small>
+                            </div>
+                        </a>
+                        {% empty %}
+                        <div class="list-group-item text-center py-4">
+                            <p class="mb-0 text-muted">No active orders</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Unassigned Items</h5>
+                    <span class="badge bg-danger">{{ unassigned_items.count }}</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for item_status in unassigned_items %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">{{ item_status.order_item.menu_item.name }}</h6>
+                                <span class="badge bg-danger">Unassigned</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <small class="text-muted">
+                                    Order #{{ item_status.order_item.order.order_number }}
+                                </small>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        Assign
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        {% for station in stations %}
+                                        <li>
+                                            <a class="dropdown-item" href="#" onclick="assignItemToStation({{ item_status.id }}, {{ station.id }})">
+                                                {{ station.name }}
+                                            </a>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="list-group-item text-center py-4">
+                            <p class="mb-0 text-muted">No unassigned items</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <div class="row">
+                {% for station, items in station_items.items %}
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">{{ station.name }}</h5>
+                            <div>
+                                <span class="badge bg-primary me-1">{{ items.count }}</span>
+                                <a href="{% url 'kitchen:station' station.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush">
+                                {% for item_status in items %}
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">{{ item_status.order_item.menu_item.name }}</h6>
+                                        <span class="status-badge status-{{ item_status.status }}">
+                                            {{ item_status.get_status_display }}
+                                        </span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                        <small class="text-muted">
+                                            Order #{{ item_status.order_item.order.order_number }} - 
+                                            Qty: {{ item_status.order_item.quantity }}
+                                        </small>
+                                        <div class="btn-group btn-group-sm">
+                                            {% if item_status.status == 'pending' %}
+                                            <button type="button" class="btn btn-outline-primary" onclick="updateItemStatus({{ item_status.id }}, 'in_progress')">
+                                                Start
+                                            </button>
+                                            {% elif item_status.status == 'in_progress' %}
+                                            <button type="button" class="btn btn-outline-success" onclick="updateItemStatus({{ item_status.id }}, 'ready')">
+                                                Ready
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% if item_status.status == 'in_progress' and item_status.estimated_completion_time %}
+                                    <div class="mt-2">
+                                        <small class="text-muted">
+                                            Time remaining: 
+                                            <span class="countdown-timer" data-target-time="{{ item_status.estimated_completion_time|date:'c' }}">
+                                                --:--
+                                            </span>
+                                        </small>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% empty %}
+                                <div class="list-group-item text-center py-4">
+                                    <p class="mb-0 text-muted">No items for this station</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Alert Modal -->
+<div class="modal fade" id="createAlertModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create Kitchen Alert</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="alertForm">
+                    <div class="mb-3">
+                        <label for="alertTitle" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="alertTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="alertMessage" class="form-label">Message</label>
+                        <textarea class="form-control" id="alertMessage" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="alertPriority" class="form-label">Priority</label>
+                        <select class="form-select" id="alertPriority">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Stations</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="allStations" checked>
+                                <label class="form-check-label" for="allStations">
+                                    All Stations
+                                </label>
+                            </div>
+                            {% for station in stations %}
+                            <div class="form-check station-checkbox" style="display: none;">
+                                <input class="form-check-input" type="checkbox" name="station_ids" value="{{ station.id }}" id="station{{ station.id }}">
+                                <label class="form-check-label" for="station{{ station.id }}">
+                                    {{ station.name }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="alertExpiration" class="form-label">Expires in (hours)</label>
+                        <input type="number" class="form-control" id="alertExpiration" min="1" value="4">
+                        <div class="form-text">Leave empty for no expiration</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="createAlertBtn">Create Alert</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle station checkboxes
+        const allStationsCheckbox = document.getElementById('allStations');
+        const stationCheckboxes = document.querySelectorAll('.station-checkbox');
+        
+        allStationsCheckbox.addEventListener('change', function() {
+            stationCheckboxes.forEach(checkbox => {
+                checkbox.style.display = this.checked ? 'none' : 'block';
+                checkbox.querySelector('input').checked = false;
+            });
+        });
+        
+        // Handle alert creation
+        const createAlertBtn = document.getElementById('createAlertBtn');
+        const alertForm = document.getElementById('alertForm');
+        const createAlertModal = document.getElementById('createAlertModal');
+        const modalInstance = new bootstrap.Modal(createAlertModal);
+        
+        createAlertBtn.addEventListener('click', function() {
+            const title = document.getElementById('alertTitle').value;
+            const message = document.getElementById('alertMessage').value;
+            const priority = document.getElementById('alertPriority').value;
+            const expiresInHours = document.getElementById('alertExpiration').value;
+            
+            if (!title || !message) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('message', message);
+            formData.append('priority', priority);
+            
+            if (expiresInHours) {
+                formData.append('expires_in_hours', expiresInHours);
+            }
+            
+            if (!allStationsCheckbox.checked) {
+                const selectedStations = document.querySelectorAll('input[name="station_ids"]:checked');
+                selectedStations.forEach(station => {
+                    formData.append('station_ids', station.value);
+                });
+            }
+            
+            fetch('{% url "kitchen:create_alert" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Add the new alert to the container
+                    const alertContainer = document.getElementById('alertContainer');
+                    const alertHtml = `
+                        <div class="kitchen-alert alert-${data.priority}" id="alert-${data.alert_id}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="alert-title">${data.title}</h5>
+                                    <p class="alert-message mb-0">${message}</p>
+                                    <small class="text-muted">Just now</small>
+                                </div>
+                                <button type="button" class="btn-close" onclick="dismissAlert(${data.alert_id})"></button>
+                            </div>
+                        </div>
+                    `;
+                    alertContainer.insertAdjacentHTML('afterbegin', alertHtml);
+                    
+                    // Reset form and close modal
+                    alertForm.reset();
+                    modalInstance.hide();
+                } else {
+                    alert('Error creating alert: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while creating the alert');
+            });
+        });
+    });
+    
+    // Function to update item status
+    function updateItemStatus(itemStatusId, newStatus) {
+        const formData = new FormData();
+        formData.append('status', newStatus);
+        
+        fetch(`/kitchen/item-status/${itemStatusId}/update/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Reload the page to reflect changes
+                window.location.reload();
+            } else {
+                alert('Error updating status: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating the status');
+        });
+    }
+    
+    // Function to assign item to station
+    function assignItemToStation(itemStatusId, stationId) {
+        const formData = new FormData();
+        formData.append('station_id', stationId);
+        
+        fetch(`/kitchen/item-status/${itemStatusId}/assign/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Reload the page to reflect changes
+                window.location.reload();
+            } else {
+                alert('Error assigning item: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while assigning the item');
+        });
+    }
+    
+    // Polling for updates
+    let lastUpdateTime = new Date().toISOString();
+    
+    function pollForUpdates() {
+        fetch(`{% url 'kitchen:get_updates' %}?last_update=${encodeURIComponent(lastUpdateTime)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                lastUpdateTime = data.timestamp;
+                
+                // Check if there are any updates
+                if (data.updated_orders.length > 0 || 
+                    data.updated_statuses.length > 0 || 
+                    data.new_alerts.length > 0) {
+                    
+                    // Play notification sound
+                    const audio = new Audio('/static/sounds/notification.mp3');
+                    audio.play().catch(e => console.log('Audio play failed:', e));
+                    
+                    // Reload the page to show updates
+                    window.location.reload();
+                }
+            }
+        })
+        .catch(error => console.error('Error polling for updates:', error));
+    }
+    
+    // Poll every 30 seconds
+    setInterval(pollForUpdates, 30000);
+</script>
+{% endblock %}

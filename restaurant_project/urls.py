@@ -28,6 +28,7 @@ urlpatterns = [
     path('orders/', include('orders.urls')),
     path('reviews/', include('reviews.urls')),
     path('admin/', include('admin_panel.urls')),  # Our custom admin panel
+    path('kitchen/', include('kitchen.urls')),  # Kitchen display system
 ]
 
 # Serve static and media files during development

@@ -36,16 +36,62 @@ class StaffProfile(models.Model):
         ('contractor', 'Contractor'),
     )
 
+    TAX_FILING_STATUS_CHOICES = (
+        ('single', 'Single'),
+        ('married_joint', 'Married Filing Jointly'),
+        ('married_separate', 'Married Filing Separately'),
+        ('head_household', 'Head of Household'),
+    )
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='staff_profile')
     position = models.ForeignKey(Position, on_delete=models.SET_NULL, null=True, blank=True, related_name='staff')
     employment_status = models.CharField(max_length=20, choices=EMPLOYMENT_STATUS_CHOICES, default='full_time')
     hire_date = models.DateField(null=True, blank=True)
+    termination_date = models.DateField(null=True, blank=True)
+    termination_reason = models.TextField(blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+    address = models.TextField(blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    state = models.CharField(max_length=100, blank=True)
+    zip_code = models.CharField(max_length=20, blank=True)
+    phone_number = models.CharField(max_length=20, blank=True)
+    alternate_phone = models.CharField(max_length=20, blank=True)
     emergency_contact_name = models.CharField(max_length=100, blank=True)
     emergency_contact_phone = models.CharField(max_length=20, blank=True)
+    emergency_contact_relationship = models.CharField(max_length=50, blank=True)
     hourly_rate = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    salary = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    pay_frequency = models.CharField(max_length=20, choices=(
+        ('hourly', 'Hourly'),
+        ('weekly', 'Weekly'),
+        ('biweekly', 'Bi-Weekly'),
+        ('monthly', 'Monthly'),
+    ), default='hourly')
     max_hours_per_week = models.PositiveIntegerField(default=40)
+    min_hours_per_week = models.PositiveIntegerField(default=0)
+    overtime_eligible = models.BooleanField(default=True)
+    tax_filing_status = models.CharField(max_length=20, choices=TAX_FILING_STATUS_CHOICES, blank=True)
+    tax_withholdings = models.PositiveIntegerField(default=0, help_text="Number of withholding allowances")
+    direct_deposit = models.BooleanField(default=False)
+    bank_name = models.CharField(max_length=100, blank=True)
+    bank_account_type = models.CharField(max_length=20, choices=(
+        ('checking', 'Checking'),
+        ('savings', 'Savings'),
+    ), blank=True)
+    bank_routing_number = models.CharField(max_length=20, blank=True)
+    bank_account_number = models.CharField(max_length=20, blank=True)
     notes = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
+    profile_image = models.ImageField(upload_to='staff_profiles/', blank=True, null=True)
+    preferred_shifts = models.CharField(max_length=50, choices=(
+        ('morning', 'Morning'),
+        ('afternoon', 'Afternoon'),
+        ('evening', 'Evening'),
+        ('night', 'Night'),
+        ('any', 'Any'),
+    ), default='any')
+    max_consecutive_days = models.PositiveIntegerField(default=6, help_text="Maximum number of consecutive days to work")
+    certifications = models.TextField(blank=True, help_text="List of certifications held by the staff member")
 
     def __str__(self):
         return f"{self.user.get_full_name() or self.user.username} - {self.position.title if self.position else 'No Position'}"
@@ -104,10 +150,16 @@ class Availability(models.Model):
     start_time = models.TimeField()
     end_time = models.TimeField()
     is_available = models.BooleanField(default=True, help_text="If unchecked, this represents unavailability")
+    priority = models.PositiveSmallIntegerField(default=1, help_text="Higher priority availabilities take precedence")
+    effective_start_date = models.DateField(null=True, blank=True, help_text="When this availability starts being effective")
+    effective_end_date = models.DateField(null=True, blank=True, help_text="When this availability stops being effective")
+    recurring = models.BooleanField(default=True, help_text="If true, this is a recurring availability")
+    notes = models.TextField(blank=True)
 
     class Meta:
         verbose_name_plural = "Availabilities"
         unique_together = ('staff', 'day_of_week', 'start_time', 'end_time')
+        ordering = ['day_of_week', 'start_time']
 
     def __str__(self):
         availability_type = "Available" if self.is_available else "Unavailable"
@@ -116,6 +168,22 @@ class Availability(models.Model):
     def clean(self):
         if self.start_time >= self.end_time:
             raise ValidationError("End time must be after start time")
+
+        if self.effective_end_date and self.effective_start_date and self.effective_end_date < self.effective_start_date:
+            raise ValidationError("Effective end date must be after effective start date")
+
+    def is_effective_on_date(self, date):
+        """Check if this availability is effective on a specific date"""
+        if not self.recurring and (self.effective_start_date is None or self.effective_end_date is None):
+            return False
+
+        if self.effective_start_date and date < self.effective_start_date:
+            return False
+
+        if self.effective_end_date and date > self.effective_end_date:
+            return False
+
+        return True
 
 class TimeOffRequest(models.Model):
     """Represents a request for time off"""
@@ -339,6 +407,28 @@ class ShiftTemplate(models.Model):
 
         return shift
 
+class SchedulingPreference(models.Model):
+    """Represents a staff member's scheduling preferences"""
+    PREFERENCE_CHOICES = (
+        (1, 'Strongly Prefer Not to Work'),
+        (2, 'Prefer Not to Work'),
+        (3, 'Neutral'),
+        (4, 'Prefer to Work'),
+        (5, 'Strongly Prefer to Work'),
+    )
+
+    staff = models.ForeignKey(StaffProfile, on_delete=models.CASCADE, related_name='scheduling_preferences')
+    day_of_week = models.PositiveSmallIntegerField(choices=ShiftTemplate.DAYS_OF_WEEK)
+    preference = models.PositiveSmallIntegerField(choices=PREFERENCE_CHOICES, default=3)
+    reason = models.TextField(blank=True)
+
+    class Meta:
+        unique_together = ('staff', 'day_of_week')
+        verbose_name_plural = "Scheduling Preferences"
+
+    def __str__(self):
+        return f"{self.staff.user.get_full_name()} - {self.get_day_of_week_display()}: {self.get_preference_display()}"
+
 class Schedule(models.Model):
     """Represents a schedule for a specific period"""
     name = models.CharField(max_length=100)
@@ -490,3 +580,120 @@ class PayrollRecord(models.Model):
 
         self.save(update_fields=['gross_pay', 'net_pay'])
         return self.net_pay
+
+class PerformanceReview(models.Model):
+    """Represents a performance review for a staff member"""
+    RATING_CHOICES = (
+        (1, 'Poor'),
+        (2, 'Below Average'),
+        (3, 'Average'),
+        (4, 'Above Average'),
+        (5, 'Excellent'),
+    )
+
+    STATUS_CHOICES = (
+        ('draft', 'Draft'),
+        ('submitted', 'Submitted'),
+        ('reviewed', 'Reviewed'),
+        ('acknowledged', 'Acknowledged'),
+        ('completed', 'Completed'),
+    )
+
+    staff = models.ForeignKey(StaffProfile, on_delete=models.CASCADE, related_name='performance_reviews')
+    reviewer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='conducted_reviews')
+    review_date = models.DateField()
+    review_period_start = models.DateField()
+    review_period_end = models.DateField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+
+    # Performance ratings
+    punctuality_rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES, null=True, blank=True)
+    attendance_rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES, null=True, blank=True)
+    job_knowledge_rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES, null=True, blank=True)
+    work_quality_rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES, null=True, blank=True)
+    productivity_rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES, null=True, blank=True)
+    communication_rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES, null=True, blank=True)
+    teamwork_rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES, null=True, blank=True)
+    initiative_rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES, null=True, blank=True)
+    adaptability_rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES, null=True, blank=True)
+    customer_service_rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES, null=True, blank=True)
+    overall_rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES, null=True, blank=True)
+
+    # Comments
+    strengths = models.TextField(blank=True)
+    areas_for_improvement = models.TextField(blank=True)
+    goals = models.TextField(blank=True)
+    action_plan = models.TextField(blank=True)
+    reviewer_comments = models.TextField(blank=True)
+    staff_comments = models.TextField(blank=True)
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    acknowledged_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    # Flags
+    requires_improvement_plan = models.BooleanField(default=False)
+    eligible_for_promotion = models.BooleanField(default=False)
+    eligible_for_raise = models.BooleanField(default=False)
+    recommended_raise_percentage = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+
+    class Meta:
+        ordering = ['-review_date']
+
+    def __str__(self):
+        return f"Performance Review for {self.staff.user.get_full_name()} - {self.review_date}"
+
+    def clean(self):
+        if self.review_period_end < self.review_period_start:
+            raise ValidationError("Review period end date must be after start date")
+
+    def calculate_average_rating(self):
+        """Calculate the average rating across all categories"""
+        ratings = [
+            self.punctuality_rating,
+            self.attendance_rating,
+            self.job_knowledge_rating,
+            self.work_quality_rating,
+            self.productivity_rating,
+            self.communication_rating,
+            self.teamwork_rating,
+            self.initiative_rating,
+            self.adaptability_rating,
+            self.customer_service_rating
+        ]
+
+        # Filter out None values
+        valid_ratings = [r for r in ratings if r is not None]
+
+        if not valid_ratings:
+            return None
+
+        return sum(valid_ratings) / len(valid_ratings)
+
+    def submit(self):
+        """Submit the review"""
+        self.status = 'submitted'
+        self.submitted_at = timezone.now()
+        self.save(update_fields=['status', 'submitted_at'])
+
+    def mark_as_reviewed(self):
+        """Mark the review as reviewed"""
+        self.status = 'reviewed'
+        self.reviewed_at = timezone.now()
+        self.save(update_fields=['status', 'reviewed_at'])
+
+    def acknowledge(self):
+        """Mark the review as acknowledged by the staff member"""
+        self.status = 'acknowledged'
+        self.acknowledged_at = timezone.now()
+        self.save(update_fields=['status', 'acknowledged_at'])
+
+    def complete(self):
+        """Mark the review as completed"""
+        self.status = 'completed'
+        self.completed_at = timezone.now()
+        self.save(update_fields=['status', 'completed_at'])

@@ -2,7 +2,8 @@ from django.contrib import admin
 from .models import (
     Department, Position, StaffProfile, Skill, StaffSkill,
     Availability, TimeOffRequest, Shift, ShiftSwapRequest,
-    ShiftTemplate, Schedule, ClockInOut, PayrollPeriod, PayrollRecord
+    ShiftTemplate, Schedule, ClockInOut, PayrollPeriod, PayrollRecord,
+    SchedulingPreference, PerformanceReview
 )
 
 @admin.register(Department)
@@ -25,21 +26,55 @@ class AvailabilityInline(admin.TabularInline):
     model = Availability
     extra = 1
 
+class PerformanceRatingInline(admin.TabularInline):
+    model = PerformanceReview
+    extra = 0
+    fields = ('review_date', 'review_period_start', 'review_period_end', 'status', 'overall_rating')
+    readonly_fields = ('review_date', 'review_period_start', 'review_period_end', 'status', 'overall_rating')
+    can_delete = False
+    show_change_link = True
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
 @admin.register(StaffProfile)
 class StaffProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'position', 'employment_status', 'hire_date', 'hourly_rate', 'is_active')
     list_filter = ('position__department', 'employment_status', 'is_active')
     search_fields = ('user__username', 'user__first_name', 'user__last_name', 'user__email')
-    inlines = [StaffSkillInline, AvailabilityInline]
+    inlines = [StaffSkillInline, AvailabilityInline, PerformanceRatingInline]
     fieldsets = (
         (None, {
-            'fields': ('user', 'position', 'employment_status', 'is_active')
+            'fields': ('user', 'position', 'employment_status', 'is_active', 'profile_image')
+        }),
+        ('Personal Information', {
+            'fields': ('date_of_birth', 'phone_number', 'alternate_phone')
+        }),
+        ('Address', {
+            'fields': ('address', 'city', 'state', 'zip_code')
         }),
         ('Employment Details', {
-            'fields': ('hire_date', 'hourly_rate', 'max_hours_per_week')
+            'fields': ('hire_date', 'termination_date', 'termination_reason')
+        }),
+        ('Compensation', {
+            'fields': ('pay_frequency', 'hourly_rate', 'salary', 'overtime_eligible')
+        }),
+        ('Schedule Preferences', {
+            'fields': ('min_hours_per_week', 'max_hours_per_week', 'preferred_shifts', 'max_consecutive_days')
         }),
         ('Emergency Contact', {
-            'fields': ('emergency_contact_name', 'emergency_contact_phone')
+            'fields': ('emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relationship')
+        }),
+        ('Tax Information', {
+            'fields': ('tax_filing_status', 'tax_withholdings'),
+            'classes': ('collapse',)
+        }),
+        ('Direct Deposit', {
+            'fields': ('direct_deposit', 'bank_name', 'bank_account_type', 'bank_routing_number', 'bank_account_number'),
+            'classes': ('collapse',)
+        }),
+        ('Skills & Certifications', {
+            'fields': ('certifications',)
         }),
         ('Additional Information', {
             'fields': ('notes',)
@@ -59,9 +94,17 @@ class StaffSkillAdmin(admin.ModelAdmin):
 
 @admin.register(Availability)
 class AvailabilityAdmin(admin.ModelAdmin):
-    list_display = ('staff', 'day_of_week', 'start_time', 'end_time', 'is_available')
-    list_filter = ('day_of_week', 'is_available')
-    search_fields = ('staff__user__username',)
+    list_display = ('staff', 'day_of_week', 'start_time', 'end_time', 'is_available', 'recurring', 'priority')
+    list_filter = ('day_of_week', 'is_available', 'recurring')
+    search_fields = ('staff__user__username', 'notes')
+    fieldsets = (
+        (None, {
+            'fields': ('staff', 'day_of_week', 'start_time', 'end_time', 'is_available')
+        }),
+        ('Advanced Options', {
+            'fields': ('recurring', 'priority', 'effective_start_date', 'effective_end_date', 'notes')
+        }),
+    )
 
 @admin.register(TimeOffRequest)
 class TimeOffRequestAdmin(admin.ModelAdmin):
@@ -180,3 +223,69 @@ class PayrollRecordAdmin(admin.ModelAdmin):
             record.calculate_pay()
         self.message_user(request, f"Pay calculated for {queryset.count()} payroll records.")
     calculate_pay.short_description = "Calculate pay for selected records"
+
+@admin.register(SchedulingPreference)
+class SchedulingPreferenceAdmin(admin.ModelAdmin):
+    list_display = ('staff', 'day_of_week', 'preference', 'reason')
+    list_filter = ('day_of_week', 'preference')
+    search_fields = ('staff__user__username', 'reason')
+    list_editable = ('preference',)
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('staff__user')
+
+@admin.register(PerformanceReview)
+class PerformanceReviewAdmin(admin.ModelAdmin):
+    list_display = ('staff', 'review_date', 'reviewer', 'status', 'overall_rating', 'eligible_for_raise')
+    list_filter = ('status', 'review_date', 'eligible_for_promotion', 'eligible_for_raise', 'requires_improvement_plan')
+    search_fields = ('staff__user__username', 'reviewer__username', 'strengths', 'areas_for_improvement')
+    readonly_fields = ('created_at', 'updated_at', 'submitted_at', 'reviewed_at', 'acknowledged_at', 'completed_at')
+    actions = ['submit_reviews', 'mark_as_reviewed', 'mark_as_completed']
+
+    fieldsets = (
+        ('Review Information', {
+            'fields': ('staff', 'reviewer', 'review_date', 'review_period_start', 'review_period_end', 'status')
+        }),
+        ('Performance Ratings', {
+            'fields': (
+                'punctuality_rating', 'attendance_rating', 'job_knowledge_rating',
+                'work_quality_rating', 'productivity_rating', 'communication_rating',
+                'teamwork_rating', 'initiative_rating', 'adaptability_rating',
+                'customer_service_rating', 'overall_rating'
+            )
+        }),
+        ('Comments', {
+            'fields': ('strengths', 'areas_for_improvement', 'goals', 'action_plan',
+                      'reviewer_comments', 'staff_comments')
+        }),
+        ('Recommendations', {
+            'fields': ('requires_improvement_plan', 'eligible_for_promotion',
+                      'eligible_for_raise', 'recommended_raise_percentage')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at', 'submitted_at', 'reviewed_at',
+                      'acknowledged_at', 'completed_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('staff__user', 'reviewer')
+
+    def submit_reviews(self, request, queryset):
+        for review in queryset.filter(status='draft'):
+            review.submit()
+        self.message_user(request, f"Selected draft reviews have been submitted.")
+    submit_reviews.short_description = "Submit selected draft reviews"
+
+    def mark_as_reviewed(self, request, queryset):
+        for review in queryset.filter(status='submitted'):
+            review.mark_as_reviewed()
+        self.message_user(request, f"Selected submitted reviews have been marked as reviewed.")
+    mark_as_reviewed.short_description = "Mark selected reviews as reviewed"
+
+    def mark_as_completed(self, request, queryset):
+        for review in queryset.filter(status='acknowledged'):
+            review.complete()
+        self.message_user(request, f"Selected acknowledged reviews have been marked as completed.")
+    mark_as_completed.short_description = "Mark selected reviews as completed"

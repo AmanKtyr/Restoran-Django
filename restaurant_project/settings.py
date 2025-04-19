@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'inventory',
     'staffing',
     'analytics',
+    'kitchen',
 ]
 
 MIDDLEWARE = [

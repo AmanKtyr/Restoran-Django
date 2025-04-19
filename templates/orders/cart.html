@@ -12,7 +12,7 @@
             <div class="col-lg-8">
                 <div class="bg-light rounded p-4 mb-4">
                     <h3 class="mb-4">Your Cart Items</h3>
-                    
+
                     {% if cart_items %}
                         <div class="table-responsive">
                             <table class="table table-hover">
@@ -70,7 +70,7 @@
                                 </tbody>
                             </table>
                         </div>
-                        
+
                         <div class="d-flex justify-content-between mt-4">
                             <a href="{% url 'menu:menu_list' %}" class="btn btn-outline-primary">
                                 <i class="fa fa-arrow-left me-2"></i>Continue Shopping
@@ -89,11 +89,11 @@
                     {% endif %}
                 </div>
             </div>
-            
+
             <div class="col-lg-4">
                 <div class="bg-light rounded p-4 mb-4">
                     <h3 class="mb-4">Order Summary</h3>
-                    
+
                     {% if cart_items %}
                         <div class="d-flex justify-content-between mb-2">
                             <span>Subtotal</span>
@@ -101,7 +101,7 @@
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span>Tax (10%)</span>
-                            <span>${{ cart.get_total_price|floatformat:2|multiply:0.1 }}</span>
+                            <span>$<span id="tax-amount">0.00</span></span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span>Delivery Fee</span>
@@ -110,9 +110,9 @@
                         <hr>
                         <div class="d-flex justify-content-between mb-4">
                             <strong>Total</strong>
-                            <strong>${{ cart.get_total_price|add:5|add:cart.get_total_price|floatformat:2|multiply:0.1 }}</strong>
+                            <strong>$<span id="total-amount">0.00</span></strong>
                         </div>
-                        
+
                         <a href="{% url 'orders:checkout' %}" class="btn btn-primary w-100">
                             Proceed to Checkout
                         </a>
@@ -122,7 +122,7 @@
                         </div>
                     {% endif %}
                 </div>
-                
+
                 <div class="bg-light rounded p-4">
                     <h5 class="mb-3">Need Help?</h5>
                     <p class="small text-muted">If you have any questions about your order, please contact our customer service.</p>
@@ -141,9 +141,22 @@
 
 {% block extra_js %}
 <script>
-    // Custom template filter for multiplication
-    function multiply(value, arg) {
-        return parseFloat(value) * parseFloat(arg);
-    }
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get the subtotal value
+        const subtotalElement = document.querySelector('.d-flex.justify-content-between.mb-2:first-of-type span:last-child');
+        if (subtotalElement) {
+            const subtotalText = subtotalElement.textContent;
+            const subtotal = parseFloat(subtotalText.replace('$', ''));
+
+            // Calculate tax (10%)
+            const tax = subtotal * 0.1;
+            document.getElementById('tax-amount').textContent = tax.toFixed(2);
+
+            // Calculate total (subtotal + tax + delivery fee)
+            const deliveryFee = 5.00;
+            const total = subtotal + tax + deliveryFee;
+            document.getElementById('total-amount').textContent = total.toFixed(2);
+        }
+    });
 </script>
 {% endblock %}

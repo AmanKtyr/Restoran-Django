@@ -1,0 +1,164 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Orders - Restaurant Admin Panel{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Orders</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Orders</h1>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-md-6">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search orders...">
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-end">
+                        <select id="statusFilter" class="form-select me-2" style="width: auto;">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="processing">Processing</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                        <select id="dateFilter" class="form-select" style="width: auto;">
+                            <option value="">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="yesterday">Yesterday</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="ordersTable">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Customer</th>
+                            <th>Date</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Payment</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td>{{ order.order_number }}</td>
+                            <td>
+                                {% if order.user %}
+                                {{ order.user.get_full_name|default:order.user.username }}
+                                {% else %}
+                                {{ order.name }}
+                                {% endif %}
+                            </td>
+                            <td>{{ order.created_at|date:"M d, Y H:i" }}</td>
+                            <td>{{ order.items.count }}</td>
+                            <td>${{ order.total|floatformat:2 }}</td>
+                            <td>
+                                {% if order.status == 'pending' %}
+                                <span class="badge bg-warning">Pending</span>
+                                {% elif order.status == 'processing' %}
+                                <span class="badge bg-info">Processing</span>
+                                {% elif order.status == 'completed' %}
+                                <span class="badge bg-success">Completed</span>
+                                {% elif order.status == 'cancelled' %}
+                                <span class="badge bg-danger">Cancelled</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ order.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if order.payment_status == 'paid' %}
+                                <span class="badge bg-success">Paid</span>
+                                {% elif order.payment_status == 'pending' %}
+                                <span class="badge bg-warning">Pending</span>
+                                {% elif order.payment_status == 'failed' %}
+                                <span class="badge bg-danger">Failed</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ order.payment_status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'admin_panel:order_detail' order.id %}" class="btn btn-sm btn-outline-primary me-1">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                <a href="{% url 'admin_panel:order_edit' order.id %}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <p class="mb-0">No orders found</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const statusFilter = document.getElementById('statusFilter');
+        const dateFilter = document.getElementById('dateFilter');
+        const table = document.getElementById('ordersTable');
+        const rows = table.querySelectorAll('tbody tr');
+        
+        function filterTable() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const statusValue = statusFilter.value.toLowerCase();
+            const dateValue = dateFilter.value.toLowerCase();
+            
+            rows.forEach(row => {
+                const orderNumber = row.cells[0].textContent.toLowerCase();
+                const customer = row.cells[1].textContent.toLowerCase();
+                const date = row.cells[2].textContent.toLowerCase();
+                const statusCell = row.cells[5].textContent.toLowerCase();
+                
+                const matchesSearch = orderNumber.includes(searchTerm) || 
+                                     customer.includes(searchTerm);
+                const matchesStatus = statusValue === '' || statusCell.includes(statusValue);
+                
+                // Simple date filtering - could be improved with actual date calculations
+                let matchesDate = true;
+                if (dateValue === 'today') {
+                    matchesDate = date.includes(new Date().toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'}));
+                } else if (dateValue === 'week' || dateValue === 'month') {
+                    // This is a simplified check - would need more complex logic for accurate filtering
+                    matchesDate = true;
+                }
+                
+                if (matchesSearch && matchesStatus && matchesDate) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        searchInput.addEventListener('input', filterTable);
+        statusFilter.addEventListener('change', filterTable);
+        dateFilter.addEventListener('change', filterTable);
+    });
+</script>
+{% endblock %}

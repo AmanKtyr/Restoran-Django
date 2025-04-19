@@ -1,0 +1,90 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}{% if testimonial %}Edit Testimonial{% else %}Add Testimonial{% endif %} - Restaurant Admin Panel{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'admin_panel:testimonial_list' %}">Testimonials</a></li>
+<li class="breadcrumb-item active">{% if testimonial %}Edit Testimonial{% else %}Add Testimonial{% endif %}</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% if testimonial %}Edit Testimonial{% else %}Add Testimonial{% endif %}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Name</label>
+                                    <input type="text" class="form-control" id="name" name="name" value="{{ testimonial.name|default:'' }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="position" class="form-label">Position</label>
+                                    <input type="text" class="form-control" id="position" name="position" value="{{ testimonial.position|default:'' }}">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="content" class="form-label">Content</label>
+                            <textarea class="form-control" id="content" name="content" rows="4" required>{{ testimonial.content|default:'' }}</textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="rating" class="form-label">Rating</label>
+                            <select class="form-select" id="rating" name="rating">
+                                <option value="5" {% if testimonial.rating == 5 %}selected{% endif %}>5 Stars</option>
+                                <option value="4" {% if testimonial.rating == 4 %}selected{% endif %}>4 Stars</option>
+                                <option value="3" {% if testimonial.rating == 3 %}selected{% endif %}>3 Stars</option>
+                                <option value="2" {% if testimonial.rating == 2 %}selected{% endif %}>2 Stars</option>
+                                <option value="1" {% if testimonial.rating == 1 %}selected{% endif %}>1 Star</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="image" class="form-label">Image</label>
+                            <input type="file" class="form-control" id="image" name="image">
+                            {% if testimonial.image %}
+                            <div class="mt-2">
+                                <img src="{{ testimonial.image.url }}" alt="{{ testimonial.name }}" class="img-thumbnail" style="max-height: 150px;">
+                                <div class="form-check mt-1">
+                                    <input class="form-check-input" type="checkbox" id="delete_image" name="delete_image">
+                                    <label class="form-check-label" for="delete_image">
+                                        Delete current image
+                                    </label>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {% if testimonial.is_active|default:True %}checked{% endif %}>
+                                <label class="form-check-label" for="is_active">
+                                    Active
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'admin_panel:testimonial_list' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if testimonial %}Update Testimonial{% else %}Add Testimonial{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

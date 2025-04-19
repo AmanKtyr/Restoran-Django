@@ -1,0 +1,182 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}{% if menu_item %}Edit Menu Item{% else %}Add Menu Item{% endif %} - Restaurant Admin Panel{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'admin_panel:menu_list' %}">Menu Management</a></li>
+<li class="breadcrumb-item"><a href="{% url 'admin_panel:menu_item_list' %}">Menu Items</a></li>
+<li class="breadcrumb-item active">{% if menu_item %}Edit Menu Item{% else %}Add Menu Item{% endif %}</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% if menu_item %}Edit Menu Item{% else %}Add Menu Item{% endif %}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="mb-3">Basic Information</h6>
+                                
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Name</label>
+                                    <input type="text" class="form-control" id="name" name="name" value="{{ menu_item.name|default:'' }}" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="category" class="form-label">Category</label>
+                                    <select class="form-select" id="category" name="category" required>
+                                        <option value="">Select a category</option>
+                                        {% for category in categories %}
+                                        <option value="{{ category.id }}" {% if menu_item.category.id == category.id %}selected{% endif %}>
+                                            {{ category.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="price" class="form-label">Price</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="price" name="price" value="{{ menu_item.price|default:'' }}" step="0.01" min="0" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Description</label>
+                                    <textarea class="form-control" id="description" name="description" rows="4" required>{{ menu_item.description|default:'' }}</textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="image" class="form-label">Image</label>
+                                    <input type="file" class="form-control" id="image" name="image">
+                                    {% if menu_item.image %}
+                                    <div class="mt-2">
+                                        <img src="{{ menu_item.image.url }}" alt="{{ menu_item.name }}" class="img-thumbnail" style="max-height: 150px;">
+                                        <div class="form-check mt-1">
+                                            <input class="form-check-input" type="checkbox" id="delete_image" name="delete_image">
+                                            <label class="form-check-label" for="delete_image">
+                                                Delete current image
+                                            </label>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h6 class="mb-3">Dietary Information</h6>
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_vegetarian" name="is_vegetarian" {% if menu_item.is_vegetarian %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_vegetarian">
+                                            Vegetarian
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_vegan" name="is_vegan" {% if menu_item.is_vegan %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_vegan">
+                                            Vegan
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_gluten_free" name="is_gluten_free" {% if menu_item.is_gluten_free %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_gluten_free">
+                                            Gluten Free
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="spice_level" class="form-label">Spice Level</label>
+                                    <select class="form-select" id="spice_level" name="spice_level">
+                                        <option value="0" {% if menu_item.spice_level == 0 %}selected{% endif %}>Not Spicy</option>
+                                        <option value="1" {% if menu_item.spice_level == 1 %}selected{% endif %}>Mild</option>
+                                        <option value="2" {% if menu_item.spice_level == 2 %}selected{% endif %}>Medium</option>
+                                        <option value="3" {% if menu_item.spice_level == 3 %}selected{% endif %}>Hot</option>
+                                        <option value="4" {% if menu_item.spice_level == 4 %}selected{% endif %}>Very Hot</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="calories" class="form-label">Calories</label>
+                                    <input type="number" class="form-control" id="calories" name="calories" value="{{ menu_item.calories|default:'' }}" min="0">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="ingredients" class="form-label">Ingredients</label>
+                                    <textarea class="form-control" id="ingredients" name="ingredients" rows="3">{{ menu_item.ingredients|default:'' }}</textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="allergens" class="form-label">Allergens</label>
+                                    <textarea class="form-control" id="allergens" name="allergens" rows="2">{{ menu_item.allergens|default:'' }}</textarea>
+                                </div>
+                                
+                                <h6 class="mb-3 mt-4">Status</h6>
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_popular" name="is_popular" {% if menu_item.is_popular %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_popular">
+                                            Popular
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured" {% if menu_item.is_featured %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_featured">
+                                            Featured
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_seasonal" name="is_seasonal" {% if menu_item.is_seasonal %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_seasonal">
+                                            Seasonal
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {% if menu_item.is_active|default:True %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_active">
+                                            Active
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'admin_panel:menu_item_list' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if menu_item %}Update Menu Item{% else %}Add Menu Item{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

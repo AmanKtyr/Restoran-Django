@@ -1,0 +1,95 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}{% if service %}Edit Service{% else %}Add Service{% endif %} - Restaurant Admin Panel{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'admin_panel:service_list' %}">Services</a></li>
+<li class="breadcrumb-item active">{% if service %}Edit Service{% else %}Add Service{% endif %}</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% if service %}Edit Service{% else %}Add Service{% endif %}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="title" name="title" value="{{ service.title|default:'' }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="4" required>{{ service.description|default:'' }}</textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="icon_class" class="form-label">Icon Class</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-icons"></i></span>
+                                <input type="text" class="form-control" id="icon_class" name="icon_class" value="{{ service.icon_class|default:'fa-utensils' }}" required>
+                            </div>
+                            <div class="form-text">Font Awesome icon class. <a href="https://fontawesome.com/icons" target="_blank">Browse icons</a></div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="display_order" class="form-label">Display Order</label>
+                                    <input type="number" class="form-control" id="display_order" name="display_order" value="{{ service.display_order|default:'0' }}" min="0">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <div class="form-check mt-4">
+                                        <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {% if service.is_active|default:True %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_active">
+                                            Active
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="preview" class="form-label">Icon Preview</label>
+                            <div class="p-3 bg-light text-center rounded">
+                                <i id="iconPreview" class="fas {{ service.icon_class|default:'fa-utensils' }} fa-3x"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'admin_panel:service_list' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if service %}Update Service{% else %}Add Service{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const iconClassInput = document.getElementById('icon_class');
+        const iconPreview = document.getElementById('iconPreview');
+        
+        iconClassInput.addEventListener('input', function() {
+            // Remove existing classes
+            iconPreview.className = '';
+            // Add new classes
+            iconPreview.className = 'fas ' + this.value + ' fa-3x';
+        });
+    });
+</script>
+{% endblock %}

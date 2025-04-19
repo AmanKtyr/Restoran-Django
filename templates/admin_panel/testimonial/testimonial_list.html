@@ -1,0 +1,144 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Testimonials - Restaurant Admin Panel{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Testimonials</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Testimonials</h1>
+        <a href="{% url 'admin_panel:testimonial_add' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Testimonial
+        </a>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-md-6">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search testimonials...">
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-end">
+                        <select id="statusFilter" class="form-select" style="width: auto;">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="testimonialsTable">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Name</th>
+                            <th>Position</th>
+                            <th>Content</th>
+                            <th>Rating</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for testimonial in testimonials %}
+                        <tr>
+                            <td>
+                                {% if testimonial.image %}
+                                <img src="{{ testimonial.image.url }}" alt="{{ testimonial.name }}" width="50" height="50" class="rounded-circle">
+                                {% else %}
+                                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 50px; height: 50px;">
+                                    {{ testimonial.name|first|upper }}
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td>{{ testimonial.name }}</td>
+                            <td>{{ testimonial.position }}</td>
+                            <td>{{ testimonial.content|truncatechars:50 }}</td>
+                            <td>
+                                <div class="rating">
+                                    {% for i in "12345" %}
+                                    {% if forloop.counter <= testimonial.rating %}
+                                    <i class="fas fa-star text-warning"></i>
+                                    {% else %}
+                                    <i class="far fa-star text-warning"></i>
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td>
+                                {% if testimonial.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'admin_panel:testimonial_edit' testimonial.id %}" class="btn btn-sm btn-outline-primary me-1">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <a href="{% url 'admin_panel:testimonial_delete' testimonial.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this testimonial?');">
+                                    <i class="fas fa-trash"></i> Delete
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <p class="mb-2">No testimonials found</p>
+                                <a href="{% url 'admin_panel:testimonial_add' %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-plus"></i> Add Testimonial
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const statusFilter = document.getElementById('statusFilter');
+        const table = document.getElementById('testimonialsTable');
+        const rows = table.querySelectorAll('tbody tr');
+        
+        function filterTable() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const statusValue = statusFilter.value.toLowerCase();
+            
+            rows.forEach(row => {
+                const name = row.cells[1].textContent.toLowerCase();
+                const position = row.cells[2].textContent.toLowerCase();
+                const content = row.cells[3].textContent.toLowerCase();
+                const statusCell = row.cells[5].textContent.toLowerCase();
+                
+                const matchesSearch = name.includes(searchTerm) || 
+                                     position.includes(searchTerm) || 
+                                     content.includes(searchTerm);
+                const matchesStatus = statusValue === '' || statusCell.includes(statusValue);
+                
+                if (matchesSearch && matchesStatus) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        searchInput.addEventListener('input', filterTable);
+        statusFilter.addEventListener('change', filterTable);
+    });
+</script>
+{% endblock %}

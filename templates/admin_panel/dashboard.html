@@ -1,0 +1,304 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Dashboard - Restaurant Admin Panel{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Dashboard</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Dashboard</h1>
+        <div>
+            <span class="text-muted">Today: {{ today|date:"F d, Y" }}</span>
+        </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card dashboard-card card-orders h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-3">
+                            <div class="card-icon">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                        </div>
+                        <div class="col-9 text-end">
+                            <h5 class="card-title mb-1">Orders</h5>
+                            <h2 class="mb-0">{{ total_orders }}</h2>
+                            <div class="small text-muted">{{ monthly_orders }} this month</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a href="{% url 'admin_panel:order_list' %}" class="small text-decoration-none">View Details</a>
+                    <div class="small text-muted"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card dashboard-card card-revenue h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-3">
+                            <div class="card-icon">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                        </div>
+                        <div class="col-9 text-end">
+                            <h5 class="card-title mb-1">Revenue</h5>
+                            <h2 class="mb-0">${{ monthly_revenue|floatformat:2 }}</h2>
+                            <div class="small text-muted">This month</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a href="{% url 'admin_panel:order_list' %}" class="small text-decoration-none">View Details</a>
+                    <div class="small text-muted"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card dashboard-card card-bookings h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-3">
+                            <div class="card-icon">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                        </div>
+                        <div class="col-9 text-end">
+                            <h5 class="card-title mb-1">Bookings</h5>
+                            <h2 class="mb-0">{{ total_bookings }}</h2>
+                            <div class="small text-muted">{{ pending_bookings }} pending</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a href="{% url 'admin_panel:booking_list' %}" class="small text-decoration-none">View Details</a>
+                    <div class="small text-muted"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card dashboard-card card-users h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-3">
+                            <div class="card-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </div>
+                        <div class="col-9 text-end">
+                            <h5 class="card-title mb-1">Users</h5>
+                            <h2 class="mb-0">{{ total_users }}</h2>
+                            <div class="small text-muted">{{ new_users }} new this month</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a href="{% url 'admin_panel:user_list' %}" class="small text-decoration-none">View Details</a>
+                    <div class="small text-muted"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-xl-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Orders</h5>
+                    <a href="{% url 'admin_panel:order_list' %}" class="btn btn-sm btn-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Customer</th>
+                                    <th>Status</th>
+                                    <th>Total</th>
+                                    <th>Date</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in recent_orders %}
+                                <tr>
+                                    <td>{{ order.order_number }}</td>
+                                    <td>{{ order.user.get_full_name|default:order.user.username }}</td>
+                                    <td>
+                                        {% if order.status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                        {% elif order.status == 'processing' %}
+                                        <span class="badge bg-info">Processing</span>
+                                        {% elif order.status == 'completed' %}
+                                        <span class="badge bg-success">Completed</span>
+                                        {% elif order.status == 'cancelled' %}
+                                        <span class="badge bg-danger">Cancelled</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ order.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>${{ order.total|floatformat:2 }}</td>
+                                    <td>{{ order.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'admin_panel:order_detail' order.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">No orders found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Bookings</h5>
+                    <a href="{% url 'admin_panel:booking_list' %}" class="btn btn-sm btn-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in recent_bookings %}
+                                <tr>
+                                    <td>{{ booking.name }}</td>
+                                    <td>{{ booking.date_time|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if booking.status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                        {% elif booking.status == 'confirmed' %}
+                                        <span class="badge bg-success">Confirmed</span>
+                                        {% elif booking.status == 'cancelled' %}
+                                        <span class="badge bg-danger">Cancelled</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ booking.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-4">No bookings found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-xl-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Reviews</h5>
+                    <a href="{% url 'admin_panel:review_list' %}" class="btn btn-sm btn-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% for review in recent_reviews %}
+                    <div class="d-flex mb-3 pb-3 {% if not forloop.last %}border-bottom{% endif %}">
+                        <div class="flex-shrink-0">
+                            {% if review.user.profile.profile_picture %}
+                            <img src="{{ review.user.profile.profile_picture.url }}" alt="{{ review.user.username }}" class="rounded-circle" width="50" height="50">
+                            {% else %}
+                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white" style="width: 50px; height: 50px;">
+                                {{ review.user.username|first|upper }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <h6 class="mb-0">{{ review.user.get_full_name|default:review.user.username }}</h6>
+                                <div>
+                                    {% for i in "12345" %}
+                                    {% if forloop.counter <= review.rating %}
+                                    <i class="fas fa-star text-warning"></i>
+                                    {% else %}
+                                    <i class="far fa-star text-warning"></i>
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <p class="mb-1"><strong>{{ review.title }}</strong></p>
+                            <p class="mb-1 text-muted small">{{ review.content|truncatechars:100 }}</p>
+                            <div class="small text-muted">{{ review.created_at|date:"M d, Y" }}</div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4">
+                        <p class="mb-0">No reviews found</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Messages</h5>
+                    <a href="{% url 'admin_panel:message_list' %}" class="btn btn-sm btn-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% for message in recent_messages %}
+                    <div class="d-flex mb-3 pb-3 {% if not forloop.last %}border-bottom{% endif %}">
+                        <div class="flex-shrink-0">
+                            <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white" style="width: 50px; height: 50px;">
+                                {{ message.name|first|upper }}
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <h6 class="mb-0">{{ message.name }}</h6>
+                                <div>
+                                    {% if not message.is_read %}
+                                    <span class="badge bg-danger">New</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <p class="mb-1"><strong>{{ message.subject }}</strong></p>
+                            <p class="mb-1 text-muted small">{{ message.message|truncatechars:100 }}</p>
+                            <div class="small text-muted">{{ message.created_at|date:"M d, Y" }}</div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4">
+                        <p class="mb-0">No messages found</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Add any dashboard-specific JavaScript here -->
+{% endblock %}

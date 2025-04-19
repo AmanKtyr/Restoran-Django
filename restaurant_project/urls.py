@@ -20,13 +20,14 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('django-admin/', admin.site.urls),  # Renamed Django admin URL
     path('', include('core.urls')),
     path('menu/', include('menu.urls')),
     path('booking/', include('booking.urls')),
     path('accounts/', include('accounts.urls')),
     path('orders/', include('orders.urls')),
     path('reviews/', include('reviews.urls')),
+    path('admin/', include('admin_panel.urls')),  # Our custom admin panel
 ]
 
 # Serve static and media files during development

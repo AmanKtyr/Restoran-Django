@@ -1,0 +1,139 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Menu Management - Restaurant Admin Panel{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Menu Management</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Menu Management</h1>
+        <div>
+            <a href="{% url 'admin_panel:category_add' %}" class="btn btn-primary me-2">
+                <i class="fas fa-plus"></i> Add Category
+            </a>
+            <a href="{% url 'admin_panel:menu_item_add' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Menu Item
+            </a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Categories</h5>
+                    <a href="{% url 'admin_panel:category_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for category in categories %}
+                        <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas {{ category.icon_class }} me-2"></i>
+                                <span>{{ category.name }}</span>
+                                {% if not category.is_active %}
+                                <span class="badge bg-secondary ms-2">Inactive</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <a href="{% url 'admin_panel:category_edit' category.id %}" class="btn btn-sm btn-outline-primary me-1">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'admin_panel:category_delete' category.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this category?');">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="list-group-item text-center py-4">
+                            <p class="mb-0">No categories found</p>
+                            <a href="{% url 'admin_panel:category_add' %}" class="btn btn-sm btn-primary mt-2">
+                                <i class="fas fa-plus"></i> Add Category
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Menu Items</h5>
+                    <a href="{% url 'admin_panel:menu_item_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Image</th>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in menu_items %}
+                                <tr>
+                                    <td>
+                                        {% if item.image %}
+                                        <img src="{{ item.image.url }}" alt="{{ item.name }}" width="50" height="50" class="rounded">
+                                        {% else %}
+                                        <div class="bg-secondary rounded d-flex align-items-center justify-content-center text-white" style="width: 50px; height: 50px;">
+                                            <i class="fas fa-utensils"></i>
+                                        </div>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ item.name }}</td>
+                                    <td>{{ item.category.name }}</td>
+                                    <td>${{ item.price }}</td>
+                                    <td>
+                                        {% if item.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                        
+                                        {% if item.is_popular %}
+                                        <span class="badge bg-primary">Popular</span>
+                                        {% endif %}
+                                        
+                                        {% if item.is_featured %}
+                                        <span class="badge bg-info">Featured</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'admin_panel:menu_item_edit' item.id %}" class="btn btn-sm btn-outline-primary me-1">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'admin_panel:menu_item_delete' item.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this menu item?');">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <p class="mb-2">No menu items found</p>
+                                        <a href="{% url 'admin_panel:menu_item_add' %}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-plus"></i> Add Menu Item
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

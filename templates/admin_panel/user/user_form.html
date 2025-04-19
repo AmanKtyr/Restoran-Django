@@ -1,0 +1,150 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}{% if user_obj %}Edit User{% else %}Add User{% endif %} - Restaurant Admin Panel{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'admin_panel:user_list' %}">Users</a></li>
+<li class="breadcrumb-item active">{% if user_obj %}Edit User{% else %}Add User{% endif %}</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% if user_obj %}Edit User{% else %}Add User{% endif %}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="mb-3">Account Information</h6>
+                                
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Username</label>
+                                    <input type="text" class="form-control" id="username" name="username" value="{{ user_obj.username|default:'' }}" {% if user_obj %}readonly{% endif %} required>
+                                    {% if not user_obj %}<div class="form-text">Username cannot be changed once created.</div>{% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email" value="{{ user_obj.email|default:'' }}" required>
+                                </div>
+                                
+                                {% if not user_obj %}
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="password" name="password" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="password_confirm" class="form-label">Confirm Password</label>
+                                    <input type="password" class="form-control" id="password_confirm" name="password_confirm" required>
+                                </div>
+                                {% else %}
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">New Password (leave blank to keep current)</label>
+                                    <input type="password" class="form-control" id="password" name="password">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="password_confirm" class="form-label">Confirm New Password</label>
+                                    <input type="password" class="form-control" id="password_confirm" name="password_confirm">
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h6 class="mb-3">Personal Information</h6>
+                                
+                                <div class="mb-3">
+                                    <label for="first_name" class="form-label">First Name</label>
+                                    <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user_obj.first_name|default:'' }}">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="last_name" class="form-label">Last Name</label>
+                                    <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user_obj.last_name|default:'' }}">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="profile_picture" class="form-label">Profile Picture</label>
+                                    <input type="file" class="form-control" id="profile_picture" name="profile_picture">
+                                    {% if user_obj.profile.profile_picture %}
+                                    <div class="mt-2">
+                                        <img src="{{ user_obj.profile.profile_picture.url }}" alt="{{ user_obj.username }}" class="img-thumbnail" style="max-height: 100px;">
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="phone" class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" id="phone" name="phone" value="{{ user_obj.profile.phone|default:'' }}">
+                                </div>
+                                
+                                <h6 class="mb-3 mt-4">Permissions</h6>
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {% if user_obj.is_active|default:True %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_active">
+                                            Active
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_staff" name="is_staff" {% if user_obj.is_staff %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_staff">
+                                            Staff
+                                        </label>
+                                        <div class="form-text">Staff members can access the admin panel.</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_superuser" name="is_superuser" {% if user_obj.is_superuser %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_superuser">
+                                            Superuser
+                                        </label>
+                                        <div class="form-text">Superusers have all permissions.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'admin_panel:user_list' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if user_obj %}Update User{% else %}Add User{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const passwordField = document.getElementById('password');
+        const confirmField = document.getElementById('password_confirm');
+        const form = document.querySelector('form');
+        
+        form.addEventListener('submit', function(event) {
+            if (passwordField.value !== confirmField.value) {
+                event.preventDefault();
+                alert('Passwords do not match!');
+            }
+        });
+    });
+</script>
+{% endblock %}

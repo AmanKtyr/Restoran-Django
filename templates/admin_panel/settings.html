@@ -1,0 +1,396 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Settings - Restaurant Admin Panel{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Settings</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Settings</h1>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-3 mb-4">
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush" id="settings-tabs" role="tablist">
+                        <a class="list-group-item list-group-item-action active" id="general-tab" data-bs-toggle="list" href="#general" role="tab" aria-controls="general">
+                            <i class="fas fa-cog me-2"></i> General Settings
+                        </a>
+                        <a class="list-group-item list-group-item-action" id="restaurant-tab" data-bs-toggle="list" href="#restaurant" role="tab" aria-controls="restaurant">
+                            <i class="fas fa-store me-2"></i> Restaurant Information
+                        </a>
+                        <a class="list-group-item list-group-item-action" id="appearance-tab" data-bs-toggle="list" href="#appearance" role="tab" aria-controls="appearance">
+                            <i class="fas fa-palette me-2"></i> Appearance
+                        </a>
+                        <a class="list-group-item list-group-item-action" id="email-tab" data-bs-toggle="list" href="#email" role="tab" aria-controls="email">
+                            <i class="fas fa-envelope me-2"></i> Email Settings
+                        </a>
+                        <a class="list-group-item list-group-item-action" id="payment-tab" data-bs-toggle="list" href="#payment" role="tab" aria-controls="payment">
+                            <i class="fas fa-credit-card me-2"></i> Payment Settings
+                        </a>
+                        <a class="list-group-item list-group-item-action" id="social-tab" data-bs-toggle="list" href="#social" role="tab" aria-controls="social">
+                            <i class="fas fa-share-alt me-2"></i> Social Media
+                        </a>
+                        <a class="list-group-item list-group-item-action" id="backup-tab" data-bs-toggle="list" href="#backup" role="tab" aria-controls="backup">
+                            <i class="fas fa-database me-2"></i> Backup & Restore
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-9 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="tab-content">
+                        <!-- General Settings -->
+                        <div class="tab-pane fade show active" id="general" role="tabpanel" aria-labelledby="general-tab">
+                            <h5 class="mb-4">General Settings</h5>
+                            <form>
+                                <div class="mb-3">
+                                    <label for="site_title" class="form-label">Site Title</label>
+                                    <input type="text" class="form-control" id="site_title" value="Restaurant Name">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="site_description" class="form-label">Site Description</label>
+                                    <textarea class="form-control" id="site_description" rows="2">A fine dining restaurant with delicious food and excellent service.</textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="timezone" class="form-label">Timezone</label>
+                                    <select class="form-select" id="timezone">
+                                        <option value="UTC">UTC</option>
+                                        <option value="America/New_York" selected>America/New_York</option>
+                                        <option value="Europe/London">Europe/London</option>
+                                        <option value="Asia/Tokyo">Asia/Tokyo</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="date_format" class="form-label">Date Format</label>
+                                    <select class="form-select" id="date_format">
+                                        <option value="F j, Y" selected>April 20, 2025</option>
+                                        <option value="Y-m-d">2025-04-20</option>
+                                        <option value="m/d/Y">04/20/2025</option>
+                                        <option value="d/m/Y">20/04/2025</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="time_format" class="form-label">Time Format</label>
+                                    <select class="form-select" id="time_format">
+                                        <option value="g:i a" selected>7:30 pm</option>
+                                        <option value="g:i A">7:30 PM</option>
+                                        <option value="H:i">19:30</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </form>
+                        </div>
+                        
+                        <!-- Restaurant Information -->
+                        <div class="tab-pane fade" id="restaurant" role="tabpanel" aria-labelledby="restaurant-tab">
+                            <h5 class="mb-4">Restaurant Information</h5>
+                            <form>
+                                <div class="mb-3">
+                                    <label for="restaurant_name" class="form-label">Restaurant Name</label>
+                                    <input type="text" class="form-control" id="restaurant_name" value="Restaurant Name">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="restaurant_logo" class="form-label">Restaurant Logo</label>
+                                    <input type="file" class="form-control" id="restaurant_logo">
+                                    <div class="form-text">Recommended size: 200x50 pixels</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="restaurant_address" class="form-label">Address</label>
+                                    <textarea class="form-control" id="restaurant_address" rows="3">123 Main Street, New York, NY 10001</textarea>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="restaurant_phone" class="form-label">Phone Number</label>
+                                        <input type="tel" class="form-control" id="restaurant_phone" value="+1 (555) 123-4567">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="restaurant_email" class="form-label">Email Address</label>
+                                        <input type="email" class="form-control" id="restaurant_email" value="info@restaurant.com">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="restaurant_hours" class="form-label">Opening Hours</label>
+                                    <textarea class="form-control" id="restaurant_hours" rows="5">Monday: 11:00 AM - 10:00 PM
+Tuesday: 11:00 AM - 10:00 PM
+Wednesday: 11:00 AM - 10:00 PM
+Thursday: 11:00 AM - 10:00 PM
+Friday: 11:00 AM - 11:00 PM
+Saturday: 10:00 AM - 11:00 PM
+Sunday: 10:00 AM - 10:00 PM</textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="google_maps" class="form-label">Google Maps Embed Code</label>
+                                    <textarea class="form-control" id="google_maps" rows="3"><iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.2!2d-73.9!3d40.7!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDDCsDQyJzAwLjAiTiA3M8KwNTQnMDAuMCJX!5e0!3m2!1sen!2sus!4v1650000000000!5m2!1sen!2sus" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </form>
+                        </div>
+                        
+                        <!-- Appearance -->
+                        <div class="tab-pane fade" id="appearance" role="tabpanel" aria-labelledby="appearance-tab">
+                            <h5 class="mb-4">Appearance Settings</h5>
+                            <form>
+                                <div class="mb-3">
+                                    <label for="primary_color" class="form-label">Primary Color</label>
+                                    <input type="color" class="form-control form-control-color" id="primary_color" value="#FEA116">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="secondary_color" class="form-label">Secondary Color</label>
+                                    <input type="color" class="form-control form-control-color" id="secondary_color" value="#0F172B">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="font_family" class="form-label">Font Family</label>
+                                    <select class="form-select" id="font_family">
+                                        <option value="Nunito" selected>Nunito</option>
+                                        <option value="Roboto">Roboto</option>
+                                        <option value="Open Sans">Open Sans</option>
+                                        <option value="Lato">Lato</option>
+                                        <option value="Poppins">Poppins</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="hero_image" class="form-label">Hero Image</label>
+                                    <input type="file" class="form-control" id="hero_image">
+                                    <div class="form-text">Recommended size: 1920x1080 pixels</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="favicon" class="form-label">Favicon</label>
+                                    <input type="file" class="form-control" id="favicon">
+                                    <div class="form-text">Recommended size: 32x32 pixels</div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </form>
+                        </div>
+                        
+                        <!-- Email Settings -->
+                        <div class="tab-pane fade" id="email" role="tabpanel" aria-labelledby="email-tab">
+                            <h5 class="mb-4">Email Settings</h5>
+                            <form>
+                                <div class="mb-3">
+                                    <label for="smtp_host" class="form-label">SMTP Host</label>
+                                    <input type="text" class="form-control" id="smtp_host" value="smtp.gmail.com">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="smtp_port" class="form-label">SMTP Port</label>
+                                    <input type="text" class="form-control" id="smtp_port" value="587">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="smtp_username" class="form-label">SMTP Username</label>
+                                    <input type="text" class="form-control" id="smtp_username" value="your-email@gmail.com">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="smtp_password" class="form-label">SMTP Password</label>
+                                    <input type="password" class="form-control" id="smtp_password" value="password">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="smtp_encryption" class="form-label">Encryption</label>
+                                    <select class="form-select" id="smtp_encryption">
+                                        <option value="tls" selected>TLS</option>
+                                        <option value="ssl">SSL</option>
+                                        <option value="none">None</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="from_email" class="form-label">From Email</label>
+                                    <input type="email" class="form-control" id="from_email" value="noreply@restaurant.com">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="from_name" class="form-label">From Name</label>
+                                    <input type="text" class="form-control" id="from_name" value="Restaurant Name">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                                <button type="button" class="btn btn-outline-primary ms-2">Send Test Email</button>
+                            </form>
+                        </div>
+                        
+                        <!-- Payment Settings -->
+                        <div class="tab-pane fade" id="payment" role="tabpanel" aria-labelledby="payment-tab">
+                            <h5 class="mb-4">Payment Settings</h5>
+                            <form>
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="enable_stripe" checked>
+                                        <label class="form-check-label" for="enable_stripe">Enable Stripe</label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="stripe_public_key" class="form-label">Stripe Public Key</label>
+                                    <input type="text" class="form-control" id="stripe_public_key" value="pk_test_51H...">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="stripe_secret_key" class="form-label">Stripe Secret Key</label>
+                                    <input type="password" class="form-control" id="stripe_secret_key" value="sk_test_51H...">
+                                </div>
+                                <hr class="my-4">
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="enable_paypal" checked>
+                                        <label class="form-check-label" for="enable_paypal">Enable PayPal</label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="paypal_client_id" class="form-label">PayPal Client ID</label>
+                                    <input type="text" class="form-control" id="paypal_client_id" value="AeJk...">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="paypal_secret" class="form-label">PayPal Secret</label>
+                                    <input type="password" class="form-control" id="paypal_secret" value="ELJk...">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="paypal_mode" class="form-label">PayPal Mode</label>
+                                    <select class="form-select" id="paypal_mode">
+                                        <option value="sandbox" selected>Sandbox (Testing)</option>
+                                        <option value="live">Live</option>
+                                    </select>
+                                </div>
+                                <hr class="my-4">
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="enable_cod" checked>
+                                        <label class="form-check-label" for="enable_cod">Enable Cash on Delivery</label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="currency" class="form-label">Currency</label>
+                                    <select class="form-select" id="currency">
+                                        <option value="USD" selected>USD ($)</option>
+                                        <option value="EUR">EUR (€)</option>
+                                        <option value="GBP">GBP (£)</option>
+                                        <option value="JPY">JPY (¥)</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </form>
+                        </div>
+                        
+                        <!-- Social Media -->
+                        <div class="tab-pane fade" id="social" role="tabpanel" aria-labelledby="social-tab">
+                            <h5 class="mb-4">Social Media Settings</h5>
+                            <form>
+                                <div class="mb-3">
+                                    <label for="facebook" class="form-label">Facebook</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fab fa-facebook-f"></i></span>
+                                        <input type="url" class="form-control" id="facebook" value="https://facebook.com/restaurant">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="twitter" class="form-label">Twitter</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fab fa-twitter"></i></span>
+                                        <input type="url" class="form-control" id="twitter" value="https://twitter.com/restaurant">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="instagram" class="form-label">Instagram</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fab fa-instagram"></i></span>
+                                        <input type="url" class="form-control" id="instagram" value="https://instagram.com/restaurant">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="youtube" class="form-label">YouTube</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fab fa-youtube"></i></span>
+                                        <input type="url" class="form-control" id="youtube" value="https://youtube.com/restaurant">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="linkedin" class="form-label">LinkedIn</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fab fa-linkedin-in"></i></span>
+                                        <input type="url" class="form-control" id="linkedin" value="https://linkedin.com/company/restaurant">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="tiktok" class="form-label">TikTok</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fab fa-tiktok"></i></span>
+                                        <input type="url" class="form-control" id="tiktok" value="https://tiktok.com/@restaurant">
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </form>
+                        </div>
+                        
+                        <!-- Backup & Restore -->
+                        <div class="tab-pane fade" id="backup" role="tabpanel" aria-labelledby="backup-tab">
+                            <h5 class="mb-4">Backup & Restore</h5>
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Database Backup</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p>Create a backup of your database. This will export all your data including menu items, orders, bookings, etc.</p>
+                                    <button type="button" class="btn btn-primary">Create Backup</button>
+                                </div>
+                            </div>
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Media Backup</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p>Create a backup of all your media files including images, documents, etc.</p>
+                                    <button type="button" class="btn btn-primary">Backup Media Files</button>
+                                </div>
+                            </div>
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Restore Database</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="text-danger">Warning: Restoring a database will overwrite all existing data. Make sure you have a backup before proceeding.</p>
+                                    <div class="mb-3">
+                                        <label for="restore_file" class="form-label">Upload Backup File</label>
+                                        <input type="file" class="form-control" id="restore_file">
+                                    </div>
+                                    <button type="button" class="btn btn-danger">Restore Database</button>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Scheduled Backups</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="enable_scheduled_backups" checked>
+                                            <label class="form-check-label" for="enable_scheduled_backups">Enable Scheduled Backups</label>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="backup_frequency" class="form-label">Backup Frequency</label>
+                                        <select class="form-select" id="backup_frequency">
+                                            <option value="daily">Daily</option>
+                                            <option value="weekly" selected>Weekly</option>
+                                            <option value="monthly">Monthly</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="backup_retention" class="form-label">Backup Retention</label>
+                                        <select class="form-select" id="backup_retention">
+                                            <option value="3">Keep last 3 backups</option>
+                                            <option value="5" selected>Keep last 5 backups</option>
+                                            <option value="10">Keep last 10 backups</option>
+                                            <option value="all">Keep all backups</option>
+                                        </select>
+                                    </div>
+                                    <button type="button" class="btn btn-primary">Save Settings</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

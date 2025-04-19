@@ -1,0 +1,123 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Services - Restaurant Admin Panel{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Services</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Services</h1>
+        <a href="{% url 'admin_panel:service_add' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Service
+        </a>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-md-6">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search services...">
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-end">
+                        <select id="statusFilter" class="form-select" style="width: auto;">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="servicesTable">
+                    <thead>
+                        <tr>
+                            <th>Icon</th>
+                            <th>Title</th>
+                            <th>Description</th>
+                            <th>Display Order</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for service in services %}
+                        <tr>
+                            <td>
+                                <i class="fas {{ service.icon_class }} fa-2x"></i>
+                            </td>
+                            <td>{{ service.title }}</td>
+                            <td>{{ service.description|truncatechars:50 }}</td>
+                            <td>{{ service.display_order }}</td>
+                            <td>
+                                {% if service.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'admin_panel:service_edit' service.id %}" class="btn btn-sm btn-outline-primary me-1">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <a href="{% url 'admin_panel:service_delete' service.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this service?');">
+                                    <i class="fas fa-trash"></i> Delete
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                <p class="mb-2">No services found</p>
+                                <a href="{% url 'admin_panel:service_add' %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-plus"></i> Add Service
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const statusFilter = document.getElementById('statusFilter');
+        const table = document.getElementById('servicesTable');
+        const rows = table.querySelectorAll('tbody tr');
+        
+        function filterTable() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const statusValue = statusFilter.value.toLowerCase();
+            
+            rows.forEach(row => {
+                const title = row.cells[1].textContent.toLowerCase();
+                const description = row.cells[2].textContent.toLowerCase();
+                const statusCell = row.cells[4].textContent.toLowerCase();
+                
+                const matchesSearch = title.includes(searchTerm) || description.includes(searchTerm);
+                const matchesStatus = statusValue === '' || statusCell.includes(statusValue);
+                
+                if (matchesSearch && matchesStatus) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        searchInput.addEventListener('input', filterTable);
+        statusFilter.addEventListener('change', filterTable);
+    });
+</script>
+{% endblock %}

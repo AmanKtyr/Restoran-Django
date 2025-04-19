@@ -3,6 +3,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import transaction
+from django.contrib.auth.models import User
 from .forms import CustomUserCreationForm, CustomAuthenticationForm, UserProfileForm, UserForm
 from .models import UserProfile
 
@@ -28,6 +29,12 @@ def login_view(request):
             password = form.cleaned_data.get('password')
             user = authenticate(username=username, password=password)
             if user is not None:
+                # Check if user has a profile, create one if not
+                try:
+                    user.profile
+                except User.profile.RelatedObjectDoesNotExist:
+                    UserProfile.objects.create(user=user)
+
                 login(request, user)
                 messages.success(request, f'Welcome back, {user.first_name}!')
                 # Redirect to the page user was trying to access or home
@@ -47,14 +54,26 @@ def logout_view(request):
 
 @login_required
 def profile_view(request):
+    # Check if user has a profile, create one if not
+    try:
+        request.user.profile
+    except User.profile.RelatedObjectDoesNotExist:
+        UserProfile.objects.create(user=request.user)
+
     return render(request, 'accounts/profile.html')
 
 @login_required
 @transaction.atomic
 def edit_profile(request):
+    # Check if user has a profile, create one if not
+    try:
+        profile = request.user.profile
+    except User.profile.RelatedObjectDoesNotExist:
+        profile = UserProfile.objects.create(user=request.user)
+
     if request.method == 'POST':
         user_form = UserForm(request.POST, instance=request.user)
-        profile_form = UserProfileForm(request.POST, request.FILES, instance=request.user.profile)
+        profile_form = UserProfileForm(request.POST, request.FILES, instance=profile)
 
         if user_form.is_valid() and profile_form.is_valid():
             user_form.save()
@@ -65,7 +84,7 @@ def edit_profile(request):
             messages.error(request, 'Please correct the errors below.')
     else:
         user_form = UserForm(instance=request.user)
-        profile_form = UserProfileForm(instance=request.user.profile)
+        profile_form = UserProfileForm(instance=profile)
 
     return render(request, 'accounts/edit_profile.html', {
         'user_form': user_form,

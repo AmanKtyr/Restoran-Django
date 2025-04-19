@@ -1,0 +1,123 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}{% if team_member %}Edit Team Member{% else %}Add Team Member{% endif %} - Restaurant Admin Panel{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'admin_panel:team_list' %}">Team Members</a></li>
+<li class="breadcrumb-item active">{% if team_member %}Edit Team Member{% else %}Add Team Member{% endif %}</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% if team_member %}Edit Team Member{% else %}Add Team Member{% endif %}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Name</label>
+                                    <input type="text" class="form-control" id="name" name="name" value="{{ team_member.name|default:'' }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="position" class="form-label">Position</label>
+                                    <input type="text" class="form-control" id="position" name="position" value="{{ team_member.position|default:'' }}" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="bio" class="form-label">Bio</label>
+                            <textarea class="form-control" id="bio" name="bio" rows="4">{{ team_member.bio|default:'' }}</textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="image" class="form-label">Image</label>
+                            <input type="file" class="form-control" id="image" name="image">
+                            {% if team_member.image %}
+                            <div class="mt-2">
+                                <img src="{{ team_member.image.url }}" alt="{{ team_member.name }}" class="img-thumbnail" style="max-height: 150px;">
+                                <div class="form-check mt-1">
+                                    <input class="form-check-input" type="checkbox" id="delete_image" name="delete_image">
+                                    <label class="form-check-label" for="delete_image">
+                                        Delete current image
+                                    </label>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="display_order" class="form-label">Display Order</label>
+                                    <input type="number" class="form-control" id="display_order" name="display_order" value="{{ team_member.display_order|default:'0' }}" min="0">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <div class="form-check mt-4">
+                                        <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {% if team_member.is_active|default:True %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_active">
+                                            Active
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h6 class="mb-3 mt-4">Social Media Links</h6>
+                        
+                        <div class="mb-3">
+                            <label for="facebook_url" class="form-label">Facebook URL</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fab fa-facebook-f"></i></span>
+                                <input type="url" class="form-control" id="facebook_url" name="facebook_url" value="{{ team_member.facebook_url|default:'' }}">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="twitter_url" class="form-label">Twitter URL</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fab fa-twitter"></i></span>
+                                <input type="url" class="form-control" id="twitter_url" name="twitter_url" value="{{ team_member.twitter_url|default:'' }}">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="instagram_url" class="form-label">Instagram URL</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fab fa-instagram"></i></span>
+                                <input type="url" class="form-control" id="instagram_url" name="instagram_url" value="{{ team_member.instagram_url|default:'' }}">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="linkedin_url" class="form-label">LinkedIn URL</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fab fa-linkedin-in"></i></span>
+                                <input type="url" class="form-control" id="linkedin_url" name="linkedin_url" value="{{ team_member.linkedin_url|default:'' }}">
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'admin_panel:team_list' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if team_member %}Update Team Member{% else %}Add Team Member{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,743 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib import messages
+from django.db.models import Count, Sum, Avg
+from django.utils import timezone
+from datetime import timedelta
+
+from django.contrib.auth.models import User
+from menu.models import Category, MenuItem
+from booking.models import Booking
+from orders.models import Order, OrderItem
+from reviews.models import Review
+from core.models import TeamMember, Testimonial, ContactMessage, Service
+
+# Helper function to check if user is admin
+def is_admin(user):
+    return user.is_authenticated and (user.is_staff or user.is_superuser)
+
+# Admin authentication views
+def admin_login(request):
+    if request.user.is_authenticated and is_admin(request.user):
+        return redirect('admin_panel:dashboard')
+
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None and is_admin(user):
+            login(request, user)
+            messages.success(request, f'Welcome back, {user.first_name}!')
+            return redirect('admin_panel:dashboard')
+        else:
+            messages.error(request, 'Invalid username or password, or insufficient permissions.')
+
+    return render(request, 'admin_panel/login.html')
+
+@login_required
+def admin_logout(request):
+    logout(request)
+    messages.success(request, 'You have been logged out successfully.')
+    return redirect('admin_panel:login')
+
+# Dashboard view
+@login_required
+@user_passes_test(is_admin)
+def dashboard(request):
+    # Get statistics for dashboard
+    today = timezone.now().date()
+    month_start = today.replace(day=1)
+    last_30_days = today - timedelta(days=30)
+
+    # Order statistics
+    total_orders = Order.objects.count()
+    recent_orders = Order.objects.order_by('-created_at')[:5]
+    monthly_orders = Order.objects.filter(created_at__date__gte=month_start).count()
+    monthly_revenue = Order.objects.filter(created_at__date__gte=month_start).aggregate(Sum('total'))['total__sum'] or 0
+
+    # Booking statistics
+    total_bookings = Booking.objects.count()
+    recent_bookings = Booking.objects.order_by('-created_at')[:5]
+    pending_bookings = Booking.objects.filter(status='pending').count()
+
+    # User statistics
+    total_users = User.objects.count()
+    new_users = User.objects.filter(date_joined__date__gte=last_30_days).count()
+
+    # Menu statistics
+    total_menu_items = MenuItem.objects.count()
+    popular_items = MenuItem.objects.filter(is_popular=True).count()
+
+    # Review statistics
+    total_reviews = Review.objects.count()
+    avg_rating = Review.objects.aggregate(Avg('rating'))['rating__avg'] or 0
+    recent_reviews = Review.objects.order_by('-created_at')[:5]
+
+    # Message statistics
+    unread_messages = ContactMessage.objects.filter(is_read=False).count()
+    recent_messages = ContactMessage.objects.order_by('-created_at')[:5]
+
+    context = {
+        'total_orders': total_orders,
+        'recent_orders': recent_orders,
+        'monthly_orders': monthly_orders,
+        'monthly_revenue': monthly_revenue,
+        'total_bookings': total_bookings,
+        'recent_bookings': recent_bookings,
+        'pending_bookings': pending_bookings,
+        'total_users': total_users,
+        'new_users': new_users,
+        'total_menu_items': total_menu_items,
+        'popular_items': popular_items,
+        'total_reviews': total_reviews,
+        'avg_rating': avg_rating,
+        'recent_reviews': recent_reviews,
+        'unread_messages': unread_messages,
+        'recent_messages': recent_messages,
+    }
+
+    return render(request, 'admin_panel/dashboard.html', context)
+
+# Menu management views
+@login_required
+@user_passes_test(is_admin)
+def menu_list(request):
+    categories = Category.objects.all()
+    menu_items = MenuItem.objects.all()
+    context = {
+        'categories': categories,
+        'menu_items': menu_items,
+    }
+    return render(request, 'admin_panel/menu/menu_list.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def category_list(request):
+    categories = Category.objects.all()
+    return render(request, 'admin_panel/menu/category_list.html', {'categories': categories})
+
+@login_required
+@user_passes_test(is_admin)
+def category_add(request):
+    # Implementation will be added later
+    return render(request, 'admin_panel/menu/category_form.html')
+
+@login_required
+@user_passes_test(is_admin)
+def category_edit(request, pk):
+    category = get_object_or_404(Category, pk=pk)
+    return render(request, 'admin_panel/menu/category_form.html', {'category': category})
+
+@login_required
+@user_passes_test(is_admin)
+def category_delete(request, pk):
+    category = get_object_or_404(Category, pk=pk)
+    category.delete()
+    messages.success(request, 'Category deleted successfully!')
+    return redirect('admin_panel:category_list')
+
+@login_required
+@user_passes_test(is_admin)
+def menu_item_list(request):
+    menu_items = MenuItem.objects.all()
+    return render(request, 'admin_panel/menu/menu_item_list.html', {'menu_items': menu_items})
+
+@login_required
+@user_passes_test(is_admin)
+def menu_item_add(request):
+    # Implementation will be added later
+    return render(request, 'admin_panel/menu/menu_item_form.html')
+
+@login_required
+@user_passes_test(is_admin)
+def menu_item_edit(request, pk):
+    menu_item = get_object_or_404(MenuItem, pk=pk)
+    return render(request, 'admin_panel/menu/menu_item_form.html', {'menu_item': menu_item})
+
+@login_required
+@user_passes_test(is_admin)
+def menu_item_delete(request, pk):
+    menu_item = get_object_or_404(MenuItem, pk=pk)
+    menu_item.delete()
+    messages.success(request, 'Menu item deleted successfully!')
+    return redirect('admin_panel:menu_item_list')
+
+# Booking management views
+@login_required
+@user_passes_test(is_admin)
+def booking_list(request):
+    bookings = Booking.objects.all().order_by('-created_at')
+    return render(request, 'admin_panel/booking/booking_list.html', {'bookings': bookings})
+
+@login_required
+@user_passes_test(is_admin)
+def booking_add(request):
+    if request.method == 'POST':
+        # Process form data
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        guests = request.POST.get('guests')
+        date = request.POST.get('date')
+        time = request.POST.get('time')
+        special_request = request.POST.get('special_request')
+        status = request.POST.get('status')
+
+        # Combine date and time
+        from datetime import datetime
+        date_time_str = f"{date} {time}"
+        date_time = datetime.strptime(date_time_str, "%Y-%m-%d %H:%M")
+
+        # Create booking
+        Booking.objects.create(
+            name=name,
+            email=email,
+            phone=phone,
+            guests=guests,
+            date_time=date_time,
+            special_request=special_request,
+            status=status
+        )
+
+        messages.success(request, 'Booking created successfully!')
+        return redirect('admin_panel:booking_list')
+
+    return render(request, 'admin_panel/booking/booking_form.html')
+
+@login_required
+@user_passes_test(is_admin)
+def booking_edit(request, pk):
+    booking = get_object_or_404(Booking, pk=pk)
+
+    if request.method == 'POST':
+        # Process form data
+        booking.name = request.POST.get('name')
+        booking.email = request.POST.get('email')
+        booking.phone = request.POST.get('phone')
+        booking.guests = request.POST.get('guests')
+        date = request.POST.get('date')
+        time = request.POST.get('time')
+        booking.special_request = request.POST.get('special_request')
+        booking.status = request.POST.get('status')
+
+        # Combine date and time
+        from datetime import datetime
+        date_time_str = f"{date} {time}"
+        booking.date_time = datetime.strptime(date_time_str, "%Y-%m-%d %H:%M")
+
+        # Save booking
+        booking.save()
+
+        messages.success(request, 'Booking updated successfully!')
+        return redirect('admin_panel:booking_list')
+
+    return render(request, 'admin_panel/booking/booking_form.html', {'booking': booking})
+
+@login_required
+@user_passes_test(is_admin)
+def booking_delete(request, pk):
+    booking = get_object_or_404(Booking, pk=pk)
+    booking.delete()
+    messages.success(request, 'Booking deleted successfully!')
+    return redirect('admin_panel:booking_list')
+
+# User management views
+@login_required
+@user_passes_test(is_admin)
+def user_list(request):
+    users = User.objects.all().order_by('-date_joined')
+    return render(request, 'admin_panel/user/user_list.html', {'users': users})
+
+@login_required
+@user_passes_test(is_admin)
+def user_add(request):
+    if request.method == 'POST':
+        # Get form data
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        is_active = request.POST.get('is_active') == 'on'
+        is_staff = request.POST.get('is_staff') == 'on'
+        is_superuser = request.POST.get('is_superuser') == 'on'
+        phone = request.POST.get('phone')
+
+        # Create user
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            is_active=is_active,
+            is_staff=is_staff,
+            is_superuser=is_superuser
+        )
+
+        # Update profile
+        if hasattr(user, 'profile'):
+            user.profile.phone = phone
+            if 'profile_picture' in request.FILES:
+                user.profile.profile_picture = request.FILES['profile_picture']
+            user.profile.save()
+
+        messages.success(request, f'User {username} created successfully!')
+        return redirect('admin_panel:user_list')
+
+    return render(request, 'admin_panel/user/user_form.html')
+
+@login_required
+@user_passes_test(is_admin)
+def user_edit(request, pk):
+    user_obj = get_object_or_404(User, pk=pk)
+
+    if request.method == 'POST':
+        # Get form data
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        is_active = request.POST.get('is_active') == 'on'
+        is_staff = request.POST.get('is_staff') == 'on'
+        is_superuser = request.POST.get('is_superuser') == 'on'
+        phone = request.POST.get('phone')
+
+        # Update user
+        user_obj.email = email
+        user_obj.first_name = first_name
+        user_obj.last_name = last_name
+        user_obj.is_active = is_active
+        user_obj.is_staff = is_staff
+        user_obj.is_superuser = is_superuser
+
+        # Update password if provided
+        if password:
+            user_obj.set_password(password)
+
+        user_obj.save()
+
+        # Update profile
+        if hasattr(user_obj, 'profile'):
+            user_obj.profile.phone = phone
+            if 'profile_picture' in request.FILES:
+                user_obj.profile.profile_picture = request.FILES['profile_picture']
+            user_obj.profile.save()
+
+        messages.success(request, f'User {user_obj.username} updated successfully!')
+        return redirect('admin_panel:user_list')
+
+    return render(request, 'admin_panel/user/user_form.html', {'user_obj': user_obj})
+
+@login_required
+@user_passes_test(is_admin)
+def user_delete(request, pk):
+    user_obj = get_object_or_404(User, pk=pk)
+    username = user_obj.username
+
+    # Don't allow deleting yourself
+    if user_obj == request.user:
+        messages.error(request, 'You cannot delete your own account!')
+        return redirect('admin_panel:user_list')
+
+    user_obj.delete()
+    messages.success(request, f'User {username} deleted successfully!')
+    return redirect('admin_panel:user_list')
+
+# Order management views
+@login_required
+@user_passes_test(is_admin)
+def order_list(request):
+    orders = Order.objects.all().order_by('-created_at')
+    return render(request, 'admin_panel/order/order_list.html', {'orders': orders})
+
+@login_required
+@user_passes_test(is_admin)
+def order_detail(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    return render(request, 'admin_panel/order/order_detail.html', {'order': order})
+
+@login_required
+@user_passes_test(is_admin)
+def order_edit(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+
+    if request.method == 'POST':
+        # Update order status and payment status
+        order.status = request.POST.get('status')
+        order.payment_status = request.POST.get('payment_status')
+
+        # Update other fields if they exist in the form
+        if 'payment_method' in request.POST:
+            order.payment_method = request.POST.get('payment_method')
+
+        if 'order_type' in request.POST:
+            order.order_type = request.POST.get('order_type')
+
+        if 'notes' in request.POST:
+            order.notes = request.POST.get('notes')
+
+        # Customer information
+        if 'name' in request.POST:
+            order.name = request.POST.get('name')
+
+        if 'email' in request.POST:
+            order.email = request.POST.get('email')
+
+        if 'phone' in request.POST:
+            order.phone = request.POST.get('phone')
+
+        # Delivery information
+        if order.order_type == 'delivery':
+            order.address = request.POST.get('address', '')
+            order.address_line2 = request.POST.get('address_line2', '')
+            order.city = request.POST.get('city', '')
+            order.state = request.POST.get('state', '')
+            order.zip_code = request.POST.get('zip_code', '')
+            order.delivery_fee = float(request.POST.get('delivery_fee', 0))
+
+        # Pricing information
+        if 'tax' in request.POST:
+            order.tax = float(request.POST.get('tax', 0))
+
+        if 'discount_amount' in request.POST:
+            order.discount_amount = float(request.POST.get('discount_amount', 0))
+
+        if 'coupon_code' in request.POST:
+            order.coupon_code = request.POST.get('coupon_code', '')
+
+        # Recalculate total
+        subtotal = order.get_subtotal()
+        order.total = subtotal + order.tax + order.delivery_fee - order.discount_amount
+
+        order.save()
+
+        messages.success(request, f'Order #{order.order_number} updated successfully!')
+
+        # Redirect based on where the form was submitted from
+        if 'status' in request.POST and 'payment_status' in request.POST and len(request.POST) <= 3:
+            # If only status and payment_status were updated (from order detail page)
+            return redirect('admin_panel:order_detail', pk=order.id)
+        else:
+            # If full form was submitted
+            return redirect('admin_panel:order_list')
+
+    return render(request, 'admin_panel/order/order_form.html', {'order': order})
+
+# Review management views
+@login_required
+@user_passes_test(is_admin)
+def review_list(request):
+    reviews = Review.objects.all().order_by('-created_at')
+    return render(request, 'admin_panel/review/review_list.html', {'reviews': reviews})
+
+@login_required
+@user_passes_test(is_admin)
+def review_detail(request, pk):
+    review = get_object_or_404(Review, pk=pk)
+    return render(request, 'admin_panel/review/review_detail.html', {'review': review})
+
+@login_required
+@user_passes_test(is_admin)
+def review_edit(request, pk):
+    review = get_object_or_404(Review, pk=pk)
+
+    if request.method == 'POST':
+        action = request.POST.get('action', 'edit')
+
+        if action == 'reply':
+            # Update reply
+            review.reply = request.POST.get('reply')
+            from django.utils import timezone
+            review.reply_date = timezone.now()
+            review.save()
+            messages.success(request, 'Reply updated successfully!')
+            return redirect('admin_panel:review_detail', pk=review.id)
+
+        elif action == 'status':
+            # Update status
+            review.is_approved = request.POST.get('is_approved') == '1'
+            review.is_featured = request.POST.get('is_featured') == '1'
+            review.save()
+            messages.success(request, 'Review status updated successfully!')
+            return redirect('admin_panel:review_detail', pk=review.id)
+
+        else:  # action == 'edit'
+            # Update review content
+            review.title = request.POST.get('title')
+            review.rating = int(request.POST.get('rating'))
+            review.content = request.POST.get('content')
+            review.is_approved = 'is_approved' in request.POST
+            review.is_featured = 'is_featured' in request.POST
+
+            if request.POST.get('reply'):
+                review.reply = request.POST.get('reply')
+                if not review.reply_date:
+                    from django.utils import timezone
+                    review.reply_date = timezone.now()
+
+            review.save()
+            messages.success(request, 'Review updated successfully!')
+            return redirect('admin_panel:review_list')
+
+    return render(request, 'admin_panel/review/review_form.html', {'review': review})
+
+@login_required
+@user_passes_test(is_admin)
+def review_delete(request, pk):
+    review = get_object_or_404(Review, pk=pk)
+    review.delete()
+    messages.success(request, 'Review deleted successfully!')
+    return redirect('admin_panel:review_list')
+
+# Team management views
+@login_required
+@user_passes_test(is_admin)
+def team_list(request):
+    team_members = TeamMember.objects.all().order_by('display_order')
+    return render(request, 'admin_panel/team/team_list.html', {'team_members': team_members})
+
+@login_required
+@user_passes_test(is_admin)
+def team_add(request):
+    if request.method == 'POST':
+        # Get form data
+        name = request.POST.get('name')
+        position = request.POST.get('position')
+        bio = request.POST.get('bio')
+        display_order = request.POST.get('display_order')
+        is_active = 'is_active' in request.POST
+        facebook_url = request.POST.get('facebook_url')
+        twitter_url = request.POST.get('twitter_url')
+        instagram_url = request.POST.get('instagram_url')
+        linkedin_url = request.POST.get('linkedin_url')
+
+        # Create team member
+        team_member = TeamMember.objects.create(
+            name=name,
+            position=position,
+            bio=bio,
+            display_order=display_order,
+            is_active=is_active,
+            facebook_url=facebook_url,
+            twitter_url=twitter_url,
+            instagram_url=instagram_url,
+            linkedin_url=linkedin_url
+        )
+
+        # Handle image upload
+        if 'image' in request.FILES:
+            team_member.image = request.FILES['image']
+            team_member.save()
+
+        messages.success(request, 'Team member added successfully!')
+        return redirect('admin_panel:team_list')
+
+    return render(request, 'admin_panel/team/team_form.html')
+
+@login_required
+@user_passes_test(is_admin)
+def team_edit(request, pk):
+    team_member = get_object_or_404(TeamMember, pk=pk)
+
+    if request.method == 'POST':
+        # Get form data
+        team_member.name = request.POST.get('name')
+        team_member.position = request.POST.get('position')
+        team_member.bio = request.POST.get('bio')
+        team_member.display_order = request.POST.get('display_order')
+        team_member.is_active = 'is_active' in request.POST
+        team_member.facebook_url = request.POST.get('facebook_url')
+        team_member.twitter_url = request.POST.get('twitter_url')
+        team_member.instagram_url = request.POST.get('instagram_url')
+        team_member.linkedin_url = request.POST.get('linkedin_url')
+
+        # Handle image upload
+        if 'image' in request.FILES:
+            team_member.image = request.FILES['image']
+
+        # Handle image deletion
+        if 'delete_image' in request.POST and team_member.image:
+            team_member.image.delete()
+            team_member.image = None
+
+        team_member.save()
+        messages.success(request, 'Team member updated successfully!')
+        return redirect('admin_panel:team_list')
+
+    return render(request, 'admin_panel/team/team_form.html', {'team_member': team_member})
+
+@login_required
+@user_passes_test(is_admin)
+def team_delete(request, pk):
+    team_member = get_object_or_404(TeamMember, pk=pk)
+    team_member.delete()
+    messages.success(request, 'Team member deleted successfully!')
+    return redirect('admin_panel:team_list')
+
+# Testimonial management views
+@login_required
+@user_passes_test(is_admin)
+def testimonial_list(request):
+    testimonials = Testimonial.objects.all().order_by('-created_at')
+    return render(request, 'admin_panel/testimonial/testimonial_list.html', {'testimonials': testimonials})
+
+@login_required
+@user_passes_test(is_admin)
+def testimonial_add(request):
+    if request.method == 'POST':
+        # Get form data
+        name = request.POST.get('name')
+        position = request.POST.get('position')
+        content = request.POST.get('content')
+        rating = int(request.POST.get('rating', 5))
+        is_active = 'is_active' in request.POST
+
+        # Create testimonial
+        testimonial = Testimonial.objects.create(
+            name=name,
+            position=position,
+            content=content,
+            rating=rating,
+            is_active=is_active
+        )
+
+        # Handle image upload
+        if 'image' in request.FILES:
+            testimonial.image = request.FILES['image']
+            testimonial.save()
+
+        messages.success(request, 'Testimonial added successfully!')
+        return redirect('admin_panel:testimonial_list')
+
+    return render(request, 'admin_panel/testimonial/testimonial_form.html')
+
+@login_required
+@user_passes_test(is_admin)
+def testimonial_edit(request, pk):
+    testimonial = get_object_or_404(Testimonial, pk=pk)
+
+    if request.method == 'POST':
+        # Get form data
+        testimonial.name = request.POST.get('name')
+        testimonial.position = request.POST.get('position')
+        testimonial.content = request.POST.get('content')
+        testimonial.rating = int(request.POST.get('rating', 5))
+        testimonial.is_active = 'is_active' in request.POST
+
+        # Handle image upload
+        if 'image' in request.FILES:
+            testimonial.image = request.FILES['image']
+
+        # Handle image deletion
+        if 'delete_image' in request.POST and testimonial.image:
+            testimonial.image.delete()
+            testimonial.image = None
+
+        testimonial.save()
+        messages.success(request, 'Testimonial updated successfully!')
+        return redirect('admin_panel:testimonial_list')
+
+    return render(request, 'admin_panel/testimonial/testimonial_form.html', {'testimonial': testimonial})
+
+@login_required
+@user_passes_test(is_admin)
+def testimonial_delete(request, pk):
+    testimonial = get_object_or_404(Testimonial, pk=pk)
+    testimonial.delete()
+    messages.success(request, 'Testimonial deleted successfully!')
+    return redirect('admin_panel:testimonial_list')
+
+# Service management views
+@login_required
+@user_passes_test(is_admin)
+def service_list(request):
+    services = Service.objects.all().order_by('display_order')
+    return render(request, 'admin_panel/service/service_list.html', {'services': services})
+
+@login_required
+@user_passes_test(is_admin)
+def service_add(request):
+    if request.method == 'POST':
+        # Get form data
+        title = request.POST.get('title')
+        description = request.POST.get('description')
+        icon_class = request.POST.get('icon_class')
+        display_order = request.POST.get('display_order')
+        is_active = 'is_active' in request.POST
+
+        # Create service
+        Service.objects.create(
+            title=title,
+            description=description,
+            icon_class=icon_class,
+            display_order=display_order,
+            is_active=is_active
+        )
+
+        messages.success(request, 'Service added successfully!')
+        return redirect('admin_panel:service_list')
+
+    return render(request, 'admin_panel/service/service_form.html')
+
+@login_required
+@user_passes_test(is_admin)
+def service_edit(request, pk):
+    service = get_object_or_404(Service, pk=pk)
+
+    if request.method == 'POST':
+        # Get form data
+        service.title = request.POST.get('title')
+        service.description = request.POST.get('description')
+        service.icon_class = request.POST.get('icon_class')
+        service.display_order = request.POST.get('display_order')
+        service.is_active = 'is_active' in request.POST
+
+        service.save()
+        messages.success(request, 'Service updated successfully!')
+        return redirect('admin_panel:service_list')
+
+    return render(request, 'admin_panel/service/service_form.html', {'service': service})
+
+@login_required
+@user_passes_test(is_admin)
+def service_delete(request, pk):
+    service = get_object_or_404(Service, pk=pk)
+    service.delete()
+    messages.success(request, 'Service deleted successfully!')
+    return redirect('admin_panel:service_list')
+
+# Contact message management views
+@login_required
+@user_passes_test(is_admin)
+def message_list(request):
+    messages_list = ContactMessage.objects.all().order_by('-created_at')
+    return render(request, 'admin_panel/message/message_list.html', {'messages': messages_list})
+
+@login_required
+@user_passes_test(is_admin)
+def message_detail(request, pk):
+    message = get_object_or_404(ContactMessage, pk=pk)
+    # Mark as read when viewed
+    if not message.is_read:
+        message.is_read = True
+        from django.utils import timezone
+        message.read_at = timezone.now()
+        message.save()
+    return render(request, 'admin_panel/message/message_detail.html', {'message': message})
+
+@login_required
+@user_passes_test(is_admin)
+def message_delete(request, pk):
+    contact_message = get_object_or_404(ContactMessage, pk=pk)
+    contact_message.delete()
+    messages.success(request, 'Message deleted successfully!')
+    return redirect('admin_panel:message_list')
+
+# Settings view
+@login_required
+@user_passes_test(is_admin)
+def settings(request):
+    return render(request, 'admin_panel/settings.html')

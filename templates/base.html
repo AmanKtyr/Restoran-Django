@@ -88,7 +88,7 @@
                         {% endif %}
                     </div>
                     <a href="{% url 'booking:booking' %}" class="btn btn-primary py-2 px-4 me-2">Book A Table</a>
-                    <a href="{% url 'orders:cart' %}" class="btn btn-outline-primary py-2 px-3 position-relative">
+                    <a href="{% url 'orders:cart' %}" class="btn btn-outline-primary py-2 px-3 position-relative me-2">
                         <i class="fa fa-shopping-cart"></i>
                         {% if user.is_authenticated and user.cart.get_total_items > 0 %}
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
@@ -96,6 +96,11 @@
                         </span>
                         {% endif %}
                     </a>
+                    {% if user.is_staff or user.is_superuser %}
+                    <a href="{% url 'admin_panel:dashboard' %}" class="btn btn-dark py-2 px-3">
+                        <i class="fa fa-lock me-1"></i> Admin
+                    </a>
+                    {% endif %}
                 </div>
             </nav>
 
@@ -182,6 +187,7 @@
                                 <a href="#">Cookies</a>
                                 <a href="#">Help</a>
                                 <a href="#">FQAs</a>
+                                <a href="{% url 'admin_panel:login' %}">Admin</a>
                             </div>
                         </div>
                     </div>

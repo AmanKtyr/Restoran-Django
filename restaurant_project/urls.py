@@ -29,6 +29,10 @@ urlpatterns = [
     path('reviews/', include('reviews.urls')),
     path('admin/', include('admin_panel.urls')),  # Our custom admin panel
     path('kitchen/', include('kitchen.urls')),  # Kitchen display system
+    path('inventory/', include('inventory.urls')),  # Inventory management system
+    path('staffing/', include('staffing.urls')),  # Staff management system
+    path('analytics/', include('analytics.urls')),  # Analytics dashboard
+    path('loyalty/', include('loyalty.urls')),  # Loyalty program management
 ]
 
 # Serve static and media files during development

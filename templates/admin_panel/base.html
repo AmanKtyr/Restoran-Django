@@ -287,6 +287,36 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link" href="{% url 'kitchen:dashboard' %}">
+                    <i class="fas fa-fire"></i>
+                    <span>Kitchen</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'inventory:dashboard' %}">
+                    <i class="fas fa-boxes"></i>
+                    <span>Inventory</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'staffing:dashboard' %}">
+                    <i class="fas fa-id-card"></i>
+                    <span>Staffing</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'analytics:dashboard' %}">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Analytics</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'loyalty:dashboard' %}">
+                    <i class="fas fa-award"></i>
+                    <span>Loyalty</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link {% if 'settings' in request.path %}active{% endif %}" href="{% url 'admin_panel:settings' %}">
                     <i class="fas fa-cog"></i>
                     <span>Settings</span>

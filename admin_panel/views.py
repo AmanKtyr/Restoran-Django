@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.db.models import Count, Sum, Avg
 from django.utils import timezone
 from datetime import timedelta
+from decimal import Decimal
 
 from django.contrib.auth.models import User
 from menu.models import Category, MenuItem
@@ -397,14 +398,14 @@ def order_edit(request, pk):
             order.city = request.POST.get('city', '')
             order.state = request.POST.get('state', '')
             order.zip_code = request.POST.get('zip_code', '')
-            order.delivery_fee = float(request.POST.get('delivery_fee', 0))
+            order.delivery_fee = Decimal(request.POST.get('delivery_fee', 0))
 
         # Pricing information
         if 'tax' in request.POST:
-            order.tax = float(request.POST.get('tax', 0))
+            order.tax = Decimal(request.POST.get('tax', 0))
 
         if 'discount_amount' in request.POST:
-            order.discount_amount = float(request.POST.get('discount_amount', 0))
+            order.discount_amount = Decimal(request.POST.get('discount_amount', 0))
 
         if 'coupon_code' in request.POST:
             order.coupon_code = request.POST.get('coupon_code', '')
@@ -865,8 +866,8 @@ def add_campaign_performance(request, pk):
         impressions = int(request.POST.get('impressions'))
         clicks = int(request.POST.get('clicks'))
         conversions = int(request.POST.get('conversions'))
-        revenue = float(request.POST.get('revenue'))
-        cost = float(request.POST.get('cost'))
+        revenue = Decimal(request.POST.get('revenue'))
+        cost = Decimal(request.POST.get('cost'))
 
         # Create performance record
         performance = CampaignPerformance.objects.create(

@@ -115,22 +115,35 @@ def checkout(request):
         # Process the order
         with transaction.atomic():
             # Create order
+            # Get form data
+            full_name = request.POST.get('full_name')
+            email = request.POST.get('email')
+            phone = request.POST.get('phone')
+            address = request.POST.get('address', '')
+            city = request.POST.get('city', '')
+            state = request.POST.get('state', '')
+            postal_code = request.POST.get('postal_code', '')
+            order_type = request.POST.get('order_type', 'delivery')
+            payment_method = request.POST.get('payment_method', 'cash')
+            special_instructions = request.POST.get('special_instructions', '')
+
+            # Create order with the correct field names
             order = Order.objects.create(
                 user=request.user,
-                full_name=request.POST.get('full_name'),
-                email=request.POST.get('email'),
-                phone=request.POST.get('phone'),
-                address=request.POST.get('address', ''),
-                city=request.POST.get('city', ''),
-                state=request.POST.get('state', ''),
-                postal_code=request.POST.get('postal_code', ''),
-                order_type=request.POST.get('order_type', 'delivery'),
-                payment_method=request.POST.get('payment_method', 'cash'),
-                special_instructions=request.POST.get('special_instructions', ''),
+                name=full_name,
+                email=email,
+                phone=phone,
+                address=address,
+                city=city,
+                state=state,
+                zip_code=postal_code,
+                order_type=order_type,
+                payment_method=payment_method,
+                special_request=special_instructions,  # Map special_instructions to special_request
                 subtotal=subtotal,
                 tax=tax,
                 delivery_fee=delivery_fee,
-                discount=Decimal('0.00'),
+                discount_amount=Decimal('0.00'),
                 total=total,
                 estimated_delivery_time=timezone.now() + timezone.timedelta(minutes=45)
             )

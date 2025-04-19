@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}Loyalty Program - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .loyalty-header {
+        background-color: #f8f9fa;
+        padding: 20px 0;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .loyalty-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        border: none;
+    }
+    .loyalty-card .card-header {
+        background-color: #fff;
+        border-bottom: 1px solid #eee;
+        font-weight: bold;
+        padding: 15px 20px;
+    }
+    .tier-card {
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 20px;
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .tier-header {
+        padding: 15px;
+        color: #fff;
+    }
+    .tier-bronze {
+        background: linear-gradient(135deg, #CD7F32, #A46628);
+    }
+    .tier-silver {
+        background: linear-gradient(135deg, #C0C0C0, #A8A8A8);
+    }
+    .tier-gold {
+        background: linear-gradient(135deg, #FFD700, #FFC107);
+    }
+    .tier-platinum {
+        background: linear-gradient(135deg, #E5E4E2, #CECECE);
+    }
+    .tier-diamond {
+        background: linear-gradient(135deg, #B9F2FF, #A8E6CF);
+    }
+    .tier-icon {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
+    .tier-name {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    .tier-threshold {
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+    .tier-body {
+        padding: 15px;
+    }
+    .tier-benefit {
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+    }
+    .tier-benefit i {
+        margin-right: 10px;
+        color: #28a745;
+    }
+    .filter-section {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    .reward-card {
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 20px;
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .reward-image {
+        height: 150px;
+        object-fit: cover;
+    }
+    .reward-points {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: #FEA116;
+        color: #fff;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-weight: bold;
+    }
+    .customer-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row loyalty-header">
+        <div class="col-md-6">
+            <h1>{% block loyalty_title %}Loyalty Program{% endblock %}</h1>
+        </div>
+        <div class="col-md-6 text-end">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb justify-content-end">
+                    <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Admin</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'loyalty:dashboard' %}">Loyalty</a></li>
+                    {% block breadcrumb %}
+                    <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+                    {% endblock %}
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card loyalty-card">
+                <div class="card-header">
+                    <i class="fas fa-award me-2"></i> Navigation
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <a href="{% url 'loyalty:dashboard' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                            <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                        </a>
+                        <a href="{% url 'loyalty:accounts' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'accounts' %}active{% endif %}">
+                            <i class="fas fa-users me-2"></i> Customer Accounts
+                        </a>
+                        <a href="{% url 'loyalty:tiers' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'tiers' %}active{% endif %}">
+                            <i class="fas fa-layer-group me-2"></i> Loyalty Tiers
+                        </a>
+                        <a href="{% url 'loyalty:rewards' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'rewards' %}active{% endif %}">
+                            <i class="fas fa-gift me-2"></i> Rewards
+                        </a>
+                        <a href="{% url 'loyalty:transactions' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'transactions' %}active{% endif %}">
+                            <i class="fas fa-exchange-alt me-2"></i> Transactions
+                        </a>
+                        <a href="{% url 'loyalty:redemptions' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'redemptions' %}active{% endif %}">
+                            <i class="fas fa-ticket-alt me-2"></i> Redemptions
+                        </a>
+                        <a href="{% url 'loyalty:settings' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'settings' %}active{% endif %}">
+                            <i class="fas fa-cog me-2"></i> Program Settings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            {% block loyalty_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %}

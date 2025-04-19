@@ -1,0 +1,361 @@
+{% extends 'loyalty/base.html' %}
+
+{% block loyalty_title %}Loyalty Dashboard{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+{% endblock %}
+
+{% block loyalty_content %}
+<div class="row">
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card loyalty-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Total Accounts</h6>
+                        <h3 class="mb-0">{{ total_accounts }}</h3>
+                    </div>
+                    <div class="card-icon text-primary">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card loyalty-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Points Issued</h6>
+                        <h3 class="mb-0">{{ total_points_issued|intcomma }}</h3>
+                    </div>
+                    <div class="card-icon text-success">
+                        <i class="fas fa-plus-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card loyalty-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Points Redeemed</h6>
+                        <h3 class="mb-0">{{ total_points_redeemed|intcomma }}</h3>
+                    </div>
+                    <div class="card-icon text-danger">
+                        <i class="fas fa-minus-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card loyalty-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Total Redemptions</h6>
+                        <h3 class="mb-0">{{ total_redemptions }}</h3>
+                    </div>
+                    <div class="card-icon text-warning">
+                        <i class="fas fa-gift fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card loyalty-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-layer-group me-2"></i> Loyalty Tiers</span>
+                <a href="{% url 'loyalty:tiers' %}" class="btn btn-sm btn-outline-primary">Manage Tiers</a>
+            </div>
+            <div class="card-body">
+                {% if tiers %}
+                <div class="row">
+                    {% for tier in tiers %}
+                    <div class="col-md-6 mb-3">
+                        <div class="tier-card">
+                            <div class="tier-header tier-{{ tier.name|lower }}">
+                                <div class="text-center">
+                                    <div class="tier-icon">
+                                        <i class="{{ tier.icon|default:'fas fa-award' }}"></i>
+                                    </div>
+                                    <div class="tier-name">{{ tier.name }}</div>
+                                    <div class="tier-threshold">{{ tier.points_threshold }} points</div>
+                                </div>
+                            </div>
+                            <div class="tier-body">
+                                <div class="tier-benefit">
+                                    <i class="fas fa-percentage"></i>
+                                    <span>{{ tier.discount_percentage }}% discount on all orders</span>
+                                </div>
+                                {% if tier.special_benefits %}
+                                <div class="tier-benefit">
+                                    <i class="fas fa-star"></i>
+                                    <span>{{ tier.special_benefits|truncatechars:50 }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-center my-3">No loyalty tiers defined yet.</p>
+                <div class="text-center">
+                    <a href="{% url 'loyalty:tiers' %}" class="btn btn-primary">Create Tiers</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card loyalty-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-exchange-alt me-2"></i> Recent Transactions</span>
+                <a href="{% url 'loyalty:transactions' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_transactions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Type</th>
+                                <th>Points</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in recent_transactions %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="customer-avatar me-2 bg-secondary d-flex align-items-center justify-content-center text-white">
+                                            {{ transaction.account.user.get_full_name|slice:":1" }}
+                                        </div>
+                                        <a href="{% url 'loyalty:account_detail' transaction.account.id %}">
+                                            {{ transaction.account.user.get_full_name|default:transaction.account.user.username }}
+                                        </a>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if transaction.transaction_type == 'earn' %}
+                                    <span class="badge bg-success">Earned</span>
+                                    {% elif transaction.transaction_type == 'redeem' %}
+                                    <span class="badge bg-danger">Redeemed</span>
+                                    {% elif transaction.transaction_type == 'expire' %}
+                                    <span class="badge bg-warning">Expired</span>
+                                    {% elif transaction.transaction_type == 'adjust' %}
+                                    <span class="badge bg-info">Adjusted</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if transaction.transaction_type == 'earn' or transaction.transaction_type == 'adjust' and transaction.points > 0 %}
+                                    <span class="text-success">+{{ transaction.points }}</span>
+                                    {% else %}
+                                    <span class="text-danger">-{{ transaction.points }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ transaction.created_at|date:"M d, Y" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">No recent transactions found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center my-3">No recent transactions found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card loyalty-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-gift me-2"></i> Popular Rewards</span>
+                <a href="{% url 'loyalty:rewards' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if program %}
+                <div class="row">
+                    {% for reward in popular_rewards %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card reward-card">
+                            {% if reward.image %}
+                            <img src="{{ reward.image.url }}" class="card-img-top reward-image" alt="{{ reward.name }}">
+                            {% else %}
+                            <div class="card-img-top reward-image bg-light d-flex align-items-center justify-content-center">
+                                <i class="fas fa-gift fa-3x text-muted"></i>
+                            </div>
+                            {% endif %}
+                            <div class="reward-points">{{ reward.points_required }} pts</div>
+                            <div class="card-body">
+                                <h5 class="card-title">{{ reward.name }}</h5>
+                                <p class="card-text text-muted">{{ reward.description|truncatechars:50 }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    {% if reward.limited_quantity %}
+                                    <small class="text-muted">{{ reward.quantity_available }} remaining</small>
+                                    {% else %}
+                                    <small class="text-muted">Unlimited</small>
+                                    {% endif %}
+                                    <a href="#" class="btn btn-sm btn-outline-primary">View</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12">
+                        <p class="text-center my-3">No rewards defined yet.</p>
+                        <div class="text-center">
+                            <a href="{% url 'loyalty:rewards' %}" class="btn btn-primary">Create Rewards</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i> Loyalty program is not configured yet.
+                    <a href="{% url 'loyalty:settings' %}" class="alert-link">Configure now</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card loyalty-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-ticket-alt me-2"></i> Recent Redemptions</span>
+                <a href="{% url 'loyalty:redemptions' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_redemptions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Reward</th>
+                                <th>Points</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for redemption in recent_redemptions %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="customer-avatar me-2 bg-secondary d-flex align-items-center justify-content-center text-white">
+                                            {{ redemption.account.user.get_full_name|slice:":1" }}
+                                        </div>
+                                        <a href="{% url 'loyalty:account_detail' redemption.account.id %}">
+                                            {{ redemption.account.user.get_full_name|default:redemption.account.user.username }}
+                                        </a>
+                                    </div>
+                                </td>
+                                <td>{{ redemption.reward.name }}</td>
+                                <td>{{ redemption.reward.points_required }}</td>
+                                <td>
+                                    {% if redemption.status == 'pending' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                    {% elif redemption.status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                    {% elif redemption.status == 'cancelled' %}
+                                    <span class="badge bg-danger">Cancelled</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">No recent redemptions found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center my-3">No recent redemptions found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if program %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card loyalty-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-cog me-2"></i> Program Settings</span>
+                <a href="{% url 'loyalty:settings' %}" class="btn btn-sm btn-outline-primary">Edit Settings</a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>{{ program.name }}</h5>
+                        <p>{{ program.description }}</p>
+                        <div class="mb-3">
+                            <strong>Points per Dollar:</strong> {{ program.points_per_dollar }}
+                        </div>
+                        <div class="mb-3">
+                            <strong>Points Expiration:</strong> {{ program.points_expiration_months }} months
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="alert alert-info">
+                            <h5 class="alert-heading">Program Statistics</h5>
+                            <hr>
+                            <div class="row">
+                                <div class="col-6">
+                                    <p class="mb-1"><strong>Total Accounts:</strong> {{ total_accounts }}</p>
+                                    <p class="mb-1"><strong>Active Accounts:</strong> {{ active_accounts }}</p>
+                                </div>
+                                <div class="col-6">
+                                    <p class="mb-1"><strong>Total Points Issued:</strong> {{ total_points_issued|intcomma }}</p>
+                                    <p class="mb-1"><strong>Points Redeemed:</strong> {{ total_points_redeemed|intcomma }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card loyalty-card">
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <h4 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i> Loyalty Program Not Configured</h4>
+                    <p>Your loyalty program is not configured yet. Set up your program to start rewarding your customers.</p>
+                    <hr>
+                    <a href="{% url 'loyalty:settings' %}" class="btn btn-primary">Configure Loyalty Program</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,263 @@
+{% extends 'analytics/base.html' %}
+
+{% block analytics_title %}Analytics Dashboard{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+{% endblock %}
+
+{% block analytics_content %}
+<div class="filter-section mb-4">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label for="start_date" class="form-label">Start Date</label>
+            <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}">
+        </div>
+        <div class="col-md-4">
+            <label for="end_date" class="form-label">End Date</label>
+            <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}">
+        </div>
+        <div class="col-md-4">
+            <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
+        </div>
+    </form>
+</div>
+
+<div class="row">
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="metric-card sales position-relative">
+            <i class="fas fa-dollar-sign metric-icon"></i>
+            <p class="metric-label">Total Sales</p>
+            <h2 class="metric-value">${{ total_sales|floatformat:2 }}</h2>
+            <p class="mb-0 text-muted">{{ start_date|date:"M d" }} - {{ end_date|date:"M d, Y" }}</p>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="metric-card orders position-relative">
+            <i class="fas fa-shopping-cart metric-icon"></i>
+            <p class="metric-label">Total Orders</p>
+            <h2 class="metric-value">{{ total_orders }}</h2>
+            <p class="mb-0 text-muted">{{ start_date|date:"M d" }} - {{ end_date|date:"M d, Y" }}</p>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="metric-card customers position-relative">
+            <i class="fas fa-users metric-icon"></i>
+            <p class="metric-label">Total Customers</p>
+            <h2 class="metric-value">{{ total_customers }}</h2>
+            <p class="mb-0 text-muted">{{ start_date|date:"M d" }} - {{ end_date|date:"M d, Y" }}</p>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="metric-card average position-relative">
+            <i class="fas fa-receipt metric-icon"></i>
+            <p class="metric-label">Average Order Value</p>
+            <h2 class="metric-value">${{ avg_order_value|floatformat:2 }}</h2>
+            <p class="mb-0 text-muted">{{ start_date|date:"M d" }} - {{ end_date|date:"M d, Y" }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mb-4">
+        <div class="card analytics-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-chart-line me-2"></i> Sales Trend</span>
+                <a href="{% url 'analytics:sales' %}" class="btn btn-sm btn-outline-primary">View Details</a>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card analytics-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-utensils me-2"></i> Top Selling Items</span>
+                <a href="{% url 'analytics:menu' %}" class="btn btn-sm btn-outline-primary">View Details</a>
+            </div>
+            <div class="card-body">
+                {% if top_items %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th class="text-end">Quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in top_items %}
+                            <tr>
+                                <td>{{ item.menu_item__name }}</td>
+                                <td class="text-end">{{ item.total_quantity }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="2" class="text-center">No data available.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center my-3">No data available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card analytics-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-users me-2"></i> Customer Analytics</span>
+                <a href="{% url 'analytics:customers' %}" class="btn btn-sm btn-outline-primary">View Details</a>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="customerChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card analytics-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-file-alt me-2"></i> Reports</span>
+                <a href="{% url 'analytics:reports' %}" class="btn btn-sm btn-outline-primary">View All Reports</a>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a href="{% url 'analytics:reports' %}?type=sales" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-dollar-sign me-2"></i> Sales Report
+                            <small class="d-block text-muted">Daily sales breakdown</small>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">
+                            <i class="fas fa-download"></i>
+                        </span>
+                    </a>
+                    <a href="{% url 'analytics:reports' %}?type=menu" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-utensils me-2"></i> Menu Performance Report
+                            <small class="d-block text-muted">Item sales and revenue</small>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">
+                            <i class="fas fa-download"></i>
+                        </span>
+                    </a>
+                    <a href="{% url 'analytics:reports' %}?type=customers" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-users me-2"></i> Customer Report
+                            <small class="d-block text-muted">New vs returning customers</small>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">
+                            <i class="fas fa-download"></i>
+                        </span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Sample data for charts (replace with actual data from backend)
+        const salesData = {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+            datasets: [{
+                label: 'Sales',
+                data: [12000, 19000, 15000, 25000, 22000, 30000, 28000],
+                borderColor: '#FEA116',
+                backgroundColor: 'rgba(254, 161, 22, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        };
+
+        const customerData = {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+            datasets: [{
+                label: 'New Customers',
+                data: [50, 75, 60, 90, 80, 110, 95],
+                backgroundColor: '#17a2b8',
+                borderWidth: 0,
+                borderRadius: 4
+            }, {
+                label: 'Returning Customers',
+                data: [30, 45, 55, 70, 65, 85, 90],
+                backgroundColor: '#6f42c1',
+                borderWidth: 0,
+                borderRadius: 4
+            }]
+        };
+
+        // Sales Chart
+        const salesCtx = document.getElementById('salesChart').getContext('2d');
+        new Chart(salesCtx, {
+            type: 'line',
+            data: salesData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Customer Chart
+        const customerCtx = document.getElementById('customerChart').getContext('2d');
+        new Chart(customerCtx, {
+            type: 'bar',
+            data: customerData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

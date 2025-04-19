@@ -12,7 +12,7 @@ from menu.models import Category, MenuItem
 from booking.models import Booking
 from orders.models import Order, OrderItem
 from reviews.models import Review
-from core.models import TeamMember, Testimonial, ContactMessage, Service
+from core.models import TeamMember, Testimonial, ContactMessage, Service, RestaurantSettings
 from analytics.models import MarketingCampaign, CampaignPerformance
 
 # Helper function to check if user is admin
@@ -742,7 +742,98 @@ def message_delete(request, pk):
 @login_required
 @user_passes_test(is_admin)
 def settings(request):
-    return render(request, 'admin_panel/settings.html')
+    # Get or create settings
+    settings_obj = RestaurantSettings.get_settings()
+
+    if request.method == 'POST':
+        # Determine which settings section is being updated
+        section = request.POST.get('section', 'general')
+
+        if section == 'general':
+            # Update general settings
+            settings_obj.site_title = request.POST.get('site_title')
+            settings_obj.site_description = request.POST.get('site_description')
+            settings_obj.timezone = request.POST.get('timezone')
+            settings_obj.currency = request.POST.get('currency')
+            settings_obj.currency_symbol = request.POST.get('currency_symbol')
+            settings_obj.tax_rate = request.POST.get('tax_rate')
+
+        elif section == 'restaurant':
+            # Update restaurant information
+            settings_obj.restaurant_name = request.POST.get('restaurant_name')
+            settings_obj.restaurant_address = request.POST.get('restaurant_address')
+            settings_obj.restaurant_phone = request.POST.get('restaurant_phone')
+            settings_obj.restaurant_email = request.POST.get('restaurant_email')
+            settings_obj.opening_hours = request.POST.get('opening_hours')
+            settings_obj.google_maps_embed = request.POST.get('google_maps_embed')
+
+            # Handle logo upload
+            if 'restaurant_logo' in request.FILES:
+                settings_obj.restaurant_logo = request.FILES['restaurant_logo']
+
+        elif section == 'appearance':
+            # Update appearance settings
+            settings_obj.primary_color = request.POST.get('primary_color')
+            settings_obj.secondary_color = request.POST.get('secondary_color')
+            settings_obj.font_family = request.POST.get('font_family')
+
+            # Handle image uploads
+            if 'hero_image' in request.FILES:
+                settings_obj.hero_image = request.FILES['hero_image']
+
+            if 'favicon' in request.FILES:
+                settings_obj.favicon = request.FILES['favicon']
+
+        elif section == 'email':
+            # Update email settings
+            settings_obj.smtp_host = request.POST.get('smtp_host')
+            settings_obj.smtp_port = request.POST.get('smtp_port')
+            settings_obj.smtp_username = request.POST.get('smtp_username')
+            settings_obj.smtp_password = request.POST.get('smtp_password')
+            settings_obj.email_from_name = request.POST.get('email_from_name')
+            settings_obj.email_from_address = request.POST.get('email_from_address')
+
+        elif section == 'payment':
+            # Update payment settings
+            settings_obj.enable_stripe = 'enable_stripe' in request.POST
+            settings_obj.stripe_public_key = request.POST.get('stripe_public_key')
+            settings_obj.stripe_secret_key = request.POST.get('stripe_secret_key')
+            settings_obj.enable_paypal = 'enable_paypal' in request.POST
+            settings_obj.paypal_client_id = request.POST.get('paypal_client_id')
+            settings_obj.paypal_secret_key = request.POST.get('paypal_secret_key')
+
+        elif section == 'social':
+            # Update social media settings
+            settings_obj.facebook_url = request.POST.get('facebook_url')
+            settings_obj.twitter_url = request.POST.get('twitter_url')
+            settings_obj.instagram_url = request.POST.get('instagram_url')
+            settings_obj.linkedin_url = request.POST.get('linkedin_url')
+            settings_obj.youtube_url = request.POST.get('youtube_url')
+
+        elif section == 'seo':
+            # Update SEO settings
+            settings_obj.meta_keywords = request.POST.get('meta_keywords')
+            settings_obj.meta_description = request.POST.get('meta_description')
+            settings_obj.google_analytics_id = request.POST.get('google_analytics_id')
+
+        elif section == 'backup':
+            # Update backup settings
+            settings_obj.enable_scheduled_backups = 'enable_scheduled_backups' in request.POST
+            settings_obj.backup_frequency = request.POST.get('backup_frequency')
+            settings_obj.backup_retention_days = request.POST.get('backup_retention_days')
+
+        elif section == 'system':
+            # Update system settings
+            settings_obj.maintenance_mode = 'maintenance_mode' in request.POST
+            settings_obj.maintenance_message = request.POST.get('maintenance_message')
+
+        # Save settings
+        settings_obj.save()
+
+        messages.success(request, 'Settings updated successfully!')
+        return redirect('admin_panel:settings')
+
+    return render(request, 'admin_panel/settings.html', {'settings': settings_obj})
 
 # Marketing campaign views
 @login_required

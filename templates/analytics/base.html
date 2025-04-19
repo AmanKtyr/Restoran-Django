@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}Analytics Dashboard - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .analytics-header {
+        background-color: #f8f9fa;
+        padding: 20px 0;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .analytics-card {
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        border: none;
+    }
+    .analytics-card .card-header {
+        background-color: #fff;
+        border-bottom: 1px solid #eee;
+        font-weight: bold;
+        padding: 15px 20px;
+    }
+    .filter-section {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+        width: 100%;
+    }
+    .metric-card {
+        border-left: 4px solid #0F172B;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .metric-card.sales {
+        border-left-color: #FEA116;
+    }
+    .metric-card.orders {
+        border-left-color: #28a745;
+    }
+    .metric-card.customers {
+        border-left-color: #17a2b8;
+    }
+    .metric-card.average {
+        border-left-color: #6f42c1;
+    }
+    .metric-value {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    .metric-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-bottom: 0;
+    }
+    .metric-icon {
+        font-size: 2.5rem;
+        opacity: 0.2;
+        position: absolute;
+        right: 20px;
+        top: 20px;
+    }
+</style>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row analytics-header">
+        <div class="col-md-6">
+            <h1>{% block analytics_title %}Analytics Dashboard{% endblock %}</h1>
+        </div>
+        <div class="col-md-6 text-end">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb justify-content-end">
+                    <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Admin</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'analytics:dashboard' %}">Analytics</a></li>
+                    {% block breadcrumb %}
+                    <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+                    {% endblock %}
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card analytics-card">
+                <div class="card-header">
+                    <i class="fas fa-chart-line me-2"></i> Navigation
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <a href="{% url 'analytics:dashboard' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                            <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                        </a>
+                        <a href="{% url 'analytics:sales' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'sales' %}active{% endif %}">
+                            <i class="fas fa-dollar-sign me-2"></i> Sales Analytics
+                        </a>
+                        <a href="{% url 'analytics:customers' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'customers' %}active{% endif %}">
+                            <i class="fas fa-users me-2"></i> Customer Analytics
+                        </a>
+                        <a href="{% url 'analytics:menu' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'menu' %}active{% endif %}">
+                            <i class="fas fa-utensils me-2"></i> Menu Analytics
+                        </a>
+                        <a href="{% url 'analytics:marketing' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'marketing' %}active{% endif %}">
+                            <i class="fas fa-bullhorn me-2"></i> Marketing Analytics
+                        </a>
+                        <a href="{% url 'analytics:reports' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'reports' %}active{% endif %}">
+                            <i class="fas fa-file-alt me-2"></i> Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            {% block analytics_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %}

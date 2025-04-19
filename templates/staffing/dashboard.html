@@ -1,0 +1,232 @@
+{% extends 'staffing/base.html' %}
+
+{% block staffing_title %}Staff Dashboard{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+{% endblock %}
+
+{% block staffing_content %}
+<div class="row">
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card staffing-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Total Staff</h6>
+                        <h3 class="mb-0">{{ total_staff }}</h3>
+                    </div>
+                    <div class="card-icon text-primary">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card staffing-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Departments</h6>
+                        <h3 class="mb-0">{{ departments.count }}</h3>
+                    </div>
+                    <div class="card-icon text-success">
+                        <i class="fas fa-building fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card staffing-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Upcoming Shifts</h6>
+                        <h3 class="mb-0">{{ upcoming_shifts.count }}</h3>
+                    </div>
+                    <div class="card-icon text-warning">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card staffing-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Pending Requests</h6>
+                        <h3 class="mb-0">{{ pending_requests.count }}</h3>
+                    </div>
+                    <div class="card-icon text-danger">
+                        <i class="fas fa-calendar-minus fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card staffing-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-clock me-2"></i> Today's Shifts</span>
+                <a href="{% url 'staffing:schedule' %}" class="btn btn-sm btn-outline-primary">View Schedule</a>
+            </div>
+            <div class="card-body">
+                {% if upcoming_shifts %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Staff</th>
+                                <th>Position</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for shift in upcoming_shifts %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if shift.staff.profile_image %}
+                                        <img src="{{ shift.staff.profile_image.url }}" alt="{{ shift.staff.user.get_full_name }}" class="staff-avatar me-2">
+                                        {% else %}
+                                        <div class="staff-avatar me-2 bg-secondary d-flex align-items-center justify-content-center text-white">
+                                            {{ shift.staff.user.get_full_name|slice:":1" }}
+                                        </div>
+                                        {% endif %}
+                                        <a href="{% url 'staffing:staff_detail' shift.staff.id %}">{{ shift.staff.user.get_full_name }}</a>
+                                    </div>
+                                </td>
+                                <td>{{ shift.position.title }}</td>
+                                <td>{{ shift.start_time|time:"g:i A" }} - {{ shift.end_time|time:"g:i A" }}</td>
+                                <td>
+                                    {% if shift.status == 'scheduled' %}
+                                    <span class="badge bg-primary">Scheduled</span>
+                                    {% elif shift.status == 'checked_in' %}
+                                    <span class="badge bg-success">Checked In</span>
+                                    {% elif shift.status == 'checked_out' %}
+                                    <span class="badge bg-secondary">Completed</span>
+                                    {% elif shift.status == 'absent' %}
+                                    <span class="badge bg-danger">Absent</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">No shifts scheduled for today.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center my-3">No shifts scheduled for today.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card staffing-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-calendar-minus me-2"></i> Pending Time Off Requests</span>
+                <a href="{% url 'staffing:time_off_requests' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if pending_requests %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Staff</th>
+                                <th>Type</th>
+                                <th>Dates</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for request in pending_requests %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if request.staff.profile_image %}
+                                        <img src="{{ request.staff.profile_image.url }}" alt="{{ request.staff.user.get_full_name }}" class="staff-avatar me-2">
+                                        {% else %}
+                                        <div class="staff-avatar me-2 bg-secondary d-flex align-items-center justify-content-center text-white">
+                                            {{ request.staff.user.get_full_name|slice:":1" }}
+                                        </div>
+                                        {% endif %}
+                                        <a href="{% url 'staffing:staff_detail' request.staff.id %}">{{ request.staff.user.get_full_name }}</a>
+                                    </div>
+                                </td>
+                                <td>{{ request.get_request_type_display }}</td>
+                                <td>{{ request.start_date|date:"M d" }} - {{ request.end_date|date:"M d, Y" }}</td>
+                                <td>
+                                    <a href="{% url 'staffing:time_off_request_detail' request.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">No pending time off requests.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center my-3">No pending time off requests.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card staffing-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-building me-2"></i> Departments</span>
+                <a href="{% url 'staffing:departments' %}" class="btn btn-sm btn-outline-primary">Manage Departments</a>
+            </div>
+            <div class="card-body">
+                {% if departments %}
+                <div class="row">
+                    {% for department in departments %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ department.name }}</h5>
+                                <p class="card-text text-muted">{{ department.description|truncatechars:100 }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-primary">{{ department.staffprofile_set.count }} Staff</span>
+                                    <span class="badge bg-secondary">{{ department.position_set.count }} Positions</span>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">Manager: {{ department.manager.get_full_name|default:"None" }}</small>
+                                    <a href="#" class="btn btn-sm btn-outline-primary">View</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-center my-3">No departments found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

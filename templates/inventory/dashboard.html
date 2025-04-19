@@ -1,0 +1,226 @@
+{% extends 'inventory/base.html' %}
+
+{% block inventory_title %}Inventory Dashboard{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+{% endblock %}
+
+{% block inventory_content %}
+<div class="row">
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card inventory-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Total Items</h6>
+                        <h3 class="mb-0">{{ total_items }}</h3>
+                    </div>
+                    <div class="card-icon text-primary">
+                        <i class="fas fa-box fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card inventory-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Low Stock Items</h6>
+                        <h3 class="mb-0 text-danger">{{ low_stock_items }}</h3>
+                    </div>
+                    <div class="card-icon text-danger">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card inventory-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Recent Orders</h6>
+                        <h3 class="mb-0">{{ recent_orders.count }}</h3>
+                    </div>
+                    <div class="card-icon text-success">
+                        <i class="fas fa-file-invoice fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card inventory-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Recent Checks</h6>
+                        <h3 class="mb-0">{{ recent_checks.count }}</h3>
+                    </div>
+                    <div class="card-icon text-info">
+                        <i class="fas fa-clipboard-check fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card inventory-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-exclamation-triangle me-2"></i> Low Stock Items</span>
+                <a href="{% url 'inventory:items' %}?stock_status=low" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if low_stock_items > 0 %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Current Stock</th>
+                                <th>Minimum Stock</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in low_stock_items_list %}
+                            <tr>
+                                <td><a href="{% url 'inventory:item_detail' item.id %}">{{ item.name }}</a></td>
+                                <td>{{ item.current_stock }} {{ item.unit.abbreviation }}</td>
+                                <td>{{ item.minimum_stock }} {{ item.unit.abbreviation }}</td>
+                                <td><span class="badge bg-danger">Low Stock</span></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">No low stock items found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center my-3">No low stock items found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card inventory-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-file-invoice me-2"></i> Recent Purchase Orders</span>
+                <a href="{% url 'inventory:purchase_orders' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_orders %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Supplier</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td><a href="{% url 'inventory:purchase_order_detail' order.id %}">PO-{{ order.id }}</a></td>
+                                <td>{{ order.supplier.name }}</td>
+                                <td>{{ order.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if order.status == 'pending' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                    {% elif order.status == 'ordered' %}
+                                    <span class="badge bg-primary">Ordered</span>
+                                    {% elif order.status == 'received' %}
+                                    <span class="badge bg-success">Received</span>
+                                    {% elif order.status == 'cancelled' %}
+                                    <span class="badge bg-danger">Cancelled</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">No recent purchase orders found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center my-3">No recent purchase orders found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card inventory-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-clipboard-check me-2"></i> Recent Inventory Checks</span>
+                <a href="{% url 'inventory:inventory_checks' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_checks %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Check #</th>
+                                <th>Date</th>
+                                <th>Performed By</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for check in recent_checks %}
+                            <tr>
+                                <td><a href="{% url 'inventory:inventory_check_detail' check.id %}">IC-{{ check.id }}</a></td>
+                                <td>{{ check.check_date|date:"M d, Y" }}</td>
+                                <td>{{ check.performed_by.get_full_name|default:check.performed_by.username }}</td>
+                                <td>
+                                    {% if check.status == 'pending' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                    {% elif check.status == 'in_progress' %}
+                                    <span class="badge bg-primary">In Progress</span>
+                                    {% elif check.status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                    {% elif check.status == 'cancelled' %}
+                                    <span class="badge bg-danger">Cancelled</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'inventory:inventory_check_detail' check.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">No recent inventory checks found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center my-3">No recent inventory checks found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

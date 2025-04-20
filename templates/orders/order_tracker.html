@@ -22,7 +22,7 @@
                             <h3 class="mb-0">Order #{{ order.order_number }}</h3>
                             <span class="badge bg-{{ order.get_status_color }} py-2 px-3">{{ order.get_status_display }}</span>
                         </div>
-                        
+
                         <!-- Order Progress Tracker -->
                         <div class="order-tracker mb-5">
                             <div class="progress-container">
@@ -66,7 +66,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         {% if order.order_type == 'delivery' and order.status == 'out_for_delivery' %}
                         <!-- Delivery Map (only shown for delivery orders that are out for delivery) -->
                         <div class="delivery-map-container mb-4">
@@ -86,7 +86,7 @@
                             </div>
                         </div>
                         {% endif %}
-                        
+
                         <!-- Order Details -->
                         <div class="row mb-4">
                             <div class="col-md-6">
@@ -108,7 +108,7 @@
                                 {% endif %}
                             </div>
                         </div>
-                        
+
                         <!-- Order Items -->
                         <div class="mb-4">
                             <h5 class="mb-3">Order Items</h5>
@@ -173,15 +173,15 @@
                                 </table>
                             </div>
                         </div>
-                        
+
                         <!-- Actions -->
                         <div class="d-flex justify-content-between">
                             <a href="{% url 'orders:order_history' %}" class="btn btn-outline-primary">
                                 <i class="fa fa-arrow-left me-2"></i> Back to My Orders
                             </a>
                             {% if order.status == 'delivered' or order.status == 'completed' %}
-                            <a href="#" class="btn btn-primary">
-                                <i class="fa fa-star me-2"></i> Rate Your Order
+                            <a href="{% url 'orders:share_experience' order.id %}" class="btn btn-primary">
+                                <i class="fa fa-star me-2"></i> Share Your Experience
                             </a>
                             {% endif %}
                         </div>
@@ -194,20 +194,20 @@
                     <div class="bg-light rounded p-5 text-center">
                         <h4 class="mb-4">Enter Your Order Number</h4>
                         <p class="text-muted mb-4">Please enter your order number to track the status of your order.</p>
-                        
+
                         <form method="get" action="{% url 'orders:order_tracker' %}">
                             <div class="input-group mb-4 w-75 mx-auto">
                                 <input type="text" name="order_number" class="form-control" placeholder="e.g. ORD-123456" required>
                                 <button class="btn btn-primary" type="submit">Track</button>
                             </div>
                         </form>
-                        
+
                         {% if error_message %}
                         <div class="alert alert-danger mt-4">
                             {{ error_message }}
                         </div>
                         {% endif %}
-                        
+
                         <div class="mt-4">
                             <p>Don't have an order yet?</p>
                             <a href="{% url 'menu:menu_list' %}" class="btn btn-outline-primary">
@@ -227,33 +227,33 @@
     .order-tracker {
         margin: 40px 0;
     }
-    
+
     .progress-container {
         position: relative;
         padding: 30px 0;
     }
-    
+
     .progress {
         height: 6px;
         background-color: #e9ecef;
         position: relative;
         z-index: 1;
     }
-    
+
     .progress-steps {
         display: flex;
         justify-content: space-between;
         position: relative;
         margin-top: -18px;
     }
-    
+
     .progress-step {
         text-align: center;
         position: relative;
         z-index: 2;
         width: 80px;
     }
-    
+
     .step-icon {
         width: 40px;
         height: 40px;
@@ -267,32 +267,32 @@
         font-size: 16px;
         border: 2px solid #fff;
     }
-    
+
     .step-label {
         font-weight: 600;
         font-size: 14px;
         color: #6c757d;
     }
-    
+
     .step-time {
         font-size: 12px;
         color: #adb5bd;
     }
-    
+
     .progress-step.active .step-icon {
         background-color: #FEA116;
         color: #fff;
     }
-    
+
     .progress-step.active .step-label {
         color: #FEA116;
     }
-    
+
     .progress-step.completed .step-icon {
         background-color: #0F172B;
         color: #fff;
     }
-    
+
     .progress-step.completed .step-label {
         color: #0F172B;
     }
@@ -307,19 +307,19 @@
     function initMap() {
         // Restaurant location (starting point)
         const restaurantLocation = { lat: 40.7128, lng: -74.0060 }; // Example: New York
-        
+
         // Delivery address (destination)
         const deliveryLocation = { lat: 40.7282, lng: -73.9942 }; // Example: Slightly different location
-        
+
         // Current driver location (will be updated via API in real implementation)
         const driverLocation = { lat: 40.7200, lng: -74.0000 }; // Example: Somewhere between
-        
+
         // Create the map centered on the driver
         const map = new google.maps.Map(document.getElementById("deliveryMap"), {
             zoom: 13,
             center: driverLocation,
         });
-        
+
         // Add markers
         const restaurantMarker = new google.maps.Marker({
             position: restaurantLocation,
@@ -330,7 +330,7 @@
             },
             title: "Restaurant"
         });
-        
+
         const deliveryMarker = new google.maps.Marker({
             position: deliveryLocation,
             map: map,
@@ -340,7 +340,7 @@
             },
             title: "Delivery Address"
         });
-        
+
         const driverMarker = new google.maps.Marker({
             position: driverLocation,
             map: map,
@@ -350,7 +350,7 @@
             },
             title: "Delivery Driver"
         });
-        
+
         // Draw route
         const directionsService = new google.maps.DirectionsService();
         const directionsRenderer = new google.maps.DirectionsRenderer({
@@ -361,7 +361,7 @@
                 strokeWeight: 5
             }
         });
-        
+
         // Calculate and display route
         directionsService.route(
             {
@@ -373,17 +373,17 @@
             (response, status) => {
                 if (status === "OK") {
                     directionsRenderer.setDirections(response);
-                    
+
                     // Calculate remaining distance and time
                     const route = response.routes[0];
                     let remainingDistance = 0;
                     let remainingTime = 0;
-                    
+
                     // In a real implementation, you would calculate the remaining distance
                     // based on the driver's current position
                     remainingDistance = route.legs[0].distance.text;
                     remainingTime = route.legs[0].duration.text;
-                    
+
                     // Update the UI
                     document.getElementById("distanceRemaining").textContent = remainingDistance;
                     document.getElementById("estimatedArrival").textContent = "{{ order.estimated_delivery_time|date:'h:i A' }}";
@@ -391,7 +391,7 @@
                 }
             }
         );
-        
+
         // In a real implementation, you would update the driver's position periodically
         // using a WebSocket or polling an API
         function updateDriverPosition() {
@@ -399,9 +399,9 @@
             const newLat = driverLocation.lat + (Math.random() - 0.5) * 0.001;
             const newLng = driverLocation.lng + (Math.random() - 0.5) * 0.001;
             const newPosition = { lat: newLat, lng: newLng };
-            
+
             driverMarker.setPosition(newPosition);
-            
+
             // Recalculate route
             directionsService.route(
                 {
@@ -417,7 +417,7 @@
                 }
             );
         }
-        
+
         // Update driver position every 5 seconds
         setInterval(updateDriverPosition, 5000);
     }

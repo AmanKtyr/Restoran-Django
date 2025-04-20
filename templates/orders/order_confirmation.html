@@ -27,6 +27,25 @@
                             <i class="fa fa-utensils me-2"></i> Continue Shopping
                         </a>
                     </div>
+
+                    <div class="mt-5">
+                        <div class="row justify-content-center">
+                            <div class="col-md-8">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title mb-3">Share Your Order</h5>
+                                        <p class="text-muted mb-4">Let your friends know about your delicious order from Restoran!</p>
+
+                                        {% include 'components/social_share.html' with
+                                            share_url=request.build_absolute_uri
+                                            share_text="I just ordered from Restoran!"
+                                            share_description="I just placed an order at Restoran. Their food is amazing! Check them out."
+                                        %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="bg-light rounded p-4 mb-4">

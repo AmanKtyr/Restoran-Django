@@ -3,7 +3,10 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
+from django.core.paginator import Paginator
+from django.db import transaction
 from datetime import timedelta
+import uuid
 
 from .models import (
     LoyaltyTier, LoyaltyProgram, LoyaltyAccount,
@@ -232,3 +235,333 @@ def loyalty_settings(request):
         'program': program,
     }
     return render(request, 'loyalty/settings.html', context)
+
+
+# User-facing loyalty views
+@login_required
+def user_dashboard(request):
+    """User loyalty dashboard view"""
+    # Get or create loyalty account for the user
+    account, created = LoyaltyAccount.objects.get_or_create(
+        user=request.user,
+        defaults={'is_active': True}
+    )
+
+    # If account was just created, update tier
+    if created:
+        account.update_tier()
+
+    # Get loyalty program settings
+    try:
+        program = LoyaltyProgram.objects.get(is_active=True)
+    except LoyaltyProgram.DoesNotExist:
+        program = None
+
+    # Get all tiers for progress display
+    tiers = LoyaltyTier.objects.filter(is_active=True).order_by('points_threshold')
+
+    # Calculate next tier and progress
+    next_tier = None
+    tier_progress_percentage = 100
+    points_needed_for_next_tier = 0
+
+    if account.tier:
+        # Find the next tier
+        higher_tiers = tiers.filter(points_threshold__gt=account.tier.points_threshold)
+        if higher_tiers.exists():
+            next_tier = higher_tiers.first()
+            points_needed_for_next_tier = next_tier.points_threshold - account.lifetime_points
+
+            # Calculate progress percentage
+            if account.tier.points_threshold == 0:
+                current_tier_points = 0
+            else:
+                current_tier_points = account.tier.points_threshold
+
+            points_range = next_tier.points_threshold - current_tier_points
+            points_progress = account.lifetime_points - current_tier_points
+            tier_progress_percentage = min(100, int((points_progress / points_range) * 100))
+
+    # Get recent transactions
+    recent_transactions = LoyaltyTransaction.objects.filter(account=account).order_by('-timestamp')[:5]
+
+    # Get available rewards (that the user can afford)
+    available_rewards = LoyaltyReward.objects.filter(
+        is_active=True,
+        points_required__lte=account.points_balance
+    ).order_by('points_required')[:4]
+
+    # Generate referral URL
+    if not account.referral_code:
+        account.referral_code = str(uuid.uuid4())[:8].upper()
+        account.save(update_fields=['referral_code'])
+
+    referral_url = request.build_absolute_uri(f'/register/?ref={account.referral_code}')
+
+    context = {
+        'account': account,
+        'program': program,
+        'tiers': tiers,
+        'next_tier': next_tier,
+        'tier_progress_percentage': tier_progress_percentage,
+        'points_needed_for_next_tier': points_needed_for_next_tier,
+        'recent_transactions': recent_transactions,
+        'available_rewards': available_rewards,
+        'referral_url': referral_url,
+    }
+
+    return render(request, 'loyalty/user_dashboard.html', context)
+
+@login_required
+def user_rewards(request):
+    """User rewards catalog view"""
+    # Get user's loyalty account
+    account = get_object_or_404(LoyaltyAccount, user=request.user)
+
+    # Get loyalty program settings
+    program = get_object_or_404(LoyaltyProgram, is_active=True)
+
+    # Get all active rewards
+    rewards = LoyaltyReward.objects.filter(is_active=True)
+
+    # Apply filters
+    points_range = request.GET.get('points_range')
+    selected_categories = request.GET.getlist('category')
+
+    if points_range:
+        if points_range == 'available':
+            rewards = rewards.filter(points_required__lte=account.points_balance)
+        elif points_range == 'under_500':
+            rewards = rewards.filter(points_required__lt=500)
+        elif points_range == '500_1000':
+            rewards = rewards.filter(points_required__gte=500, points_required__lte=1000)
+        elif points_range == '1000_2000':
+            rewards = rewards.filter(points_required__gte=1000, points_required__lte=2000)
+        elif points_range == 'over_2000':
+            rewards = rewards.filter(points_required__gt=2000)
+
+    # Calculate next tier and progress
+    tiers = LoyaltyTier.objects.filter(is_active=True).order_by('points_threshold')
+    next_tier = None
+    tier_progress_percentage = 100
+    points_needed_for_next_tier = 0
+
+    if account.tier:
+        # Find the next tier
+        higher_tiers = tiers.filter(points_threshold__gt=account.tier.points_threshold)
+        if higher_tiers.exists():
+            next_tier = higher_tiers.first()
+            points_needed_for_next_tier = next_tier.points_threshold - account.lifetime_points
+
+            # Calculate progress percentage
+            if account.tier.points_threshold == 0:
+                current_tier_points = 0
+            else:
+                current_tier_points = account.tier.points_threshold
+
+            points_range = next_tier.points_threshold - current_tier_points
+            points_progress = account.lifetime_points - current_tier_points
+            tier_progress_percentage = min(100, int((points_progress / points_range) * 100))
+
+    context = {
+        'account': account,
+        'program': program,
+        'rewards': rewards,
+        'points_range': points_range,
+        'selected_categories': selected_categories,
+        'next_tier': next_tier,
+        'tier_progress_percentage': tier_progress_percentage,
+        'points_needed_for_next_tier': points_needed_for_next_tier,
+    }
+
+    return render(request, 'loyalty/user_rewards.html', context)
+
+@login_required
+def user_transactions(request):
+    """User transaction history view"""
+    # Get user's loyalty account
+    account = get_object_or_404(LoyaltyAccount, user=request.user)
+
+    # Get loyalty program settings
+    program = get_object_or_404(LoyaltyProgram, is_active=True)
+
+    # Get all transactions for this user
+    transactions = LoyaltyTransaction.objects.filter(account=account).order_by('-timestamp')
+
+    # Apply filters
+    transaction_type = request.GET.get('type')
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    if transaction_type:
+        transactions = transactions.filter(transaction_type=transaction_type)
+
+    if start_date and end_date:
+        try:
+            start_date = timezone.datetime.strptime(start_date, '%Y-%m-%d').date()
+            end_date = timezone.datetime.strptime(end_date, '%Y-%m-%d').date()
+            transactions = transactions.filter(timestamp__date__range=[start_date, end_date])
+        except ValueError:
+            pass
+
+    # Calculate totals
+    total_earned = transactions.filter(transaction_type='earn').aggregate(total=Sum('points'))['total'] or 0
+    total_spent = transactions.filter(transaction_type='redeem').aggregate(total=Sum('points'))['total'] or 0
+
+    # Paginate transactions
+    paginator = Paginator(transactions, 10)  # 10 transactions per page
+    page_number = request.GET.get('page')
+    transactions = paginator.get_page(page_number)
+
+    # Calculate next tier and progress
+    tiers = LoyaltyTier.objects.filter(is_active=True).order_by('points_threshold')
+    next_tier = None
+    tier_progress_percentage = 100
+    points_needed_for_next_tier = 0
+
+    if account.tier:
+        # Find the next tier
+        higher_tiers = tiers.filter(points_threshold__gt=account.tier.points_threshold)
+        if higher_tiers.exists():
+            next_tier = higher_tiers.first()
+            points_needed_for_next_tier = next_tier.points_threshold - account.lifetime_points
+
+            # Calculate progress percentage
+            if account.tier.points_threshold == 0:
+                current_tier_points = 0
+            else:
+                current_tier_points = account.tier.points_threshold
+
+            points_range = next_tier.points_threshold - current_tier_points
+            points_progress = account.lifetime_points - current_tier_points
+            tier_progress_percentage = min(100, int((points_progress / points_range) * 100))
+
+    context = {
+        'account': account,
+        'program': program,
+        'transactions': transactions,
+        'transaction_type': transaction_type,
+        'start_date': start_date,
+        'end_date': end_date,
+        'total_earned': total_earned,
+        'total_spent': total_spent,
+        'next_tier': next_tier,
+        'tier_progress_percentage': tier_progress_percentage,
+        'points_needed_for_next_tier': points_needed_for_next_tier,
+    }
+
+    return render(request, 'loyalty/user_transactions.html', context)
+
+@login_required
+def user_redemptions(request):
+    """User redemption history view"""
+    # Get user's loyalty account
+    account = get_object_or_404(LoyaltyAccount, user=request.user)
+
+    # Get loyalty program settings
+    program = get_object_or_404(LoyaltyProgram, is_active=True)
+
+    # Get all redemptions for this user
+    redemptions = RewardRedemption.objects.filter(account=account).order_by('-redemption_date')
+
+    # Add is_expired property to each redemption
+    for redemption in redemptions:
+        if redemption.expiration_date and timezone.now() > redemption.expiration_date:
+            redemption.is_expired = True
+        else:
+            redemption.is_expired = False
+
+    # Calculate next tier and progress
+    tiers = LoyaltyTier.objects.filter(is_active=True).order_by('points_threshold')
+    next_tier = None
+    tier_progress_percentage = 100
+    points_needed_for_next_tier = 0
+
+    if account.tier:
+        # Find the next tier
+        higher_tiers = tiers.filter(points_threshold__gt=account.tier.points_threshold)
+        if higher_tiers.exists():
+            next_tier = higher_tiers.first()
+            points_needed_for_next_tier = next_tier.points_threshold - account.lifetime_points
+
+            # Calculate progress percentage
+            if account.tier.points_threshold == 0:
+                current_tier_points = 0
+            else:
+                current_tier_points = account.tier.points_threshold
+
+            points_range = next_tier.points_threshold - current_tier_points
+            points_progress = account.lifetime_points - current_tier_points
+            tier_progress_percentage = min(100, int((points_progress / points_range) * 100))
+
+    context = {
+        'account': account,
+        'program': program,
+        'redemptions': redemptions,
+        'next_tier': next_tier,
+        'tier_progress_percentage': tier_progress_percentage,
+        'points_needed_for_next_tier': points_needed_for_next_tier,
+    }
+
+    return render(request, 'loyalty/user_redemptions.html', context)
+
+@login_required
+def redeem_reward(request, reward_id):
+    """Redeem a reward"""
+    # Get the reward
+    reward = get_object_or_404(LoyaltyReward, id=reward_id, is_active=True)
+
+    # Get user's loyalty account
+    account = get_object_or_404(LoyaltyAccount, user=request.user)
+
+    # Check if user has enough points
+    if account.points_balance < reward.points_required:
+        messages.error(request, f"You don't have enough points to redeem this reward. You need {reward.points_required - account.points_balance} more points.")
+        return redirect('loyalty:user_rewards')
+
+    # Check if reward is available (quantity)
+    if reward.limited_quantity and reward.quantity_available <= 0:
+        messages.error(request, "This reward is no longer available.")
+        return redirect('loyalty:user_rewards')
+
+    # Process the redemption
+    with transaction.atomic():
+        # Deduct points from account
+        account.points_balance -= reward.points_required
+        account.save(update_fields=['points_balance'])
+
+        # Create transaction record
+        transaction_obj = LoyaltyTransaction.objects.create(
+            account=account,
+            points=reward.points_required,
+            transaction_type='redeem',
+            reason=f"Redeemed for {reward.name}"
+        )
+
+        # Generate unique redemption code
+        redemption_code = f"{account.user.username[:3].upper()}-{uuid.uuid4().hex[:6].upper()}"
+
+        # Calculate expiration date (30 days from now)
+        expiration_date = timezone.now() + timedelta(days=30)
+
+        # Create redemption record
+        redemption = RewardRedemption.objects.create(
+            account=account,
+            reward=reward,
+            points_used=reward.points_required,
+            redemption_code=redemption_code,
+            expiration_date=expiration_date
+        )
+
+        # Update reward quantity if limited
+        if reward.limited_quantity:
+            reward.quantity_available -= 1
+            reward.save(update_fields=['quantity_available'])
+
+    messages.success(request, f"You have successfully redeemed {reward.name} for {reward.points_required} points!")
+
+    # Redirect to redemption confirmation page
+    return render(request, 'loyalty/redeem_confirmation.html', {
+        'redemption': redemption,
+        'account': account,
+    })

@@ -14,7 +14,7 @@
             <span class="text-muted">Today: {{ today|date:"F d, Y" }}</span>
         </div>
     </div>
-    
+
     <!-- Stats Cards -->
     <div class="row">
         <div class="col-xl-3 col-md-6 mb-4">
@@ -39,7 +39,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card dashboard-card card-revenue h-100">
                 <div class="card-body">
@@ -62,7 +62,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card dashboard-card card-bookings h-100">
                 <div class="card-body">
@@ -85,7 +85,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card dashboard-card card-users h-100">
                 <div class="card-body">
@@ -109,7 +109,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Recent Activity -->
     <div class="row">
         <div class="col-xl-8 mb-4">
@@ -166,7 +166,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-xl-4 mb-4">
             <div class="card h-100">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -212,7 +212,143 @@
             </div>
         </div>
     </div>
-    
+
+    <!-- Staff & Operations Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-3">Staff & Operations</h4>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card bg-gradient-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-user-tie fa-3x mb-3"></i>
+                            <h5 class="card-title mb-0">Team</h5>
+                            <p class="card-text mt-2">Manage your restaurant team members</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 d-flex align-items-center justify-content-between">
+                    <a href="{% url 'admin_panel:team_list' %}" class="text-white">Manage Team</a>
+                    <i class="fas fa-arrow-circle-right"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card bg-gradient-success text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-id-card fa-3x mb-3"></i>
+                            <h5 class="card-title mb-0">Staffing</h5>
+                            <p class="card-text mt-2">Manage staff schedules and assignments</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 d-flex align-items-center justify-content-between">
+                    <a href="{% url 'admin_panel:staffing_dashboard' %}" class="text-white">Staffing Dashboard</a>
+                    <i class="fas fa-arrow-circle-right"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card bg-gradient-danger text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-fire fa-3x mb-3"></i>
+                            <h5 class="card-title mb-0">Kitchen</h5>
+                            <p class="card-text mt-2">Monitor kitchen operations and orders</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 d-flex align-items-center justify-content-between">
+                    <a href="{% url 'admin_panel:kitchen_dashboard' %}" class="text-white">Kitchen Dashboard</a>
+                    <i class="fas fa-arrow-circle-right"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card bg-gradient-warning text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-boxes fa-3x mb-3"></i>
+                            <h5 class="card-title mb-0">Inventory</h5>
+                            <p class="card-text mt-2">Track inventory and supplies</p>
+                            {% if low_stock_items > 0 %}
+                            <span class="badge bg-danger">{{ low_stock_items }} low stock items</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 d-flex align-items-center justify-content-between">
+                    <a href="{% url 'admin_panel:inventory_dashboard' %}" class="text-white">Inventory Dashboard</a>
+                    <i class="fas fa-arrow-circle-right"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports & Analytics Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-3">Reports & Analytics</h4>
+        </div>
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card bg-gradient-info text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-chart-line fa-3x mb-3"></i>
+                            <h5 class="card-title mb-0">Analytics Dashboard</h5>
+                            <p class="card-text mt-2">View comprehensive analytics and insights</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 d-flex align-items-center justify-content-between">
+                    <a href="{% url 'admin_panel:analytics_dashboard' %}" class="text-white">View Analytics</a>
+                    <i class="fas fa-arrow-circle-right"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card bg-gradient-success text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-file-alt fa-3x mb-3"></i>
+                            <h5 class="card-title mb-0">Reports</h5>
+                            <p class="card-text mt-2">Generate and view detailed reports</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 d-flex align-items-center justify-content-between">
+                    <a href="{% url 'admin_panel:analytics_reports' %}" class="text-white">View Reports</a>
+                    <i class="fas fa-arrow-circle-right"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card bg-gradient-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-dollar-sign fa-3x mb-3"></i>
+                            <h5 class="card-title mb-0">Sales Analytics</h5>
+                            <p class="card-text mt-2">Track sales performance and trends</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 d-flex align-items-center justify-content-between">
+                    <a href="{% url 'admin_panel:analytics_sales' %}" class="text-white">View Sales</a>
+                    <i class="fas fa-arrow-circle-right"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-xl-6 mb-4">
             <div class="card h-100">
@@ -258,7 +394,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-xl-6 mb-4">
             <div class="card h-100">
                 <div class="card-header d-flex justify-content-between align-items-center">

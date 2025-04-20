@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Digital Menu QR Code - Restoran{% endblock %}
+
+{% block page_title %}Digital Menu QR Code{% endblock %}
+{% block breadcrumb_active %}QR Code Generator{% endblock %}
+
+{% block content %}
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+            <h5 class="section-title ff-secondary text-center text-primary fw-normal">Digital Menu</h5>
+            <h1 class="mb-5">QR Code Generator</h1>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="bg-light rounded p-4 mb-4">
+                    <h4 class="mb-4">Generate QR Code for Our Menu</h4>
+                    <p class="mb-4">Create a custom QR code for our digital menu. You can customize it for specific categories or share it with friends and family.</p>
+                    
+                    <form id="qrCodeForm" method="get" action="{% url 'menu:qr_code_generator' %}">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Menu Type</label>
+                                <select class="form-select" name="menu_type" id="menuType">
+                                    <option value="full" {% if menu_type == 'full' %}selected{% endif %}>Full Menu</option>
+                                    <option value="category" {% if menu_type == 'category' %}selected{% endif %}>Specific Category</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6" id="categorySelectContainer" {% if menu_type != 'category' %}style="display: none;"{% endif %}>
+                                <label class="form-label">Select Category</label>
+                                <select class="form-select" name="category_id" id="categorySelect">
+                                    <option value="">Select a category</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}" {% if category_id == category.id|stringformat:"i" %}selected{% endif %}>{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">QR Code Size</label>
+                                <select class="form-select" name="size" id="qrSize">
+                                    <option value="small" {% if size == 'small' %}selected{% endif %}>Small</option>
+                                    <option value="medium" {% if size == 'medium' or not size %}selected{% endif %}>Medium</option>
+                                    <option value="large" {% if size == 'large' %}selected{% endif %}>Large</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Include Restaurant Logo</label>
+                                <div class="form-check form-switch mt-2">
+                                    <input class="form-check-input" type="checkbox" id="includeLogo" name="include_logo" value="1" {% if include_logo %}checked{% endif %}>
+                                    <label class="form-check-label" for="includeLogo">Add logo to QR code</label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12 text-center mt-4">
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="fa fa-qrcode me-2"></i> Generate QR Code
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                {% if qr_code_url %}
+                <div class="bg-light rounded p-4 text-center">
+                    <h4 class="mb-4">Your QR Code</h4>
+                    <div class="qr-code-container mb-4">
+                        <img src="{{ qr_code_url }}" alt="Menu QR Code" class="img-fluid rounded">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <p>Scan this QR code with your smartphone camera to view our digital menu.</p>
+                        <p class="text-muted">This QR code links to: <a href="{{ menu_url }}" target="_blank">{{ menu_url }}</a></p>
+                    </div>
+                    
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="{{ qr_code_url }}" download="restoran-menu-qr-code.png" class="btn btn-primary">
+                            <i class="fa fa-download me-2"></i> Download QR Code
+                        </a>
+                        <button type="button" class="btn btn-outline-primary" id="shareButton">
+                            <i class="fa fa-share-alt me-2"></i> Share
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuType = document.getElementById('menuType');
+        const categoryContainer = document.getElementById('categorySelectContainer');
+        const categorySelect = document.getElementById('categorySelect');
+        const shareButton = document.getElementById('shareButton');
+        
+        // Toggle category select visibility based on menu type
+        menuType.addEventListener('change', function() {
+            if (this.value === 'category') {
+                categoryContainer.style.display = 'block';
+                categorySelect.setAttribute('required', 'required');
+            } else {
+                categoryContainer.style.display = 'none';
+                categorySelect.removeAttribute('required');
+            }
+        });
+        
+        // Share functionality
+        if (shareButton) {
+            shareButton.addEventListener('click', function() {
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'Restoran Digital Menu',
+                        text: 'Check out our digital menu!',
+                        url: '{{ menu_url|default:request.build_absolute_uri }}'
+                    })
+                    .then(() => console.log('Share successful'))
+                    .catch((error) => console.log('Error sharing:', error));
+                } else {
+                    // Fallback for browsers that don't support the Web Share API
+                    const dummy = document.createElement('input');
+                    document.body.appendChild(dummy);
+                    dummy.value = '{{ menu_url|default:request.build_absolute_uri }}';
+                    dummy.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(dummy);
+                    
+                    alert('Link copied to clipboard!');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

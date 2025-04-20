@@ -1,0 +1,1152 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Dashboard - Restoran{% endblock %}
+{% block page_title %}My Dashboard{% endblock %}
+{% block breadcrumb_active %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-card {
+        border-radius: 15px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        height: 100%;
+        border: none;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .profile-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .profile-header {
+        background-color: #0F172B;
+        color: white;
+        padding: 20px;
+        position: relative;
+    }
+
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        border: 4px solid #FEA116;
+        object-fit: cover;
+        margin-bottom: 15px;
+    }
+
+    .profile-stats {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 10px;
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #FEA116;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        color: #6c757d;
+        text-transform: uppercase;
+    }
+
+    .activity-item {
+        padding: 15px;
+        border-bottom: 1px solid #e9ecef;
+        position: relative;
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+    }
+
+    .activity-content {
+        flex: 1;
+    }
+
+    .activity-time {
+        font-size: 12px;
+        color: #6c757d;
+    }
+
+    .loyalty-progress {
+        height: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+    }
+
+    .recommendation-card {
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+    }
+
+    .recommendation-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .recommendation-img {
+        height: 150px;
+        object-fit: cover;
+    }
+
+    .nav-pills .nav-link.active {
+        background-color: #FEA116;
+    }
+
+    .nav-pills .nav-link {
+        color: #0F172B;
+    }
+
+    .nav-pills .nav-link.active {
+        color: white;
+    }
+
+    .quick-action-btn {
+        border-radius: 15px;
+        padding: 20px 15px;
+        text-align: center;
+        transition: all 0.3s ease;
+        height: 100%;
+        border: none;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+        color: #fff;
+        font-weight: 500;
+    }
+
+    .quick-action-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.1);
+        z-index: -1;
+        transform: scale(0);
+        transition: all 0.5s ease;
+        border-radius: 50%;
+    }
+
+    .quick-action-btn:hover::before {
+        transform: scale(2);
+    }
+
+    .quick-action-btn:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .quick-action-icon {
+        font-size: 28px;
+        margin-bottom: 12px;
+        background: rgba(255, 255, 255, 0.2);
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        margin: 0 auto 15px;
+        transition: all 0.3s ease;
+    }
+
+    .quick-action-btn:hover .quick-action-icon {
+        transform: scale(1.1);
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    .quick-action-text {
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .bg-gradient-booking {
+        background: linear-gradient(135deg, #4e54c8, #8f94fb);
+    }
+
+    .bg-gradient-order {
+        background: linear-gradient(135deg, #ff9966, #ff5e62);
+    }
+
+    .bg-gradient-profile {
+        background: linear-gradient(135deg, #11998e, #38ef7d);
+    }
+
+    .bg-gradient-password {
+        background: linear-gradient(135deg, #2193b0, #6dd5ed);
+    }
+
+    .bg-gradient-activity {
+        background: linear-gradient(135deg, #834d9b, #d04ed6);
+    }
+
+    /* Fix for footer overlap */
+    .footer {
+        position: relative;
+        z-index: 5;
+    }
+
+    /* Profile Card Styles */
+    .profile-card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .profile-card:hover {
+        box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.15);
+        transform: translateY(-2px);
+    }
+
+    /* Activity Styles */
+    .activity-item {
+        padding: 15px;
+        border-bottom: 1px solid #e9ecef;
+        transition: all 0.2s ease;
+    }
+
+    .activity-item:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        flex-shrink: 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .activity-content {
+        flex-grow: 1;
+    }
+
+    .activity-time {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+
+    /* Recommendation Cards */
+    .recommendation-card {
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+    .recommendation-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .recommendation-img {
+        height: 160px;
+        object-fit: cover;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-xxl py-5" style="position: relative; z-index: 1;">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Left Column - User Profile -->
+            <div class="col-lg-4">
+                <!-- Profile Card -->
+                <div class="card profile-card mb-4">
+                    <div class="profile-header text-center" style="background: linear-gradient(135deg, #0F172B, #1a2942); color: white; padding: 30px 20px; border-radius: 8px 8px 0 0;">
+                        <div class="position-relative d-inline-block mb-3">
+                            {% if user.profile.profile_picture %}
+                                <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.get_full_name }}" class="profile-avatar" style="border: 4px solid rgba(254, 161, 22, 0.7);">
+                            {% else %}
+                                <img src="{% static 'img/user-default.jpg' %}" alt="{{ user.get_full_name }}" class="profile-avatar" style="border: 4px solid rgba(254, 161, 22, 0.7);">
+                            {% endif %}
+                            {% if loyalty_account and loyalty_account.tier %}
+                                <span class="position-absolute bottom-0 end-0 badge rounded-pill" style="background-color: #FEA116; transform: translate(10%, 10%);">
+                                    <i class="fa fa-crown"></i>
+                                </span>
+                            {% endif %}
+                        </div>
+                        <h4 class="mb-1">{{ user.get_full_name }}</h4>
+                        <p class="mb-0" style="color: rgba(255, 255, 255, 0.7);">@{{ user.username }}</p>
+                        <p class="mb-2" style="color: rgba(255, 255, 255, 0.7);"><small>Member since {{ user.date_joined|date:"F Y" }}</small></p>
+                        {% if loyalty_account and loyalty_account.tier %}
+                            <div class="mt-2">
+                                <span class="badge" style="background-color: #FEA116;">
+                                    <i class="fa fa-crown me-1"></i> {{ loyalty_account.tier.name }} Member
+                                </span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="profile-stats" style="background-color: #f8f9fa; padding: 15px;">
+                        <div class="row g-0">
+                            <div class="col-4 stat-item" style="border-right: 1px solid #e9ecef;">
+                                <div class="stat-value" style="color: #0F172B; font-weight: 600;">{{ order_count|default:"0" }}</div>
+                                <div class="stat-label" style="color: #6c757d; font-size: 0.85rem;">Orders</div>
+                            </div>
+                            <div class="col-4 stat-item" style="border-right: 1px solid #e9ecef;">
+                                <div class="stat-value" style="color: #0F172B; font-weight: 600;">{{ booking_count|default:"0" }}</div>
+                                <div class="stat-label" style="color: #6c757d; font-size: 0.85rem;">Bookings</div>
+                            </div>
+                            <div class="col-4 stat-item">
+                                <div class="stat-value" style="color: #0F172B; font-weight: 600;">{{ review_count|default:"0" }}</div>
+                                <div class="stat-label" style="color: #6c757d; font-size: 0.85rem;">Reviews</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <h5 class="card-title d-flex align-items-center">
+                            <i class="fa fa-crown me-2" style="color: #FEA116;"></i>
+                            Loyalty Status
+                        </h5>
+                        {% if loyalty_account %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-medium">{{ loyalty_account.tier.name }} Member</span>
+                                <span class="badge bg-primary">{{ loyalty_account.points_balance }} Points</span>
+                            </div>
+                            <div class="progress loyalty-progress" style="height: 10px; background-color: #e9ecef;">
+                                <div class="progress-bar" role="progressbar" style="width: {{ tier_progress_percentage }}%; background-color: #FEA116;" aria-valuenow="{{ tier_progress_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            {% if next_tier %}
+                                <p class="small text-muted text-center mt-2">{{ points_needed_for_next_tier }} more points to reach {{ next_tier.name }}</p>
+                            {% else %}
+                                <p class="small text-muted text-center mt-2">You've reached our highest tier!</p>
+                            {% endif %}
+                            <div class="d-grid gap-2 mt-3">
+                                <a href="{% url 'loyalty:user_dashboard' %}" class="btn btn-outline-primary">
+                                    <i class="fa fa-gift me-1"></i> View Rewards
+                                </a>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-3">
+                                <i class="fa fa-crown fa-2x mb-3" style="color: #FEA116;"></i>
+                                <p class="text-muted">You're not enrolled in our loyalty program yet.</p>
+                                <div class="d-grid gap-2">
+                                    <a href="{% url 'loyalty:user_dashboard' %}" class="btn btn-primary">
+                                        <i class="fa fa-plus-circle me-1"></i> Join Loyalty Program
+                                    </a>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer bg-light">
+                        <a href="{% url 'accounts:edit_profile' %}" class="btn btn-sm btn-primary w-100">
+                            <i class="fa fa-edit me-1"></i> Edit Profile
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Spacer to prevent footer overlap -->
+                <div class="mb-5 pb-5" style="height: 50px;"></div>
+            </div>
+
+            <!-- Right Column - Dashboard Content -->
+            <div class="col-lg-8">
+                <!-- Navigation Tabs -->
+                <ul class="nav nav-pills mb-4" id="dashboardTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="activity-tab" data-bs-toggle="pill" data-bs-target="#activity" type="button" role="tab" aria-controls="activity" aria-selected="true"><i class="fa fa-tachometer-alt me-2"></i>Overview</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="profile-tab" data-bs-toggle="pill" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false"><i class="fa fa-user me-2"></i>Profile</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="orders-tab" data-bs-toggle="pill" data-bs-target="#orders" type="button" role="tab" aria-controls="orders" aria-selected="false"><i class="fa fa-shopping-bag me-2"></i>Orders</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="reservations-tab" data-bs-toggle="pill" data-bs-target="#reservations" type="button" role="tab" aria-controls="reservations" aria-selected="false"><i class="fa fa-calendar-check me-2"></i>Reservations</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="favorites-tab" data-bs-toggle="pill" data-bs-target="#favorites" type="button" role="tab" aria-controls="favorites" aria-selected="false"><i class="fa fa-heart me-2"></i>Favorites</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="addresses-tab" data-bs-toggle="pill" data-bs-target="#addresses" type="button" role="tab" aria-controls="addresses" aria-selected="false"><i class="fa fa-map-marker-alt me-2"></i>Addresses</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="referrals-tab" data-bs-toggle="pill" data-bs-target="#referrals" type="button" role="tab" aria-controls="referrals" aria-selected="false"><i class="fa fa-users me-2"></i>Referrals</button>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content" id="dashboardTabContent">
+                    <!-- Activity Tab -->
+                    <div class="tab-pane fade show active" id="activity" role="tabpanel" aria-labelledby="activity-tab">
+                        <!-- Quick Actions -->
+                        <div class="card profile-card mb-4">
+                            <div class="card-header" style="background: linear-gradient(135deg, #0F172B, #1a2942); color: white;">
+                                <h5 class="mb-0"><i class="fa fa-bolt me-2" style="color: #FEA116;"></i> Quick Actions</h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row g-4">
+                                    <div class="col-md-4 col-6">
+                                        <a href="{% url 'booking:booking' %}" class="quick-action-btn bg-gradient-booking d-block">
+                                            <div class="quick-action-icon">
+                                                <i class="fa fa-calendar-plus"></i>
+                                            </div>
+                                            <div class="quick-action-text">Book a Table</div>
+                                        </a>
+                                    </div>
+                                    <div class="col-md-4 col-6">
+                                        <a href="{% url 'menu:menu_list' %}" class="quick-action-btn bg-gradient-order d-block">
+                                            <div class="quick-action-icon">
+                                                <i class="fa fa-utensils"></i>
+                                            </div>
+                                            <div class="quick-action-text">Order Food</div>
+                                        </a>
+                                    </div>
+                                    <div class="col-md-4 col-6">
+                                        <a href="{% url 'loyalty:user_dashboard' %}" class="quick-action-btn d-block" style="background: linear-gradient(135deg, #F09819, #EDDE5D);">
+                                            <div class="quick-action-icon">
+                                                <i class="fa fa-crown"></i>
+                                            </div>
+                                            <div class="quick-action-text">My Rewards</div>
+                                        </a>
+                                    </div>
+                                    <div class="col-md-4 col-6">
+                                        <a href="{% url 'accounts:edit_profile' %}" class="quick-action-btn bg-gradient-profile d-block">
+                                            <div class="quick-action-icon">
+                                                <i class="fa fa-user-edit"></i>
+                                            </div>
+                                            <div class="quick-action-text">Edit Profile</div>
+                                        </a>
+                                    </div>
+                                    <div class="col-md-4 col-6">
+                                        <a href="{% url 'accounts:change_password' %}" class="quick-action-btn bg-gradient-password d-block">
+                                            <div class="quick-action-icon">
+                                                <i class="fa fa-lock"></i>
+                                            </div>
+                                            <div class="quick-action-text">Change Password</div>
+                                        </a>
+                                    </div>
+                                    <div class="col-md-4 col-6">
+                                        <a href="{% url 'accounts:activity_history' %}" class="quick-action-btn bg-gradient-activity d-block">
+                                            <div class="quick-action-icon">
+                                                <i class="fa fa-history"></i>
+                                            </div>
+                                            <div class="quick-action-text">Activity History</div>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card profile-card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fa fa-history me-2"></i> Recent Activity</h5>
+                            </div>
+                            <div class="card-body p-0">
+                                {% if activities %}
+                                    <div class="list-group list-group-flush">
+                                        {% for activity in activities %}
+                                            <div class="activity-item d-flex align-items-start">
+                                                <div class="activity-icon">
+                                                    {% if activity.type == 'order' %}
+                                                        <i class="fa fa-shopping-bag text-primary"></i>
+                                                    {% elif activity.type == 'booking' %}
+                                                        <i class="fa fa-calendar-check text-success"></i>
+                                                    {% elif activity.type == 'review' %}
+                                                        <i class="fa fa-star text-warning"></i>
+                                                    {% elif activity.type == 'loyalty' %}
+                                                        <i class="fa fa-crown text-info"></i>
+                                                    {% else %}
+                                                        <i class="fa fa-check-circle text-secondary"></i>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="activity-content">
+                                                    <p class="mb-1">{{ activity.description }}</p>
+                                                    <p class="activity-time mb-0">{{ activity.timestamp|date:"F d, Y, g:i A" }}</p>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="text-center py-5">
+                                        <i class="fa fa-history fa-3x text-muted mb-3"></i>
+                                        <h5>No Recent Activity</h5>
+                                        <p class="text-muted">Your recent activities will appear here.</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Personalized Recommendations -->
+                        <div class="card profile-card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fa fa-lightbulb me-2"></i> Recommended for You</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if recommendations %}
+                                    <div class="row">
+                                        {% for item in recommendations %}
+                                            <div class="col-md-6 mb-3">
+                                                <div class="card recommendation-card">
+                                                    {% if item.image %}
+                                                        <img src="{{ item.image.url }}" class="card-img-top recommendation-img" alt="{{ item.name }}">
+                                                    {% else %}
+                                                        <div class="card-img-top recommendation-img bg-light d-flex align-items-center justify-content-center">
+                                                            <i class="fa fa-utensils fa-2x text-muted"></i>
+                                                        </div>
+                                                    {% endif %}
+                                                    <div class="card-body">
+                                                        <h6 class="card-title">{{ item.name }}</h6>
+                                                        <p class="card-text small text-muted">{{ item.description|truncatechars:60 }}</p>
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <span class="text-primary">{{ currency_symbol|default:"$" }}{{ item.price }}</span>
+                                                            <a href="{% url 'menu:menu_item_detail' item.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="text-center py-4">
+                                        <i class="fa fa-lightbulb fa-3x text-muted mb-3"></i>
+                                        <h5>No Recommendations Yet</h5>
+                                        <p class="text-muted">Place orders to get personalized recommendations.</p>
+                                        <a href="{% url 'menu:menu_list' %}" class="btn btn-primary mt-2">Browse Menu</a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Orders Tab -->
+                    <div class="tab-pane fade" id="orders" role="tabpanel" aria-labelledby="orders-tab">
+                        <div class="card profile-card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="fa fa-shopping-bag me-2"></i> Your Orders</h5>
+                                <a href="{% url 'orders:order_history' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                            </div>
+                            <div class="card-body p-0">
+                                {% if recent_orders %}
+                                    <div class="table-responsive">
+                                        <table class="table table-hover mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Order #</th>
+                                                    <th>Date</th>
+                                                    <th>Total</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for order in recent_orders %}
+                                                    <tr>
+                                                        <td>{{ order.order_number }}</td>
+                                                        <td>{{ order.created_at|date:"M d, Y" }}</td>
+                                                        <td>{{ currency_symbol|default:"$" }}{{ order.total }}</td>
+                                                        <td>
+                                                            <span class="badge bg-{{ order.get_status_color }}">
+                                                                {{ order.get_status_display }}
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-sm btn-outline-primary">Details</a>
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                {% else %}
+                                    <div class="text-center py-5">
+                                        <i class="fa fa-shopping-bag fa-3x text-muted mb-3"></i>
+                                        <h5>No Orders Yet</h5>
+                                        <p class="text-muted">You haven't placed any orders yet.</p>
+                                        <a href="{% url 'menu:menu_list' %}" class="btn btn-primary mt-2">Order Now</a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reservations Tab -->
+                    <div class="tab-pane fade" id="reservations" role="tabpanel" aria-labelledby="reservations-tab">
+                        <div class="card profile-card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="fa fa-calendar-check me-2"></i> Your Reservations</h5>
+                                <a href="{% url 'booking:my_bookings' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                            </div>
+                            <div class="card-body p-0">
+                                {% if recent_bookings %}
+                                    <div class="table-responsive">
+                                        <table class="table table-hover mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Reservation #</th>
+                                                    <th>Date & Time</th>
+                                                    <th>Guests</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for booking in recent_bookings %}
+                                                    <tr>
+                                                        <td>{{ booking.confirmation_code }}</td>
+                                                        <td>{{ booking.date_time|date:"M d, Y, g:i A" }}</td>
+                                                        <td>{{ booking.guest_count_adults|add:booking.guest_count_children }}</td>
+                                                        <td>
+                                                            <span class="badge bg-{{ booking.get_status_color }}">
+                                                                {{ booking.get_status_display }}
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <a href="{% url 'booking:reservation_tracker' %}?code={{ booking.confirmation_code }}" class="btn btn-sm btn-outline-primary">Track</a>
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                {% else %}
+                                    <div class="text-center py-5">
+                                        <i class="fa fa-calendar-check fa-3x text-muted mb-3"></i>
+                                        <h5>No Reservations Yet</h5>
+                                        <p class="text-muted">You haven't made any reservations yet.</p>
+                                        <a href="{% url 'booking:booking' %}" class="btn btn-primary mt-2">Book a Table</a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Favorites Tab -->
+                    <div class="tab-pane fade" id="favorites" role="tabpanel" aria-labelledby="favorites-tab">
+                        <div class="card profile-card">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fa fa-heart me-2"></i> Your Favorites</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if favorites %}
+                                    <div class="row">
+                                        {% for favorite in favorites %}
+                                            {% with item=favorite.menu_item %}
+                                            <div class="col-md-6 mb-3">
+                                                <div class="card recommendation-card">
+                                                    {% if item.image %}
+                                                        <img src="{{ item.image.url }}" class="card-img-top recommendation-img" alt="{{ item.name }}">
+                                                    {% else %}
+                                                        <div class="card-img-top recommendation-img bg-light d-flex align-items-center justify-content-center">
+                                                            <i class="fa fa-utensils fa-2x text-muted"></i>
+                                                        </div>
+                                                    {% endif %}
+                                                    <div class="card-body">
+                                                        <h6 class="card-title">{{ item.name }}</h6>
+                                                        <p class="card-text small text-muted">{{ item.description|truncatechars:60 }}</p>
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <span class="text-primary">{{ currency_symbol|default:"$" }}{{ item.price }}</span>
+                                                            <div>
+                                                                <a href="{% url 'menu:menu_item_detail' item.id %}" class="btn btn-sm btn-outline-primary me-1">View</a>
+                                                                <button class="btn btn-sm btn-outline-danger remove-favorite" data-item-id="{{ item.id }}">
+                                                                    <i class="fa fa-heart-broken"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endwith %}
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="text-center py-5">
+                                        <i class="fa fa-heart fa-3x text-muted mb-3"></i>
+                                        <h5>No Favorites Yet</h5>
+                                        <p class="text-muted">You haven't added any items to your favorites yet.</p>
+                                        <a href="{% url 'menu:menu_list' %}" class="btn btn-primary mt-2">Browse Menu</a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profile Tab -->
+                    <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                        <div class="card profile-card mb-4">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="fa fa-user me-2"></i> Personal Information</h5>
+                                <a href="{% url 'accounts:edit_profile' %}" class="btn btn-sm btn-outline-primary"><i class="fa fa-edit me-1"></i> Edit</a>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <h6 class="text-muted mb-2">Basic Information</h6>
+                                        <div class="mb-3">
+                                            <label class="small text-muted d-block">Full Name</label>
+                                            <div class="fw-medium">{{ user.get_full_name|default:"Not provided" }}</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="small text-muted d-block">Username</label>
+                                            <div class="fw-medium">{{ user.username }}</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="small text-muted d-block">Email Address</label>
+                                            <div class="fw-medium">{{ user.email }}</div>
+                                            {% if user.profile.email_verified %}
+                                                <span class="badge bg-success"><i class="fa fa-check-circle me-1"></i> Verified</span>
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark"><i class="fa fa-exclamation-circle me-1"></i> Not Verified</span>
+                                                <a href="{% url 'accounts:resend_verification' %}" class="small ms-2">Verify Now</a>
+                                            {% endif %}
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="small text-muted d-block">Phone Number</label>
+                                            <div class="fw-medium">{{ user.profile.phone|default:"Not provided" }}</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="small text-muted d-block">Date of Birth</label>
+                                            <div class="fw-medium">{{ user.profile.date_of_birth|date:"F d, Y"|default:"Not provided" }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6 class="text-muted mb-2">Dietary Preferences</h6>
+                                        <div class="mb-3">
+                                            <label class="small text-muted d-block">Dietary Preference</label>
+                                            <div class="fw-medium">{{ user.profile.get_dietary_preference_display }}</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="small text-muted d-block">Spice Preference</label>
+                                            <div class="fw-medium">{{ user.profile.get_spice_preference_display }}</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="small text-muted d-block">Food Allergies</label>
+                                            <div class="fw-medium">{{ user.profile.food_allergies|default:"None specified" }}</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="small text-muted d-block">Favorite Cuisine</label>
+                                            <div class="fw-medium">{{ user.profile.favorite_cuisine|default:"Not specified" }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <h6 class="text-muted mb-2">About Me</h6>
+                                <div class="mb-4">
+                                    <div class="fw-medium">{{ user.profile.bio|default:"No bio provided"|linebreaks }}</div>
+                                </div>
+
+                                <h6 class="text-muted mb-2">Social Media Profiles</h6>
+                                <div class="row mb-4">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="small text-muted d-block">Facebook</label>
+                                            <div class="fw-medium">
+                                                {% if user.profile.facebook_profile %}
+                                                <a href="{{ user.profile.facebook_profile }}" target="_blank" class="text-decoration-none">
+                                                    <i class="fab fa-facebook me-1"></i> View Profile
+                                                </a>
+                                                {% else %}
+                                                Not linked
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="small text-muted d-block">Instagram</label>
+                                            <div class="fw-medium">
+                                                {% if user.profile.instagram_profile %}
+                                                <a href="{{ user.profile.instagram_profile }}" target="_blank" class="text-decoration-none">
+                                                    <i class="fab fa-instagram me-1"></i> View Profile
+                                                </a>
+                                                {% else %}
+                                                Not linked
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="small text-muted d-block">Twitter</label>
+                                            <div class="fw-medium">
+                                                {% if user.profile.twitter_profile %}
+                                                <a href="{{ user.profile.twitter_profile }}" target="_blank" class="text-decoration-none">
+                                                    <i class="fab fa-twitter me-1"></i> View Profile
+                                                </a>
+                                                {% else %}
+                                                Not linked
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <h6 class="text-muted mb-2">Communication Preferences</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="" id="newsletterCheck" {% if user.profile.is_subscribed_to_newsletter %}checked{% endif %} disabled>
+                                                <label class="form-check-label" for="newsletterCheck">
+                                                    Subscribe to newsletter
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="" id="orderUpdatesCheck" {% if user.profile.receive_order_updates %}checked{% endif %} disabled>
+                                                <label class="form-check-label" for="orderUpdatesCheck">
+                                                    Receive order updates
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="" id="promoEmailsCheck" {% if user.profile.receive_promotional_emails %}checked{% endif %} disabled>
+                                                <label class="form-check-label" for="promoEmailsCheck">
+                                                    Receive promotional emails
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="" id="smsNotificationsCheck" {% if user.profile.receive_sms_notifications %}checked{% endif %} disabled>
+                                                <label class="form-check-label" for="smsNotificationsCheck">
+                                                    Receive SMS notifications
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-light">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{% url 'accounts:edit_profile' %}" class="btn btn-primary"><i class="fa fa-edit me-1"></i> Edit Profile</a>
+                                    <a href="{% url 'accounts:change_password' %}" class="btn btn-outline-secondary"><i class="fa fa-lock me-1"></i> Change Password</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Addresses Tab -->
+                    <div class="tab-pane fade" id="addresses" role="tabpanel" aria-labelledby="addresses-tab">
+                        <div class="card profile-card mb-4">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="fa fa-map-marker-alt me-2"></i> Your Addresses</h5>
+                                <a href="{% url 'accounts:add_address' %}" class="btn btn-sm btn-primary"><i class="fa fa-plus me-1"></i> Add New Address</a>
+                            </div>
+                            <div class="card-body">
+                                {% if addresses %}
+                                    <div class="row">
+                                        {% for address in addresses %}
+                                        <div class="col-md-6 mb-4">
+                                            <div class="card h-100 {% if address.is_default %}border-primary{% else %}border-light{% endif %}">
+                                                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                                                    <h6 class="mb-0">
+                                                        {{ address.name }}
+                                                        {% if address.is_default %}
+                                                        <span class="badge bg-primary ms-2">Default</span>
+                                                        {% endif %}
+                                                    </h6>
+                                                    <span class="badge bg-secondary">{{ address.get_address_type_display }}</span>
+                                                </div>
+                                                <div class="card-body">
+                                                    <p class="mb-1">{{ address.address_line1 }}</p>
+                                                    {% if address.address_line2 %}
+                                                    <p class="mb-1">{{ address.address_line2 }}</p>
+                                                    {% endif %}
+                                                    <p class="mb-1">{{ address.city }}, {{ address.state }} {{ address.postal_code }}</p>
+                                                    <p class="mb-1">{{ address.country }}</p>
+                                                    {% if address.phone %}
+                                                    <p class="mb-0"><i class="fa fa-phone-alt me-2 text-muted"></i>{{ address.phone }}</p>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="card-footer bg-transparent">
+                                                    <div class="btn-group w-100">
+                                                        <a href="{% url 'accounts:edit_address' address.id %}" class="btn btn-outline-primary btn-sm">
+                                                            <i class="fa fa-edit me-1"></i> Edit
+                                                        </a>
+                                                        {% if not address.is_default %}
+                                                        <a href="{% url 'accounts:set_default_address' address.id %}" class="btn btn-outline-success btn-sm">
+                                                            <i class="fa fa-check-circle me-1"></i> Set Default
+                                                        </a>
+                                                        <a href="{% url 'accounts:delete_address' address.id %}" class="btn btn-outline-danger btn-sm">
+                                                            <i class="fa fa-trash-alt me-1"></i> Delete
+                                                        </a>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="text-center py-5">
+                                        <div class="mb-3">
+                                            <i class="fa fa-map-marker-alt fa-4x text-muted"></i>
+                                        </div>
+                                        <h5>No Addresses Found</h5>
+                                        <p class="text-muted">You haven't added any addresses yet.</p>
+                                        <a href="{% url 'accounts:add_address' %}" class="btn btn-primary">
+                                            <i class="fa fa-plus me-1"></i> Add Your First Address
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Referrals Tab -->
+                    <div class="tab-pane fade" id="referrals" role="tabpanel" aria-labelledby="referrals-tab">
+                        <div class="card profile-card mb-4">
+                            <div class="card-header bg-white py-3">
+                                <h5 class="mb-0">Your Referral Code</h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <p class="mb-3">Share your referral code with friends and earn <strong>{{ referral_points_reward }} loyalty points</strong> for each friend who signs up and verifies their email!</p>
+
+                                        <div class="input-group mb-3">
+                                            <input type="text" class="form-control" value="{{ referral_url }}" id="referralUrl" readonly>
+                                            <button class="btn btn-primary" type="button" onclick="copyReferralUrl()">
+                                                <i class="fa fa-copy me-1"></i> Copy
+                                            </button>
+                                        </div>
+
+                                        <div class="d-flex align-items-center mb-3">
+                                            <span class="me-3">Your code:</span>
+                                            <span class="badge bg-primary p-2 fs-6">{{ user.profile.referral_code }}</span>
+                                        </div>
+
+                                        <div class="mt-3">
+                                            <a href="{% url 'accounts:share_referral' %}" class="btn btn-outline-primary">
+                                                <i class="fa fa-share-alt me-1"></i> Share Your Referral
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 text-center">
+                                        <img src="{% static 'img/referral.png' %}" alt="Referral" class="img-fluid" style="max-height: 150px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Referrals Card -->
+                        <div class="card profile-card mb-4">
+                            <div class="card-header bg-white py-3">
+                                <h5 class="mb-0">Your Referrals</h5>
+                            </div>
+                            <div class="card-body p-0">
+                                {% if referrals %}
+                                    <div class="table-responsive">
+                                        <table class="table table-hover mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Name</th>
+                                                    <th>Email</th>
+                                                    <th>Joined</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for referred_user in referrals %}
+                                                <tr>
+                                                    <td>{{ referred_user.get_full_name }}</td>
+                                                    <td>{{ referred_user.email }}</td>
+                                                    <td>{{ referred_user.date_joined|date:"M d, Y" }}</td>
+                                                    <td>
+                                                        {% if referred_user.profile.email_verified %}
+                                                        <span class="badge bg-success">Verified</span>
+                                                        {% else %}
+                                                        <span class="badge bg-warning text-dark">Pending</span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                {% else %}
+                                    <div class="text-center py-5">
+                                        <div class="mb-3">
+                                            <i class="fa fa-users fa-4x text-muted"></i>
+                                        </div>
+                                        <h5>No Referrals Yet</h5>
+                                        <p class="text-muted">You haven't referred anyone yet. Share your referral code to start earning points!</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Referral Bonuses Card -->
+                        <div class="card profile-card">
+                            <div class="card-header bg-white py-3">
+                                <h5 class="mb-0">Referral Bonuses</h5>
+                            </div>
+                            <div class="card-body p-0">
+                                {% if referral_bonuses %}
+                                    <div class="table-responsive">
+                                        <table class="table table-hover mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Type</th>
+                                                    <th>Value</th>
+                                                    <th>Status</th>
+                                                    <th>Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for bonus in referral_bonuses %}
+                                                <tr>
+                                                    <td>
+                                                        {% if bonus.referrer == user %}
+                                                        <span class="badge bg-primary">Earned</span>
+                                                        {% else %}
+                                                        <span class="badge bg-info">Received</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if bonus.bonus_type == 'points' %}
+                                                        <span class="text-primary">{{ bonus.bonus_value|floatformat:0 }} Points</span>
+                                                        {% elif bonus.bonus_type == 'discount' %}
+                                                        <span class="text-success">{{ bonus.bonus_value|floatformat:0 }}% Discount</span>
+                                                        {% elif bonus.bonus_type == 'free_item' %}
+                                                        <span class="text-danger">Free Item</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if bonus.status == 'pending' %}
+                                                        <span class="badge bg-warning text-dark">Pending</span>
+                                                        {% elif bonus.status == 'approved' %}
+                                                        <span class="badge bg-success">Approved</span>
+                                                        {% elif bonus.status == 'rejected' %}
+                                                        <span class="badge bg-danger">Rejected</span>
+                                                        {% elif bonus.status == 'expired' %}
+                                                        <span class="badge bg-secondary">Expired</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>{{ bonus.created_at|date:"M d, Y" }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                {% else %}
+                                    <div class="text-center py-5">
+                                        <div class="mb-3">
+                                            <i class="fa fa-gift fa-4x text-muted"></i>
+                                        </div>
+                                        <h5>No Bonuses Yet</h5>
+                                        <p class="text-muted">You haven't earned any referral bonuses yet.</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="py-5 my-5" style="height: 100px;"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle favorite removal
+        const removeFavoriteButtons = document.querySelectorAll('.remove-favorite');
+
+        removeFavoriteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const itemId = this.getAttribute('data-item-id');
+
+                // Send AJAX request to remove favorite
+                fetch(`/accounts/favorites/remove/${itemId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Remove the card from the UI
+                        this.closest('.col-md-6').remove();
+
+                        // If no more favorites, show empty state
+                        const favoritesContainer = document.querySelector('#favorites .row');
+                        if (favoritesContainer && favoritesContainer.children.length === 0) {
+                            const emptyState = `
+                                <div class="text-center py-5 col-12">
+                                    <i class="fa fa-heart fa-3x text-muted mb-3"></i>
+                                    <h5>No Favorites Yet</h5>
+                                    <p class="text-muted">You haven't added any items to your favorites yet.</p>
+                                    <a href="{% url 'menu:menu_list' %}" class="btn btn-primary mt-2">Browse Menu</a>
+                                </div>
+                            `;
+                            document.querySelector('#favorites .card-body').innerHTML = emptyState;
+                        }
+                    }
+                });
+            });
+        });
+
+        // Function to get CSRF token from cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %}

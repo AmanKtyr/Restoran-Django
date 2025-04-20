@@ -1,0 +1,373 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Rewards - Restoran{% endblock %}
+
+{% block page_title %}My Rewards{% endblock %}
+{% block breadcrumb_active %}My Rewards{% endblock %}
+
+{% block content %}
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+            <h5 class="section-title ff-secondary text-center text-primary fw-normal">{{ program.name }}</h5>
+            <h1 class="mb-5">My Rewards Dashboard</h1>
+        </div>
+
+        <div class="row g-4">
+            <!-- Loyalty Card -->
+            <div class="col-lg-4">
+                <div class="card loyalty-card mb-4 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fa fa-crown me-2"></i> {{ account.tier.name }} Member</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <div class="loyalty-points-circle">
+                                <div class="points-value">{{ account.points_balance }}</div>
+                                <div class="points-label">POINTS</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h6 class="mb-2">Member Benefits:</h6>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span><i class="fa fa-tag text-primary me-2"></i> Discount</span>
+                                    <span class="badge bg-primary rounded-pill">{{ account.tier.discount_percentage }}%</span>
+                                </li>
+                                {% if account.tier.special_benefits %}
+                                    {% for benefit in account.tier.special_benefits_list %}
+                                    <li class="list-group-item">
+                                        <i class="fa fa-check text-success me-2"></i> {{ benefit }}
+                                    </li>
+                                    {% endfor %}
+                                {% endif %}
+                            </ul>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6 class="mb-2">Membership Details:</h6>
+                            <p class="mb-1"><small>Member Since: {{ account.enrollment_date|date:"F d, Y" }}</small></p>
+                            <p class="mb-1"><small>Lifetime Points: {{ account.lifetime_points }}</small></p>
+                            <p class="mb-0"><small>Last Activity: {{ account.last_activity_date|date:"F d, Y" }}</small></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Referral Card -->
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fa fa-user-plus me-2"></i> Refer a Friend</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Invite friends and earn {{ program.referral_points }} points for each friend who joins!</p>
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" value="{{ referral_url }}" id="referralCode" readonly>
+                            <button class="btn btn-outline-primary" type="button" id="copyReferralBtn">
+                                <i class="fa fa-copy"></i>
+                            </button>
+                        </div>
+                        <div class="text-center">
+                            <button class="btn btn-primary" id="shareReferralBtn">
+                                <i class="fa fa-share-alt me-2"></i> Share Referral Link
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tier Progress -->
+            <div class="col-lg-8">
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fa fa-layer-group me-2"></i> Tier Progress</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="tier-progress-container">
+                            {% for tier in tiers %}
+                            <div class="tier-level {% if account.tier == tier %}current{% endif %} {% if account.lifetime_points >= tier.points_threshold %}achieved{% endif %}">
+                                <div class="tier-icon">
+                                    <i class="{{ tier.icon|default:'fa fa-award' }}"></i>
+                                </div>
+                                <div class="tier-name">{{ tier.name }}</div>
+                                <div class="tier-points">{{ tier.points_threshold }} pts</div>
+                            </div>
+                            {% if not forloop.last %}
+                            <div class="tier-connector">
+                                <div class="tier-line {% if account.lifetime_points >= tier.points_threshold %}achieved{% endif %}"></div>
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                        
+                        {% if next_tier %}
+                        <div class="next-tier-progress mt-4">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Progress to {{ next_tier.name }}</span>
+                                <span>{{ account.lifetime_points }} / {{ next_tier.points_threshold }} points</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ tier_progress_percentage }}%" aria-valuenow="{{ tier_progress_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <div class="text-center mt-3">
+                                <p>You need <strong>{{ points_needed_for_next_tier }}</strong> more points to reach {{ next_tier.name }} status</p>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="text-center mt-4">
+                            <div class="alert alert-success">
+                                <i class="fa fa-trophy me-2"></i> Congratulations! You've reached our highest tier!
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Available Rewards -->
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fa fa-gift me-2"></i> Available Rewards</h5>
+                        <a href="{% url 'loyalty:user_rewards' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for reward in available_rewards %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card reward-card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ reward.name }}</h5>
+                                        <p class="card-text small">{{ reward.description|truncatechars:100 }}</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="badge bg-primary">{{ reward.points_required }} points</span>
+                                            {% if account.points_balance >= reward.points_required %}
+                                            <a href="{% url 'loyalty:redeem_reward' reward.id %}" class="btn btn-sm btn-primary">Redeem</a>
+                                            {% else %}
+                                            <button class="btn btn-sm btn-outline-secondary" disabled>Need {{ reward.points_required|sub:account.points_balance }} more</button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <i class="fa fa-info-circle me-2"></i> No rewards available at the moment. Please check back later!
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Transactions -->
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fa fa-history me-2"></i> Recent Activity</h5>
+                        <a href="{% url 'loyalty:user_transactions' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Activity</th>
+                                        <th>Points</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for transaction in recent_transactions %}
+                                    <tr>
+                                        <td>{{ transaction.timestamp|date:"M d, Y" }}</td>
+                                        <td>{{ transaction.reason }}</td>
+                                        <td class="{% if transaction.transaction_type == 'earn' %}text-success{% else %}text-danger{% endif %}">
+                                            {% if transaction.transaction_type == 'earn' %}+{% else %}-{% endif %}{{ transaction.points }}
+                                        </td>
+                                        <td>
+                                            {% if transaction.transaction_type == 'earn' %}
+                                            <span class="badge bg-success">Earned</span>
+                                            {% elif transaction.transaction_type == 'redeem' %}
+                                            <span class="badge bg-primary">Redeemed</span>
+                                            {% elif transaction.transaction_type == 'expire' %}
+                                            <span class="badge bg-danger">Expired</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">Adjusted</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center">No recent activity</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .loyalty-card {
+        border-radius: 15px;
+        overflow: hidden;
+        border: none;
+    }
+    
+    .loyalty-points-circle {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background-color: #FEA116;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .points-value {
+        font-size: 36px;
+        font-weight: bold;
+        line-height: 1;
+    }
+    
+    .points-label {
+        font-size: 14px;
+        letter-spacing: 1px;
+    }
+    
+    .tier-progress-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 0;
+    }
+    
+    .tier-level {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        width: 80px;
+    }
+    
+    .tier-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        color: #6c757d;
+        margin-bottom: 10px;
+        border: 2px solid #dee2e6;
+    }
+    
+    .tier-name {
+        font-size: 12px;
+        font-weight: bold;
+        text-align: center;
+    }
+    
+    .tier-points {
+        font-size: 10px;
+        color: #6c757d;
+    }
+    
+    .tier-connector {
+        flex-grow: 1;
+        height: 50px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .tier-line {
+        height: 3px;
+        background-color: #dee2e6;
+        width: 100%;
+    }
+    
+    .tier-level.achieved .tier-icon {
+        background-color: #FEA116;
+        color: white;
+        border-color: #FEA116;
+    }
+    
+    .tier-line.achieved {
+        background-color: #FEA116;
+    }
+    
+    .tier-level.current .tier-icon {
+        border: 3px solid #0F172B;
+        box-shadow: 0 0 0 3px rgba(15, 23, 43, 0.2);
+    }
+    
+    .reward-card {
+        transition: all 0.3s ease;
+        border: 1px solid #dee2e6;
+    }
+    
+    .reward-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Copy referral code functionality
+        const copyReferralBtn = document.getElementById('copyReferralBtn');
+        const referralCode = document.getElementById('referralCode');
+        
+        if (copyReferralBtn && referralCode) {
+            copyReferralBtn.addEventListener('click', function() {
+                referralCode.select();
+                document.execCommand('copy');
+                
+                // Change button text temporarily
+                const originalHTML = copyReferralBtn.innerHTML;
+                copyReferralBtn.innerHTML = '<i class="fa fa-check"></i>';
+                
+                setTimeout(function() {
+                    copyReferralBtn.innerHTML = originalHTML;
+                }, 2000);
+            });
+        }
+        
+        // Share referral link functionality
+        const shareReferralBtn = document.getElementById('shareReferralBtn');
+        
+        if (shareReferralBtn && referralCode) {
+            shareReferralBtn.addEventListener('click', function() {
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'Join me at {{ program.name }}',
+                        text: 'Use my referral link to join {{ program.name }} and we both earn rewards!',
+                        url: referralCode.value
+                    })
+                    .catch(error => console.log('Error sharing:', error));
+                } else {
+                    // Fallback for browsers that don't support Web Share API
+                    referralCode.select();
+                    document.execCommand('copy');
+                    alert('Referral link copied to clipboard!');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

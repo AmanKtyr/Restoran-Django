@@ -12,10 +12,10 @@
             <div class="col-lg-12">
                 <div class="bg-light rounded p-4 mb-4">
                     <h3 class="mb-4">Edit Your Profile</h3>
-                    
+
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
-                        
+
                         <div class="row mb-4">
                             <div class="col-lg-3 text-center">
                                 <div class="mb-3">
@@ -37,7 +37,7 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            
+
                             <div class="col-lg-9">
                                 <h4 class="mb-3">Personal Information</h4>
                                 <div class="row g-3">
@@ -105,7 +105,7 @@
                                         {% endif %}
                                     </div>
                                 </div>
-                                
+
                                 <h4 class="mb-3 mt-4">Address Information</h4>
                                 <div class="row g-3">
                                     <div class="col-12">
@@ -174,10 +174,118 @@
                                         {% endif %}
                                     </div>
                                 </div>
-                                
-                                <h4 class="mb-3 mt-4">Preferences</h4>
+
+                                <h4 class="mb-3 mt-4">About You</h4>
                                 <div class="row g-3">
                                     <div class="col-12">
+                                        <label for="{{ profile_form.bio.id_for_label }}" class="form-label">Bio</label>
+                                        {{ profile_form.bio }}
+                                        {% if profile_form.bio.errors %}
+                                        <div class="text-danger">
+                                            {% for error in profile_form.bio.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        <div class="form-text">Tell us a bit about yourself</div>
+                                    </div>
+                                </div>
+
+                                <h4 class="mb-3 mt-4">Dietary Preferences</h4>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="{{ profile_form.dietary_preference.id_for_label }}" class="form-label">Dietary Preference</label>
+                                        {{ profile_form.dietary_preference }}
+                                        {% if profile_form.dietary_preference.errors %}
+                                        <div class="text-danger">
+                                            {% for error in profile_form.dietary_preference.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="{{ profile_form.spice_preference.id_for_label }}" class="form-label">Spice Preference</label>
+                                        {{ profile_form.spice_preference }}
+                                        {% if profile_form.spice_preference.errors %}
+                                        <div class="text-danger">
+                                            {% for error in profile_form.spice_preference.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="{{ profile_form.favorite_cuisine.id_for_label }}" class="form-label">Favorite Cuisine</label>
+                                        {{ profile_form.favorite_cuisine }}
+                                        {% if profile_form.favorite_cuisine.errors %}
+                                        <div class="text-danger">
+                                            {% for error in profile_form.favorite_cuisine.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="{{ profile_form.food_allergies.id_for_label }}" class="form-label">Food Allergies</label>
+                                        {{ profile_form.food_allergies }}
+                                        {% if profile_form.food_allergies.errors %}
+                                        <div class="text-danger">
+                                            {% for error in profile_form.food_allergies.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        <div class="form-text">List any food allergies you have</div>
+                                    </div>
+                                </div>
+
+                                <h4 class="mb-3 mt-4">Social Media Profiles</h4>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fab fa-facebook"></i></span>
+                                            {{ profile_form.facebook_profile }}
+                                        </div>
+                                        {% if profile_form.facebook_profile.errors %}
+                                        <div class="text-danger">
+                                            {% for error in profile_form.facebook_profile.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fab fa-instagram"></i></span>
+                                            {{ profile_form.instagram_profile }}
+                                        </div>
+                                        {% if profile_form.instagram_profile.errors %}
+                                        <div class="text-danger">
+                                            {% for error in profile_form.instagram_profile.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fab fa-twitter"></i></span>
+                                            {{ profile_form.twitter_profile }}
+                                        </div>
+                                        {% if profile_form.twitter_profile.errors %}
+                                        <div class="text-danger">
+                                            {% for error in profile_form.twitter_profile.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <h4 class="mb-3 mt-4">Communication Preferences</h4>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
                                         <div class="form-check">
                                             {{ profile_form.is_subscribed_to_newsletter }}
                                             <label class="form-check-label" for="{{ profile_form.is_subscribed_to_newsletter.id_for_label }}">
@@ -192,8 +300,53 @@
                                         </div>
                                         {% endif %}
                                     </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            {{ profile_form.receive_order_updates }}
+                                            <label class="form-check-label" for="{{ profile_form.receive_order_updates.id_for_label }}">
+                                                Receive updates about your orders
+                                            </label>
+                                        </div>
+                                        {% if profile_form.receive_order_updates.errors %}
+                                        <div class="text-danger">
+                                            {% for error in profile_form.receive_order_updates.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            {{ profile_form.receive_promotional_emails }}
+                                            <label class="form-check-label" for="{{ profile_form.receive_promotional_emails.id_for_label }}">
+                                                Receive promotional emails and offers
+                                            </label>
+                                        </div>
+                                        {% if profile_form.receive_promotional_emails.errors %}
+                                        <div class="text-danger">
+                                            {% for error in profile_form.receive_promotional_emails.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            {{ profile_form.receive_sms_notifications }}
+                                            <label class="form-check-label" for="{{ profile_form.receive_sms_notifications.id_for_label }}">
+                                                Receive SMS notifications
+                                            </label>
+                                        </div>
+                                        {% if profile_form.receive_sms_notifications.errors %}
+                                        <div class="text-danger">
+                                            {% for error in profile_form.receive_sms_notifications.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
                                 </div>
-                                
+
                                 <div class="mt-4">
                                     <button type="submit" class="btn btn-primary">Save Changes</button>
                                     <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary ms-2">Cancel</a>

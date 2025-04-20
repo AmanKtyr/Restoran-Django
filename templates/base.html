@@ -39,6 +39,9 @@
     <!-- Custom Navbar Stylesheet -->
     <link href="{% static 'css/custom-navbar.css' %}" rel="stylesheet">
 
+    <!-- Custom Footer Stylesheet -->
+    <link href="{% static 'css/custom-footer.css' %}" rel="stylesheet">
+
     {% block extra_css %}{% endblock %}
 </head>
 
@@ -92,10 +95,12 @@
                         <div class="nav-item dropdown">
                             <a href="#" class="nav-link dropdown-toggle {% if 'accounts' in request.path %}active{% endif %}" data-bs-toggle="dropdown"><i class="fa fa-user me-1"></i> {{ user.get_full_name|default:user.username }}</a>
                             <div class="dropdown-menu m-0">
+                                <a href="{% url 'accounts:dashboard' %}" class="dropdown-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"><i class="fa fa-tachometer-alt me-2"></i> Dashboard</a>
                                 <a href="{% url 'accounts:profile' %}" class="dropdown-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}"><i class="fa fa-id-card me-2"></i> My Profile</a>
                                 <a href="{% url 'orders:order_history' %}" class="dropdown-item {% if request.resolver_match.url_name == 'order_history' %}active{% endif %}"><i class="fa fa-shopping-bag me-2"></i> My Orders</a>
                                 <a href="{% url 'booking:my_bookings' %}" class="dropdown-item {% if request.resolver_match.url_name == 'my_bookings' %}active{% endif %}"><i class="fa fa-calendar me-2"></i> My Reservations</a>
                                 <a href="{% url 'booking:reservation_tracker' %}" class="dropdown-item {% if request.resolver_match.url_name == 'reservation_tracker' %}active{% endif %}"><i class="fa fa-search me-2"></i> Track Reservation</a>
+                                <a href="{% url 'loyalty:user_dashboard' %}" class="dropdown-item {% if 'loyalty' in request.path %}active{% endif %}"><i class="fa fa-crown me-2"></i> My Rewards</a>
                                 <div class="dropdown-divider"></div>
                                 <a href="{% url 'accounts:logout' %}" class="dropdown-item"><i class="fa fa-sign-out-alt me-2"></i> Logout</a>
                             </div>

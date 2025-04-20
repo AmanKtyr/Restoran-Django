@@ -38,30 +38,35 @@
             width: 250px;
             z-index: 100;
             padding-top: 60px;
+            padding-bottom: 60px; /* Add more padding at the bottom for better scrolling */
             transition: all 0.3s;
-            overflow-y: auto; /* Always allow scrolling */
+            overflow-y: auto !important; /* Force scrolling to be enabled */
             box-shadow: 3px 0 10px rgba(0,0,0,0.2);
             scrollbar-width: thin;
-            scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+            scrollbar-color: rgba(255, 255, 255, 0.3) transparent; /* Make scrollbar more visible */
             height: 100vh; /* Ensure it takes full height */
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
         }
 
         /* Custom scrollbar for webkit browsers */
         .sidebar::-webkit-scrollbar {
-            width: 6px;
+            width: 8px; /* Slightly wider scrollbar */
+            display: block; /* Ensure scrollbar is always visible */
         }
 
         .sidebar::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .sidebar::-webkit-scrollbar-thumb {
-            background-color: rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.1); /* Slightly visible track */
             border-radius: 10px;
         }
 
+        .sidebar::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.3); /* More visible thumb */
+            border-radius: 10px;
+            border: 2px solid rgba(0, 0, 0, 0.1); /* Border around thumb */
+        }
+
         .sidebar::-webkit-scrollbar-thumb:hover {
-            background-color: rgba(255, 255, 255, 0.3);
+            background-color: rgba(255, 255, 255, 0.5); /* Even more visible on hover */
         }
 
         .sidebar-collapsed {
@@ -261,6 +266,27 @@
             color: var(--warning-color);
         }
 
+        /* Gradient backgrounds for cards */
+        .bg-gradient-primary {
+            background: linear-gradient(45deg, #4e73df 0%, #6f86e0 100%);
+        }
+
+        .bg-gradient-success {
+            background: linear-gradient(45deg, #1cc88a 0%, #36e2bd 100%);
+        }
+
+        .bg-gradient-info {
+            background: linear-gradient(45deg, #36b9cc 0%, #5ce3fc 100%);
+        }
+
+        .bg-gradient-warning {
+            background: linear-gradient(45deg, #f6c23e 0%, #ffd66e 100%);
+        }
+
+        .bg-gradient-danger {
+            background: linear-gradient(45deg, #e74a3b 0%, #ff7d71 100%);
+        }
+
         .toggle-sidebar {
             cursor: pointer;
             font-size: 1.5rem;
@@ -420,37 +446,7 @@
                 </a>
             </li>
 
-            <div class="sidebar-category">Staff & Operations</div>
-            <li class="nav-item">
-                <a class="nav-link {% if 'team' in request.path %}active{% endif %}" href="{% url 'admin_panel:team_list' %}">
-                    <i class="fas fa-user-tie" style="color: #4e73df;"></i>
-                    <span>Team</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if 'staffing' in request.path %}active{% endif %}" href="{% url 'admin_panel:staffing_dashboard' %}">
-                    <i class="fas fa-id-card" style="color: #1cc88a;"></i>
-                    <span>Staffing</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if 'kitchen' in request.path %}active{% endif %}" href="{% url 'admin_panel:kitchen_dashboard' %}">
-                    <i class="fas fa-fire" style="color: #e74a3b;"></i>
-                    <span>Kitchen</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if 'inventory' in request.path %}active{% endif %}" href="{% url 'admin_panel:inventory_dashboard' %}">
-                    <i class="fas fa-boxes" style="color: #f6c23e;"></i>
-                    <span>Inventory</span>
-                    {% if low_stock_items > 0 %}
-                    <span class="position-absolute top-50 start-100 translate-middle badge rounded-pill bg-warning text-dark" style="margin-top: -2px; margin-left: -15px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.5);">
-                        {{ low_stock_items }}
-                        <span class="visually-hidden">low stock items</span>
-                    </span>
-                    {% endif %}
-                </a>
-            </li>
+
 
             <div class="sidebar-category">AI Features</div>
             <li class="nav-item">
@@ -484,25 +480,7 @@
                 </a>
             </li>
 
-            <div class="sidebar-category">Reports & Analytics</div>
-            <li class="nav-item">
-                <a class="nav-link {% if 'analytics/dashboard' in request.path %}active{% endif %}" href="{% url 'admin_panel:analytics_dashboard' %}">
-                    <i class="fas fa-chart-line" style="color: #4e73df;"></i>
-                    <span>Analytics Dashboard</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if 'analytics/reports' in request.path %}active{% endif %}" href="{% url 'admin_panel:analytics_reports' %}">
-                    <i class="fas fa-file-alt" style="color: #1cc88a;"></i>
-                    <span>Reports</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if 'analytics/sales' in request.path %}active{% endif %}" href="{% url 'admin_panel:analytics_sales' %}">
-                    <i class="fas fa-dollar-sign" style="color: #36b9cc;"></i>
-                    <span>Sales Analytics</span>
-                </a>
-            </li>
+
 
             <div class="sidebar-category">System</div>
             <li class="nav-item">
@@ -582,6 +560,10 @@
 
             // Ensure sidebar is always scrollable
             sidebar.style.overflowY = 'auto';
+            sidebar.style.display = 'block'; // Ensure sidebar is displayed
+
+            // Force scrollbar to be visible
+            document.documentElement.style.setProperty('--scrollbar-always-visible', 'true');
 
             toggleSidebar.addEventListener('click', function() {
                 // Add smooth transition
@@ -623,10 +605,11 @@
             });
 
             // Add some padding at the bottom to ensure we can scroll to see all menu items
-            sidebar.style.paddingBottom = '50px';
+            sidebar.style.paddingBottom = '60px';
 
             // Ensure sidebar is always scrollable
             sidebar.style.overflowY = 'auto';
+            sidebar.style.overflowX = 'hidden';
 
             // Add hover effect to toggle sidebar button
             toggleSidebar.addEventListener('mouseenter', function() {

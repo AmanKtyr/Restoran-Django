@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from menu.models import MenuItem
 from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.urls import reverse
 
 class Cart(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='cart')
@@ -365,3 +366,40 @@ class OrderItem(models.Model):
 
         # Recalculate order total
         self.order.recalculate_total()
+
+
+class CustomerExperience(models.Model):
+    """Model for storing customer experiences and feedback"""
+    RATING_CHOICES = (
+        (1, '1 - Poor'),
+        (2, '2 - Fair'),
+        (3, '3 - Good'),
+        (4, '4 - Very Good'),
+        (5, '5 - Excellent'),
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='experiences')
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='experiences')
+    rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES, validators=[MinValueValidator(1), MaxValueValidator(5)])
+    comment = models.TextField(blank=True)
+    shared_on_social = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user', 'order')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username}'s experience for Order #{self.order.order_number}"
+
+    def get_absolute_url(self):
+        return reverse('orders:share_experience', args=[self.order.id])
+
+    def get_rating_display_stars(self):
+        """Return HTML for displaying stars based on rating"""
+        full_stars = self.rating
+        empty_stars = 5 - full_stars
+        stars_html = '<i class="fas fa-star text-warning"></i>' * full_stars
+        stars_html += '<i class="far fa-star text-muted"></i>' * empty_stars
+        return stars_html

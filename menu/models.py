@@ -43,8 +43,23 @@ class MenuItem(models.Model):
     is_vegetarian = models.BooleanField(default=False)
     is_vegan = models.BooleanField(default=False)
     is_gluten_free = models.BooleanField(default=False)
+    is_dairy_free = models.BooleanField(default=False)
+    is_nut_free = models.BooleanField(default=False)
+    is_low_carb = models.BooleanField(default=False)
+    is_keto_friendly = models.BooleanField(default=False)
     spice_level = models.IntegerField(choices=SPICE_LEVEL_CHOICES, default=0)
+
+    # Nutritional information
     calories = models.PositiveIntegerField(blank=True, null=True, help_text="Calories per serving")
+    protein_grams = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True, help_text="Protein in grams")
+    carbs_grams = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True, help_text="Carbohydrates in grams")
+    fat_grams = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True, help_text="Fat in grams")
+    fiber_grams = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True, help_text="Fiber in grams")
+    sugar_grams = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True, help_text="Sugar in grams")
+    sodium_mg = models.PositiveIntegerField(blank=True, null=True, help_text="Sodium in milligrams")
+    serving_size = models.CharField(max_length=100, blank=True, help_text="Serving size description")
+
+    # Ingredients and allergens
     ingredients = models.TextField(blank=True, help_text="List of ingredients")
     allergens = models.TextField(blank=True, help_text="List of allergens")
 
@@ -73,9 +88,30 @@ class MenuItem(models.Model):
             tags.append('Vegan')
         if self.is_gluten_free:
             tags.append('Gluten-Free')
+        if self.is_dairy_free:
+            tags.append('Dairy-Free')
+        if self.is_nut_free:
+            tags.append('Nut-Free')
+        if self.is_low_carb:
+            tags.append('Low-Carb')
+        if self.is_keto_friendly:
+            tags.append('Keto-Friendly')
         if self.spice_level > 0:
             tags.append(f"{self.get_spice_level_display()} Spicy")
         return tags
+
+    def get_nutritional_info(self):
+        """Return a dictionary of nutritional information"""
+        return {
+            'calories': self.calories,
+            'protein': self.protein_grams,
+            'carbs': self.carbs_grams,
+            'fat': self.fat_grams,
+            'fiber': self.fiber_grams,
+            'sugar': self.sugar_grams,
+            'sodium': self.sodium_mg,
+            'serving_size': self.serving_size
+        }
 
     def get_profit_margin(self):
         """Calculate the profit margin percentage"""

@@ -22,6 +22,25 @@
                     <i class="fa fa-home me-2"></i> Return to Home
                 </a>
             </div>
+
+            <div class="mt-5">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title mb-3">Share Your Reservation</h5>
+                                <p class="text-muted mb-4">Let your friends know about your upcoming visit to Restoran!</p>
+
+                                {% include 'components/social_share.html' with
+                                    share_url=request.build_absolute_uri
+                                    share_text="I just made a reservation at Restoran!"
+                                    share_description="I just made a reservation at Restoran for {{ booking.date_time|date:'F d, Y - h:i A' }}. Join me for a delicious meal!"
+                                %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

@@ -1,0 +1,320 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Redemptions - Restoran{% endblock %}
+
+{% block page_title %}My Redemptions{% endblock %}
+{% block breadcrumb_active %}My Redemptions{% endblock %}
+
+{% block content %}
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+            <h5 class="section-title ff-secondary text-center text-primary fw-normal">{{ program.name }}</h5>
+            <h1 class="mb-5">My Redemptions</h1>
+        </div>
+
+        <div class="row g-4">
+            <!-- Sidebar -->
+            <div class="col-lg-3">
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fa fa-user-circle me-2"></i> My Account</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <div class="loyalty-points-circle">
+                                <div class="points-value">{{ account.points_balance }}</div>
+                                <div class="points-label">POINTS</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6 class="mb-2">{{ account.tier.name }} Member</h6>
+                            <div class="progress mb-2">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ tier_progress_percentage }}%" aria-valuenow="{{ tier_progress_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            {% if next_tier %}
+                            <p class="small text-muted">{{ points_needed_for_next_tier }} more points to {{ next_tier.name }}</p>
+                            {% else %}
+                            <p class="small text-muted">You've reached our highest tier!</p>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="list-group list-group-flush">
+                            <a href="{% url 'loyalty:user_dashboard' %}" class="list-group-item list-group-item-action">
+                                <i class="fa fa-tachometer-alt me-2"></i> Dashboard
+                            </a>
+                            <a href="{% url 'loyalty:user_rewards' %}" class="list-group-item list-group-item-action">
+                                <i class="fa fa-gift me-2"></i> Available Rewards
+                            </a>
+                            <a href="{% url 'loyalty:user_transactions' %}" class="list-group-item list-group-item-action">
+                                <i class="fa fa-history me-2"></i> Transaction History
+                            </a>
+                            <a href="{% url 'loyalty:user_redemptions' %}" class="list-group-item list-group-item-action active">
+                                <i class="fa fa-ticket-alt me-2"></i> My Redemptions
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Redemptions List -->
+            <div class="col-lg-9">
+                <div class="card shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fa fa-ticket-alt me-2"></i> My Redemptions</h5>
+                        <a href="{% url 'loyalty:user_rewards' %}" class="btn btn-sm btn-primary">
+                            <i class="fa fa-gift me-2"></i> Redeem Points
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        {% if redemptions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Reward</th>
+                                        <th>Date</th>
+                                        <th>Points</th>
+                                        <th>Status</th>
+                                        <th>Code</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for redemption in redemptions %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if redemption.reward.image %}
+                                                <img src="{{ redemption.reward.image.url }}" alt="{{ redemption.reward.name }}" class="redemption-thumbnail me-2">
+                                                {% else %}
+                                                <div class="redemption-thumbnail-placeholder me-2">
+                                                    <i class="fa fa-gift"></i>
+                                                </div>
+                                                {% endif %}
+                                                <div>
+                                                    <h6 class="mb-0">{{ redemption.reward.name }}</h6>
+                                                    <small class="text-muted">{{ redemption.reward.description|truncatechars:50 }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ redemption.redemption_date|date:"M d, Y" }}</td>
+                                        <td>{{ redemption.points_used }}</td>
+                                        <td>
+                                            {% if redemption.is_used %}
+                                            <span class="badge bg-success">Used</span>
+                                            {% elif redemption.is_expired %}
+                                            <span class="badge bg-danger">Expired</span>
+                                            {% else %}
+                                            <span class="badge bg-primary">Active</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="redemption-code">
+                                                {{ redemption.redemption_code }}
+                                                <button class="btn btn-sm btn-link copy-code-btn" data-code="{{ redemption.redemption_code }}">
+                                                    <i class="fa fa-copy"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary view-details-btn" data-bs-toggle="modal" data-bs-target="#redemptionModal{{ redemption.id }}">
+                                                Details
+                                            </button>
+                                            
+                                            <!-- Redemption Details Modal -->
+                                            <div class="modal fade" id="redemptionModal{{ redemption.id }}" tabindex="-1" aria-labelledby="redemptionModalLabel{{ redemption.id }}" aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="redemptionModalLabel{{ redemption.id }}">Redemption Details</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <div class="text-center mb-4">
+                                                                <h4>{{ redemption.reward.name }}</h4>
+                                                                <p>{{ redemption.reward.description }}</p>
+                                                            </div>
+                                                            
+                                                            <div class="mb-4">
+                                                                <h6>Redemption Code</h6>
+                                                                <div class="d-flex justify-content-between align-items-center p-3 border rounded">
+                                                                    <span class="redemption-code-large">{{ redemption.redemption_code }}</span>
+                                                                    <button class="btn btn-sm btn-outline-primary copy-code-btn" data-code="{{ redemption.redemption_code }}">
+                                                                        <i class="fa fa-copy me-1"></i> Copy
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div class="row mb-4">
+                                                                <div class="col-6">
+                                                                    <h6>Redemption Date</h6>
+                                                                    <p>{{ redemption.redemption_date|date:"F d, Y" }}</p>
+                                                                </div>
+                                                                <div class="col-6">
+                                                                    <h6>Points Used</h6>
+                                                                    <p>{{ redemption.points_used }}</p>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div class="row mb-4">
+                                                                <div class="col-6">
+                                                                    <h6>Status</h6>
+                                                                    <p>
+                                                                        {% if redemption.is_used %}
+                                                                        <span class="badge bg-success">Used</span>
+                                                                        {% elif redemption.is_expired %}
+                                                                        <span class="badge bg-danger">Expired</span>
+                                                                        {% else %}
+                                                                        <span class="badge bg-primary">Active</span>
+                                                                        {% endif %}
+                                                                    </p>
+                                                                </div>
+                                                                <div class="col-6">
+                                                                    <h6>Expiration Date</h6>
+                                                                    <p>{{ redemption.expiration_date|date:"F d, Y" }}</p>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div class="mb-4">
+                                                                <h6>How to Use</h6>
+                                                                <ol class="mb-0">
+                                                                    <li>Present this code to our staff when visiting the restaurant.</li>
+                                                                    <li>Make sure to use it before the expiration date.</li>
+                                                                    <li>For any questions, please contact our customer service.</li>
+                                                                </ol>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                            {% if not redemption.is_used and not redemption.is_expired %}
+                                                            <a href="{% url 'loyalty:user_rewards' %}" class="btn btn-primary">Redeem More</a>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fa fa-ticket-alt fa-4x text-muted mb-4"></i>
+                            <h4>No Redemptions Yet</h4>
+                            <p class="mb-4">You haven't redeemed any rewards yet. Start using your points to get amazing rewards!</p>
+                            <a href="{% url 'loyalty:user_rewards' %}" class="btn btn-primary">
+                                <i class="fa fa-gift me-2"></i> Browse Rewards
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .loyalty-points-circle {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background-color: #FEA116;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .points-value {
+        font-size: 30px;
+        font-weight: bold;
+        line-height: 1;
+    }
+    
+    .points-label {
+        font-size: 12px;
+        letter-spacing: 1px;
+    }
+    
+    .redemption-thumbnail {
+        width: 40px;
+        height: 40px;
+        border-radius: 4px;
+        object-fit: cover;
+    }
+    
+    .redemption-thumbnail-placeholder {
+        width: 40px;
+        height: 40px;
+        border-radius: 4px;
+        background-color: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #adb5bd;
+    }
+    
+    .redemption-code {
+        font-family: monospace;
+        display: flex;
+        align-items: center;
+    }
+    
+    .redemption-code-large {
+        font-family: monospace;
+        font-size: 18px;
+        letter-spacing: 1px;
+    }
+    
+    .copy-code-btn {
+        padding: 0;
+        margin-left: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Copy redemption code functionality
+        const copyButtons = document.querySelectorAll('.copy-code-btn');
+        
+        copyButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const code = this.getAttribute('data-code');
+                
+                // Create a temporary input element
+                const tempInput = document.createElement('input');
+                tempInput.value = code;
+                document.body.appendChild(tempInput);
+                
+                // Select and copy the text
+                tempInput.select();
+                document.execCommand('copy');
+                
+                // Remove the temporary element
+                document.body.removeChild(tempInput);
+                
+                // Change button text temporarily
+                const originalHTML = this.innerHTML;
+                this.innerHTML = '<i class="fa fa-check"></i> Copied';
+                
+                setTimeout(() => {
+                    this.innerHTML = originalHTML;
+                }, 2000);
+            });
+        });
+    });
+</script>
+{% endblock %}

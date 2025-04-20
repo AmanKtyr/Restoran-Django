@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to {{ site_name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #FEA116;
+            padding: 20px;
+            text-align: center;
+            color: white;
+        }
+        .content {
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .button {
+            display: inline-block;
+            background-color: #FEA116;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #777;
+        }
+        .feature {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .feature h3 {
+            color: #FEA116;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{ site_name }}</h1>
+        </div>
+        <div class="content">
+            <h2>Welcome to {{ site_name }}!</h2>
+            <p>Hello {{ user.first_name }},</p>
+            <p>Thank you for joining {{ site_name }}. We're excited to have you as part of our community!</p>
+            
+            <div style="text-align: center;">
+                <a href="{{ login_url }}" class="button">Log In to Your Account</a>
+            </div>
+            
+            <h3>Here's what you can do with your account:</h3>
+            
+            <div class="feature">
+                <h3>Order Online</h3>
+                <p>Browse our menu and place orders for pickup or delivery.</p>
+            </div>
+            
+            <div class="feature">
+                <h3>Make Reservations</h3>
+                <p>Book a table at our restaurant for special occasions or casual dining.</p>
+            </div>
+            
+            <div class="feature">
+                <h3>Earn Loyalty Points</h3>
+                <p>Earn points with every order and redeem them for discounts and free items.</p>
+            </div>
+            
+            <div class="feature">
+                <h3>Refer Friends</h3>
+                <p>Share your unique referral code with friends and earn bonus points when they join.</p>
+            </div>
+            
+            <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+            
+            <p>Enjoy your experience with {{ site_name }}!</p>
+        </div>
+        <div class="footer">
+            <p>&copy; {{ site_name }} | All rights reserved</p>
+            <p>This is an automated email, please do not reply.</p>
+        </div>
+    </div>
+</body>
+</html>

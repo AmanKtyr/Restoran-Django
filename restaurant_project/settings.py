@@ -150,3 +150,24 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'core:home'
 LOGOUT_REDIRECT_URL = 'core:home'
+
+# Site URL for absolute URLs
+SITE_URL = 'http://localhost:8000'
+
+# Email settings
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
+# For production, use SMTP backend
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.example.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'your-email@example.com'
+# EMAIL_HOST_PASSWORD = 'your-password'
+
+# Default from email
+DEFAULT_FROM_EMAIL = 'noreply@restoran.com'
+SERVER_EMAIL = 'server@restoran.com'
+
+# Referral system settings
+REFERRAL_POINTS_REWARD = 100  # Points awarded for successful referral
+REFERRAL_BONUS_EXPIRY_DAYS = 30  # Days until referral bonus expires

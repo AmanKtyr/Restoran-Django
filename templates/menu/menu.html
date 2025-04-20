@@ -13,6 +13,11 @@
         <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
             <h5 class="section-title ff-secondary text-center text-primary fw-normal">Food Menu</h5>
             <h1 class="mb-5">Most Popular Items</h1>
+            <div class="mb-5">
+                <a href="{% url 'menu:qr_code_generator' %}" class="btn btn-primary">
+                    <i class="fa fa-qrcode me-2"></i> Generate Menu QR Code
+                </a>
+            </div>
         </div>
 
         <div class="row mb-5 wow fadeInUp" data-wow-delay="0.1s">
@@ -55,6 +60,18 @@
                                             {% if item.is_gluten_free %}
                                             <span class="badge bg-warning me-1" title="Gluten-Free"><i class="fa fa-wheat-alt"></i></span>
                                             {% endif %}
+                                            {% if item.is_dairy_free %}
+                                            <span class="badge bg-warning me-1" title="Dairy-Free"><i class="fa fa-cheese"></i></span>
+                                            {% endif %}
+                                            {% if item.is_nut_free %}
+                                            <span class="badge bg-warning me-1" title="Nut-Free"><i class="fa fa-allergies"></i></span>
+                                            {% endif %}
+                                            {% if item.is_low_carb %}
+                                            <span class="badge bg-primary me-1" title="Low-Carb"><i class="fa fa-bread-slice"></i></span>
+                                            {% endif %}
+                                            {% if item.is_keto_friendly %}
+                                            <span class="badge bg-primary me-1" title="Keto-Friendly"><i class="fa fa-drumstick-bite"></i></span>
+                                            {% endif %}
                                             {% if item.spice_level > 0 %}
                                             <span class="badge bg-danger" title="{{ item.get_spice_level_display }}">
                                                 <i class="fa fa-pepper-hot"></i> {{ item.spice_level }}
@@ -81,25 +98,55 @@
                     <h4 class="mb-4">Filter Options</h4>
                     <form id="menuFilterForm" method="get" action="{% url 'menu:menu_list' %}">
                         <div class="row g-3">
-                            <div class="col-md-3">
+                            <div class="col-md-6">
                                 <label class="form-label">Dietary Preferences</label>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="vegetarian" name="vegetarian" value="1" {% if request.GET.vegetarian %}checked{% endif %}>
-                                    <label class="form-check-label" for="vegetarian">
-                                        <i class="fa fa-leaf text-success me-1"></i> Vegetarian
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="vegan" name="vegan" value="1" {% if request.GET.vegan %}checked{% endif %}>
-                                    <label class="form-check-label" for="vegan">
-                                        <i class="fa fa-seedling text-success me-1"></i> Vegan
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="gluten_free" name="gluten_free" value="1" {% if request.GET.gluten_free %}checked{% endif %}>
-                                    <label class="form-check-label" for="gluten_free">
-                                        <i class="fa fa-wheat-alt text-warning me-1"></i> Gluten-Free
-                                    </label>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="vegetarian" name="vegetarian" value="1" {% if request.GET.vegetarian %}checked{% endif %}>
+                                            <label class="form-check-label" for="vegetarian">
+                                                <i class="fa fa-leaf text-success me-1"></i> Vegetarian
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="vegan" name="vegan" value="1" {% if request.GET.vegan %}checked{% endif %}>
+                                            <label class="form-check-label" for="vegan">
+                                                <i class="fa fa-seedling text-success me-1"></i> Vegan
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="gluten_free" name="gluten_free" value="1" {% if request.GET.gluten_free %}checked{% endif %}>
+                                            <label class="form-check-label" for="gluten_free">
+                                                <i class="fa fa-wheat-alt text-warning me-1"></i> Gluten-Free
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="dairy_free" name="dairy_free" value="1" {% if request.GET.dairy_free %}checked{% endif %}>
+                                            <label class="form-check-label" for="dairy_free">
+                                                <i class="fa fa-cheese text-warning me-1"></i> Dairy-Free
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="nut_free" name="nut_free" value="1" {% if request.GET.nut_free %}checked{% endif %}>
+                                            <label class="form-check-label" for="nut_free">
+                                                <i class="fa fa-allergies text-warning me-1"></i> Nut-Free
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="low_carb" name="low_carb" value="1" {% if request.GET.low_carb %}checked{% endif %}>
+                                            <label class="form-check-label" for="low_carb">
+                                                <i class="fa fa-bread-slice text-primary me-1"></i> Low-Carb
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="keto_friendly" name="keto_friendly" value="1" {% if request.GET.keto_friendly %}checked{% endif %}>
+                                            <label class="form-check-label" for="keto_friendly">
+                                                <i class="fa fa-drumstick-bite text-primary me-1"></i> Keto-Friendly
+                                            </label>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-3">

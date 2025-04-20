@@ -21,13 +21,13 @@
                         <h4 class="mt-3">{{ user.get_full_name }}</h4>
                         <p class="text-muted">@{{ user.username }}</p>
                     </div>
-                    
+
                     <div class="d-grid gap-2">
                         <a href="{% url 'accounts:edit_profile' %}" class="btn btn-primary">Edit Profile</a>
                     </div>
-                    
+
                     <hr>
-                    
+
                     <div class="profile-stats">
                         <div class="row text-center">
                             <div class="col-6">
@@ -40,21 +40,22 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <hr>
-                    
+
                     <div class="profile-menu">
                         <ul class="list-group list-group-flush">
-                            <li class="list-group-item bg-transparent"><a href="#" class="text-decoration-none text-dark"><i class="fa fa-history me-2"></i> Order History</a></li>
-                            <li class="list-group-item bg-transparent"><a href="#" class="text-decoration-none text-dark"><i class="fa fa-bookmark me-2"></i> Saved Items</a></li>
-                            <li class="list-group-item bg-transparent"><a href="#" class="text-decoration-none text-dark"><i class="fa fa-calendar me-2"></i> My Reservations</a></li>
-                            <li class="list-group-item bg-transparent"><a href="#" class="text-decoration-none text-dark"><i class="fa fa-star me-2"></i> My Reviews</a></li>
-                            <li class="list-group-item bg-transparent"><a href="#" class="text-decoration-none text-dark"><i class="fa fa-cog me-2"></i> Account Settings</a></li>
+                            <li class="list-group-item bg-transparent"><a href="{% url 'accounts:dashboard' %}" class="text-decoration-none text-dark"><i class="fa fa-tachometer-alt me-2"></i> Dashboard</a></li>
+                            <li class="list-group-item bg-transparent"><a href="{% url 'accounts:address_list' %}" class="text-decoration-none text-dark"><i class="fa fa-map-marker-alt me-2"></i> My Addresses</a></li>
+                            <li class="list-group-item bg-transparent"><a href="{% url 'accounts:favorites_list' %}" class="text-decoration-none text-dark"><i class="fa fa-heart me-2"></i> My Favorites</a></li>
+                            <li class="list-group-item bg-transparent"><a href="{% url 'accounts:referrals' %}" class="text-decoration-none text-dark"><i class="fa fa-users me-2"></i> My Referrals</a></li>
+                            <li class="list-group-item bg-transparent"><a href="{% url 'accounts:activity_history' %}" class="text-decoration-none text-dark"><i class="fa fa-history me-2"></i> Activity History</a></li>
+                            <li class="list-group-item bg-transparent"><a href="{% url 'accounts:change_password' %}" class="text-decoration-none text-dark"><i class="fa fa-lock me-2"></i> Change Password</a></li>
                         </ul>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Profile Content -->
             <div class="col-lg-8">
                 <div class="bg-light rounded p-4 mb-4">
@@ -77,7 +78,7 @@
                             <p class="mb-3 fw-bold">{{ user.profile.date_of_birth|date:"F d, Y"|default:"Not provided" }}</p>
                         </div>
                     </div>
-                    
+
                     <h3 class="mb-4 mt-5">Address Information</h3>
                     <div class="row mb-3">
                         <div class="col-12">
@@ -101,12 +102,78 @@
                             <p class="mb-3 fw-bold">{{ user.profile.country|default:"Not provided" }}</p>
                         </div>
                     </div>
-                    
+
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="{% url 'accounts:address_list' %}" class="btn btn-outline-primary">
+                            <i class="fa fa-map-marker-alt me-2"></i> Manage My Addresses
+                        </a>
+                    </div>
+
+                    <h3 class="mb-4 mt-5">Dietary Preferences</h3>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted small">Dietary Preference</p>
+                            <p class="mb-3 fw-bold">{{ user.profile.get_dietary_preference_display }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted small">Spice Preference</p>
+                            <p class="mb-3 fw-bold">{{ user.profile.get_spice_preference_display }}</p>
+                        </div>
+                        <div class="col-12">
+                            <p class="mb-1 text-muted small">Food Allergies</p>
+                            <p class="mb-3 fw-bold">{{ user.profile.food_allergies|default:"None specified" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted small">Favorite Cuisine</p>
+                            <p class="mb-3 fw-bold">{{ user.profile.favorite_cuisine|default:"Not specified" }}</p>
+                        </div>
+                    </div>
+
+                    <h3 class="mb-4 mt-5">Social Media</h3>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <p class="mb-1 text-muted small">Facebook</p>
+                            <p class="mb-3 fw-bold">
+                                {% if user.profile.facebook_profile %}
+                                <a href="{{ user.profile.facebook_profile }}" target="_blank" class="text-decoration-none">
+                                    <i class="fab fa-facebook me-1"></i> View Profile
+                                </a>
+                                {% else %}
+                                Not linked
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-1 text-muted small">Instagram</p>
+                            <p class="mb-3 fw-bold">
+                                {% if user.profile.instagram_profile %}
+                                <a href="{{ user.profile.instagram_profile }}" target="_blank" class="text-decoration-none">
+                                    <i class="fab fa-instagram me-1"></i> View Profile
+                                </a>
+                                {% else %}
+                                Not linked
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-1 text-muted small">Twitter</p>
+                            <p class="mb-3 fw-bold">
+                                {% if user.profile.twitter_profile %}
+                                <a href="{{ user.profile.twitter_profile }}" target="_blank" class="text-decoration-none">
+                                    <i class="fab fa-twitter me-1"></i> View Profile
+                                </a>
+                                {% else %}
+                                Not linked
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
                     <h3 class="mb-4 mt-5">Recent Orders</h3>
                     <div class="alert alert-info">
                         You haven't placed any orders yet. <a href="{% url 'menu:menu_list' %}">Browse our menu</a> to place your first order.
                     </div>
-                    
+
                     <h3 class="mb-4 mt-5">Upcoming Reservations</h3>
                     <div class="alert alert-info">
                         You don't have any upcoming reservations. <a href="{% url 'booking:booking' %}">Make a reservation</a> to secure your table.

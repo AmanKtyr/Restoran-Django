@@ -6,7 +6,8 @@ from django.db import transaction
 from django.utils import timezone
 from decimal import Decimal
 
-from .models import Cart, CartItem, Order, OrderItem
+from .models import Cart, CartItem, Order, OrderItem, CustomerExperience
+from .forms import CustomerExperienceForm
 from menu.models import MenuItem
 
 @login_required
@@ -222,3 +223,50 @@ def order_tracker(request):
     }
 
     return render(request, 'orders/order_tracker.html', context)
+
+@login_required
+def share_experience(request, order_id):
+    """View for sharing customer experience"""
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+
+    # Check if order is completed or delivered
+    if order.status not in ['completed', 'delivered']:
+        messages.warning(request, "You can only share your experience for completed orders.")
+        return redirect('orders:order_detail', order_id=order.id)
+
+    # Check if user has already shared experience for this order
+    experience = CustomerExperience.objects.filter(user=request.user, order=order).first()
+    show_social_share = False
+
+    if request.method == 'POST':
+        # If experience exists, update it, otherwise create new
+        if experience:
+            experience_form = CustomerExperienceForm(request.POST, instance=experience)
+        else:
+            experience_form = CustomerExperienceForm(request.POST)
+
+        if experience_form.is_valid():
+            new_experience = experience_form.save(commit=False)
+            new_experience.user = request.user
+            new_experience.order = order
+            new_experience.save()
+
+            messages.success(request, "Thank you for sharing your experience!")
+            show_social_share = new_experience.shared_on_social
+            experience = new_experience
+    else:
+        # If experience exists, populate form with it
+        if experience:
+            experience_form = CustomerExperienceForm(instance=experience)
+            show_social_share = experience.shared_on_social
+        else:
+            experience_form = CustomerExperienceForm()
+
+    context = {
+        'order': order,
+        'experience_form': experience_form,
+        'experience': experience,
+        'show_social_share': show_social_share,
+    }
+
+    return render(request, 'orders/share_experience.html', context)

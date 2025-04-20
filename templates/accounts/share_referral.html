@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Share Your Referral - Restoran{% endblock %}
+{% block page_title %}Share Your Referral{% endblock %}
+{% block breadcrumb_active %}Share Referral{% endblock %}
+
+{% block content %}
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0">Share Your Referral</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="text-center mb-4">
+                            <img src="{% static 'img/referral.png' %}" alt="Referral" class="img-fluid" style="max-height: 200px;">
+                            <h4 class="mt-3">Invite Friends & Earn Rewards</h4>
+                            <p class="text-muted">Share your unique referral link with friends and earn <strong>{{ points_reward }} loyalty points</strong> for each friend who signs up!</p>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">Your Referral Link</label>
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control" value="{{ referral_url }}" id="referralUrl" readonly>
+                                <button class="btn btn-primary" type="button" onclick="copyReferralUrl()">
+                                    <i class="fa fa-copy me-1"></i> Copy
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">Your Referral Code</label>
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control" value="{{ referral_code }}" id="referralCode" readonly>
+                                <button class="btn btn-primary" type="button" onclick="copyReferralCode()">
+                                    <i class="fa fa-copy me-1"></i> Copy
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">Share via</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="https://www.facebook.com/sharer/sharer.php?u={{ referral_url|urlencode }}" target="_blank" class="btn btn-outline-primary">
+                                    <i class="fab fa-facebook-f me-2"></i> Facebook
+                                </a>
+                                <a href="https://twitter.com/intent/tweet?text=Join%20me%20at%20Restoran!%20Use%20my%20referral%20code%20{{ referral_code }}%20to%20sign%20up&url={{ referral_url|urlencode }}" target="_blank" class="btn btn-outline-info">
+                                    <i class="fab fa-twitter me-2"></i> Twitter
+                                </a>
+                                <a href="https://api.whatsapp.com/send?text=Join%20me%20at%20Restoran!%20Use%20my%20referral%20code%20{{ referral_code }}%20to%20sign%20up:%20{{ referral_url|urlencode }}" target="_blank" class="btn btn-outline-success">
+                                    <i class="fab fa-whatsapp me-2"></i> WhatsApp
+                                </a>
+                                <a href="mailto:?subject=Join%20me%20at%20Restoran&body=Hey!%20I'm%20inviting%20you%20to%20join%20Restoran.%20Use%20my%20referral%20code%20{{ referral_code }}%20when%20you%20sign%20up:%20{{ referral_url|urlencode }}" class="btn btn-outline-secondary">
+                                    <i class="fa fa-envelope me-2"></i> Email
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="card bg-light mb-4">
+                            <div class="card-body">
+                                <h5>How it works</h5>
+                                <ol class="mb-0">
+                                    <li>Share your unique referral link or code with friends</li>
+                                    <li>Your friends sign up using your link or code</li>
+                                    <li>Once they verify their email, you earn {{ points_reward }} loyalty points</li>
+                                    <li>Use your points for discounts on future orders</li>
+                                </ol>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center">
+                            <a href="{% url 'accounts:referrals' %}" class="btn btn-primary">
+                                <i class="fa fa-users me-2"></i> View My Referrals
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function copyReferralUrl() {
+        var copyText = document.getElementById("referralUrl");
+        copyText.select();
+        copyText.setSelectionRange(0, 99999);
+        document.execCommand("copy");
+        
+        // Show a tooltip or message
+        alert("Referral link copied to clipboard!");
+    }
+    
+    function copyReferralCode() {
+        var copyText = document.getElementById("referralCode");
+        copyText.select();
+        copyText.setSelectionRange(0, 99999);
+        document.execCommand("copy");
+        
+        // Show a tooltip or message
+        alert("Referral code copied to clipboard!");
+    }
+</script>
+{% endblock %}

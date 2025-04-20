@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>You Earned Referral Points!</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #FEA116;
+            padding: 20px;
+            text-align: center;
+            color: white;
+        }
+        .content {
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .button {
+            display: inline-block;
+            background-color: #FEA116;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #777;
+        }
+        .bonus-box {
+            background-color: #fff;
+            border: 2px dashed #FEA116;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .bonus-points {
+            font-size: 36px;
+            font-weight: bold;
+            color: #FEA116;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{ site_name }}</h1>
+        </div>
+        <div class="content">
+            <h2>Congratulations! You Earned Referral Points!</h2>
+            <p>Hello {{ user.first_name }},</p>
+            <p>Great news! Your friend {{ referred_user.first_name }} {{ referred_user.last_name }} has joined {{ site_name }} using your referral code and has verified their email address.</p>
+            
+            <div class="bonus-box">
+                <p>You've earned</p>
+                <div class="bonus-points">{{ bonus_points }} Points</div>
+                <p>These points have been added to your loyalty account!</p>
+            </div>
+            
+            <p>Keep referring friends to earn more points. The more friends you refer, the more rewards you can earn!</p>
+            
+            <div style="text-align: center;">
+                <a href="{{ login_url }}" class="button">View Your Account</a>
+            </div>
+            
+            <p>Thank you for being a valued member of {{ site_name }}!</p>
+        </div>
+        <div class="footer">
+            <p>&copy; {{ site_name }} | All rights reserved</p>
+            <p>This is an automated email, please do not reply.</p>
+        </div>
+    </div>
+</body>
+</html>

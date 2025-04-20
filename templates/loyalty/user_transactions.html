@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Transaction History - Restoran{% endblock %}
+
+{% block page_title %}Transaction History{% endblock %}
+{% block breadcrumb_active %}Transaction History{% endblock %}
+
+{% block content %}
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+            <h5 class="section-title ff-secondary text-center text-primary fw-normal">{{ program.name }}</h5>
+            <h1 class="mb-5">Transaction History</h1>
+        </div>
+
+        <div class="row g-4">
+            <!-- Sidebar -->
+            <div class="col-lg-3">
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fa fa-user-circle me-2"></i> My Account</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <div class="loyalty-points-circle">
+                                <div class="points-value">{{ account.points_balance }}</div>
+                                <div class="points-label">POINTS</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6 class="mb-2">{{ account.tier.name }} Member</h6>
+                            <div class="progress mb-2">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ tier_progress_percentage }}%" aria-valuenow="{{ tier_progress_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            {% if next_tier %}
+                            <p class="small text-muted">{{ points_needed_for_next_tier }} more points to {{ next_tier.name }}</p>
+                            {% else %}
+                            <p class="small text-muted">You've reached our highest tier!</p>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="list-group list-group-flush">
+                            <a href="{% url 'loyalty:user_dashboard' %}" class="list-group-item list-group-item-action">
+                                <i class="fa fa-tachometer-alt me-2"></i> Dashboard
+                            </a>
+                            <a href="{% url 'loyalty:user_rewards' %}" class="list-group-item list-group-item-action">
+                                <i class="fa fa-gift me-2"></i> Available Rewards
+                            </a>
+                            <a href="{% url 'loyalty:user_transactions' %}" class="list-group-item list-group-item-action active">
+                                <i class="fa fa-history me-2"></i> Transaction History
+                            </a>
+                            <a href="{% url 'loyalty:user_redemptions' %}" class="list-group-item list-group-item-action">
+                                <i class="fa fa-ticket-alt me-2"></i> My Redemptions
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Filter Card -->
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fa fa-filter me-2"></i> Filter Transactions</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="get" action="{% url 'loyalty:user_transactions' %}">
+                            <div class="mb-3">
+                                <label class="form-label">Transaction Type</label>
+                                <select name="type" class="form-select">
+                                    <option value="">All Types</option>
+                                    <option value="earn" {% if transaction_type == 'earn' %}selected{% endif %}>Points Earned</option>
+                                    <option value="redeem" {% if transaction_type == 'redeem' %}selected{% endif %}>Points Redeemed</option>
+                                    <option value="expire" {% if transaction_type == 'expire' %}selected{% endif %}>Points Expired</option>
+                                    <option value="adjust" {% if transaction_type == 'adjust' %}selected{% endif %}>Adjustments</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Date Range</label>
+                                <div class="input-group mb-2">
+                                    <span class="input-group-text">From</span>
+                                    <input type="date" class="form-control" name="start_date" value="{{ start_date|date:'Y-m-d' }}">
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-text">To</span>
+                                    <input type="date" class="form-control" name="end_date" value="{{ end_date|date:'Y-m-d' }}">
+                                </div>
+                            </div>
+                            
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary">Apply Filters</button>
+                                <a href="{% url 'loyalty:user_transactions' %}" class="btn btn-outline-secondary">Reset</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Transactions List -->
+            <div class="col-lg-9">
+                <div class="card shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fa fa-history me-2"></i> Transaction History</h5>
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <span class="badge bg-success me-1">+</span> Earned: {{ total_earned }}
+                            </div>
+                            <div>
+                                <span class="badge bg-danger me-1">-</span> Spent: {{ total_spent }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {% if transactions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Description</th>
+                                        <th>Reference</th>
+                                        <th>Points</th>
+                                        <th>Type</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for transaction in transactions %}
+                                    <tr>
+                                        <td>{{ transaction.timestamp|date:"M d, Y" }}</td>
+                                        <td>{{ transaction.reason }}</td>
+                                        <td>
+                                            {% if transaction.reference_id %}
+                                            <span class="badge bg-light text-dark">{{ transaction.reference_id }}</span>
+                                            {% else %}
+                                            -
+                                            {% endif %}
+                                        </td>
+                                        <td class="{% if transaction.transaction_type == 'earn' %}text-success{% else %}text-danger{% endif %}">
+                                            {% if transaction.transaction_type == 'earn' %}+{% else %}-{% endif %}{{ transaction.points }}
+                                        </td>
+                                        <td>
+                                            {% if transaction.transaction_type == 'earn' %}
+                                            <span class="badge bg-success">Earned</span>
+                                            {% elif transaction.transaction_type == 'redeem' %}
+                                            <span class="badge bg-primary">Redeemed</span>
+                                            {% elif transaction.transaction_type == 'expire' %}
+                                            <span class="badge bg-danger">Expired</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">Adjusted</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        {% if transactions.has_other_pages %}
+                        <nav aria-label="Transaction history pagination" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                {% if transactions.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ transactions.previous_page_number }}{% if transaction_type %}&type={{ transaction_type }}{% endif %}{% if start_date %}&start_date={{ start_date|date:'Y-m-d' }}{% endif %}{% if end_date %}&end_date={{ end_date|date:'Y-m-d' }}{% endif %}" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                {% for i in transactions.paginator.page_range %}
+                                    {% if transactions.number == i %}
+                                    <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+                                    {% else %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ i }}{% if transaction_type %}&type={{ transaction_type }}{% endif %}{% if start_date %}&start_date={{ start_date|date:'Y-m-d' }}{% endif %}{% if end_date %}&end_date={{ end_date|date:'Y-m-d' }}{% endif %}">{{ i }}</a></li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if transactions.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ transactions.next_page_number }}{% if transaction_type %}&type={{ transaction_type }}{% endif %}{% if start_date %}&start_date={{ start_date|date:'Y-m-d' }}{% endif %}{% if end_date %}&end_date={{ end_date|date:'Y-m-d' }}{% endif %}" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                        
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fa fa-history fa-4x text-muted mb-4"></i>
+                            <h4>No Transactions Found</h4>
+                            <p class="mb-4">There are no transactions matching your filter criteria.</p>
+                            <a href="{% url 'loyalty:user_transactions' %}" class="btn btn-primary">
+                                <i class="fa fa-sync me-2"></i> Reset Filters
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .loyalty-points-circle {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background-color: #FEA116;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .points-value {
+        font-size: 30px;
+        font-weight: bold;
+        line-height: 1;
+    }
+    
+    .points-label {
+        font-size: 12px;
+        letter-spacing: 1px;
+    }
+</style>
+{% endblock %}

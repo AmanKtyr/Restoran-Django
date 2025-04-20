@@ -157,13 +157,54 @@ def category_list(request):
 @login_required
 @user_passes_test(is_admin)
 def category_add(request):
-    # Implementation will be added later
+    if request.method == 'POST':
+        # Get form data
+        name = request.POST.get('name')
+        slug = request.POST.get('slug')
+        icon_class = request.POST.get('icon_class')
+        small_description = request.POST.get('small_description')
+        display_order = request.POST.get('display_order', 0)
+        is_active = 'is_active' in request.POST
+
+        # Create category
+        category = Category.objects.create(
+            name=name,
+            slug=slug,  # If empty, will be auto-generated in the save method
+            icon_class=icon_class,
+            small_description=small_description,
+            display_order=display_order,
+            is_active=is_active
+        )
+
+        messages.success(request, 'Category added successfully!')
+
+        # Check if this is a popup (opened from menu_item_add)
+        if 'popup' in request.GET:
+            # Redirect to category list which will trigger the JS to close the window
+            return redirect('admin_panel:category_list')
+        else:
+            return redirect('admin_panel:category_list')
+
     return render(request, 'admin_panel/menu/category_form.html')
 
 @login_required
 @user_passes_test(is_admin)
 def category_edit(request, pk):
     category = get_object_or_404(Category, pk=pk)
+
+    if request.method == 'POST':
+        # Get form data
+        category.name = request.POST.get('name')
+        category.slug = request.POST.get('slug')  # If empty, will be auto-generated in the save method
+        category.icon_class = request.POST.get('icon_class')
+        category.small_description = request.POST.get('small_description')
+        category.display_order = request.POST.get('display_order', 0)
+        category.is_active = 'is_active' in request.POST
+
+        category.save()
+        messages.success(request, 'Category updated successfully!')
+        return redirect('admin_panel:category_list')
+
     return render(request, 'admin_panel/menu/category_form.html', {'category': category})
 
 @login_required
@@ -183,14 +224,113 @@ def menu_item_list(request):
 @login_required
 @user_passes_test(is_admin)
 def menu_item_add(request):
-    # Implementation will be added later
-    return render(request, 'admin_panel/menu/menu_item_form.html')
+    if request.method == 'POST':
+        # Get basic information
+        name = request.POST.get('name')
+        category_id = request.POST.get('category')
+        price = request.POST.get('price')
+        description = request.POST.get('description')
+
+        # Get dietary information
+        is_vegetarian = 'is_vegetarian' in request.POST
+        is_vegan = 'is_vegan' in request.POST
+        is_gluten_free = 'is_gluten_free' in request.POST
+        spice_level = request.POST.get('spice_level', 0)
+        calories = request.POST.get('calories') or None
+        ingredients = request.POST.get('ingredients', '')
+        allergens = request.POST.get('allergens', '')
+
+        # Get status flags
+        is_popular = 'is_popular' in request.POST
+        is_featured = 'is_featured' in request.POST
+        is_seasonal = 'is_seasonal' in request.POST
+        is_active = 'is_active' in request.POST
+
+        # Get category object
+        category = get_object_or_404(Category, id=category_id)
+
+        # Create menu item
+        menu_item = MenuItem.objects.create(
+            name=name,
+            category=category,
+            price=price,
+            description=description,
+            is_vegetarian=is_vegetarian,
+            is_vegan=is_vegan,
+            is_gluten_free=is_gluten_free,
+            spice_level=spice_level,
+            calories=calories,
+            ingredients=ingredients,
+            allergens=allergens,
+            is_popular=is_popular,
+            is_featured=is_featured,
+            is_seasonal=is_seasonal,
+            is_active=is_active
+        )
+
+        # Handle image upload
+        if 'image' in request.FILES:
+            menu_item.image = request.FILES['image']
+            menu_item.save()
+
+        messages.success(request, 'Menu item added successfully!')
+        return redirect('admin_panel:menu_item_list')
+
+    # Get all categories for the dropdown
+    categories = Category.objects.all()
+
+    # Check if a specific category was requested
+    selected_category_id = request.GET.get('category')
+    context = {
+        'categories': categories,
+        'selected_category_id': selected_category_id
+    }
+
+    return render(request, 'admin_panel/menu/menu_item_form.html', context)
 
 @login_required
 @user_passes_test(is_admin)
 def menu_item_edit(request, pk):
     menu_item = get_object_or_404(MenuItem, pk=pk)
-    return render(request, 'admin_panel/menu/menu_item_form.html', {'menu_item': menu_item})
+
+    if request.method == 'POST':
+        # Get basic information
+        menu_item.name = request.POST.get('name')
+        menu_item.category_id = request.POST.get('category')
+        menu_item.price = request.POST.get('price')
+        menu_item.description = request.POST.get('description')
+
+        # Get dietary information
+        menu_item.is_vegetarian = 'is_vegetarian' in request.POST
+        menu_item.is_vegan = 'is_vegan' in request.POST
+        menu_item.is_gluten_free = 'is_gluten_free' in request.POST
+        menu_item.spice_level = request.POST.get('spice_level', 0)
+        menu_item.calories = request.POST.get('calories') or None
+        menu_item.ingredients = request.POST.get('ingredients', '')
+        menu_item.allergens = request.POST.get('allergens', '')
+
+        # Get status flags
+        menu_item.is_popular = 'is_popular' in request.POST
+        menu_item.is_featured = 'is_featured' in request.POST
+        menu_item.is_seasonal = 'is_seasonal' in request.POST
+        menu_item.is_active = 'is_active' in request.POST
+
+        # Handle image upload
+        if 'image' in request.FILES:
+            menu_item.image = request.FILES['image']
+
+        # Handle image deletion
+        if 'delete_image' in request.POST and menu_item.image:
+            menu_item.image.delete()
+            menu_item.image = None
+
+        menu_item.save()
+        messages.success(request, 'Menu item updated successfully!')
+        return redirect('admin_panel:menu_item_list')
+
+    # Get all categories for the dropdown
+    categories = Category.objects.all()
+    return render(request, 'admin_panel/menu/menu_item_form.html', {'menu_item': menu_item, 'categories': categories})
 
 @login_required
 @user_passes_test(is_admin)

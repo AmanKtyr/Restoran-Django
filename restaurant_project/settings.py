@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'staffing',
     'analytics',
     'kitchen',
+    'ai_features',
 ]
 
 MIDDLEWARE = [

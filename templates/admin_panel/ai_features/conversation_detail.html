@@ -1,0 +1,362 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Conversation Detail - Admin Panel{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'admin_panel:ai_dashboard' %}">AI Features</a></li>
+<li class="breadcrumb-item"><a href="{% url 'admin_panel:ai_conversations' %}">Chatbot Conversations</a></li>
+<li class="breadcrumb-item active">Conversation Detail</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Conversation Detail</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'admin_panel:ai_dashboard' %}">AI Features</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'admin_panel:ai_conversations' %}">Chatbot Conversations</a></li>
+        <li class="breadcrumb-item active">Conversation #{{ conversation.id }}</li>
+    </ol>
+    
+    <div class="row">
+        <div class="col-xl-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Conversation Information
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>User:</strong> 
+                        {% if conversation.user %}
+                            {{ conversation.user.username }}
+                        {% else %}
+                            Anonymous
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Session ID:</strong> {{ conversation.session_id }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Started:</strong> {{ conversation.started_at|date:"M d, Y H:i:s" }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Last Updated:</strong> {{ conversation.last_updated|date:"M d, Y H:i:s" }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Status:</strong> 
+                        {% if conversation.is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Closed</span>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Total Messages:</strong> {{ conversation.messages.count }}
+                    </div>
+                    
+                    <div class="d-grid gap-2 mt-4">
+                        {% if conversation.is_active %}
+                        <button class="btn btn-warning" id="closeConversation">
+                            <i class="fas fa-times-circle me-1"></i> Close Conversation
+                        </button>
+                        {% else %}
+                        <button class="btn btn-success" id="reopenConversation">
+                            <i class="fas fa-play-circle me-1"></i> Reopen Conversation
+                        </button>
+                        {% endif %}
+                        <button class="btn btn-danger" id="deleteConversation">
+                            <i class="fas fa-trash me-1"></i> Delete Conversation
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-pie me-1"></i>
+                    Conversation Analytics
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>User Messages:</strong> {{ user_message_count }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Bot Messages:</strong> {{ bot_message_count }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Average Response Time:</strong> {{ avg_response_time|default:"N/A" }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Conversation Duration:</strong> {{ conversation_duration|default:"N/A" }}
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h6>Top Intents</h6>
+                        <ul class="list-group">
+                            {% for intent in top_intents %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ intent.name }}
+                                <span class="badge bg-primary rounded-pill">{{ intent.count }}</span>
+                            </li>
+                            {% empty %}
+                            <li class="list-group-item">No intent data available</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-comments me-1"></i>
+                            Conversation Messages
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary" id="exportConversation">
+                                <i class="fas fa-download me-1"></i> Export
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chat-container" style="height: 600px; overflow-y: auto; padding: 20px; background-color: #f8f9fa; border-radius: 10px;">
+                        {% for message in messages %}
+                        <div class="chat-message {% if message.message_type == 'user' %}user{% else %}bot{% endif %}" style="margin-bottom: 15px; display: flex; {% if message.message_type == 'user' %}justify-content: flex-end;{% else %}justify-content: flex-start;{% endif %}">
+                            <div class="message-content" style="max-width: 70%; padding: 10px 15px; border-radius: 18px; position: relative; {% if message.message_type == 'user' %}background-color: #fea116; color: white; border-bottom-right-radius: 5px;{% else %}background-color: #e9ecef; color: #212529; border-bottom-left-radius: 5px;{% endif %}">
+                                {{ message.content|linebreaks }}
+                                <div class="message-time" style="font-size: 0.75rem; color: {% if message.message_type == 'user' %}rgba(255,255,255,0.7){% else %}#6c757d{% endif %}; margin-top: 5px; text-align: {% if message.message_type == 'user' %}right{% else %}left{% endif %};">
+                                    {{ message.timestamp|date:"g:i A" }}
+                                </div>
+                                {% if message.intent %}
+                                <div class="message-intent" style="font-size: 0.7rem; margin-top: 5px; text-align: {% if message.message_type == 'user' %}right{% else %}left{% endif %};">
+                                    <span class="badge bg-info">Intent: {{ message.intent }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-comments fa-3x mb-3"></i>
+                            <p>No messages in this conversation</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    {% if conversation.is_active %}
+                    <div class="mt-4">
+                        <form id="sendMessageForm" class="d-flex">
+                            <input type="text" class="form-control" id="messageInput" placeholder="Type a message as the bot...">
+                            <button type="submit" class="btn btn-primary ms-2">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-line me-1"></i>
+                    Message Timeline
+                </div>
+                <div class="card-body">
+                    <canvas id="messageTimelineChart" width="100%" height="40"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Scroll to bottom of chat container
+        const chatContainer = document.querySelector('.chat-container');
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        
+        // Sample data for message timeline chart - in a real implementation, this would come from the server
+        const timelineLabels = [
+            {% for timestamp in message_timestamps %}
+                '{{ timestamp|date:"H:i" }}',
+            {% endfor %}
+        ];
+        
+        const messageTimelineData = {
+            labels: timelineLabels,
+            datasets: [
+                {
+                    label: 'User Messages',
+                    data: [
+                        {% for is_user in message_types %}
+                            {% if is_user == 'user' %}1{% else %}null{% endif %},
+                        {% endfor %}
+                    ],
+                    backgroundColor: 'rgba(254, 161, 22, 0.5)',
+                    borderColor: 'rgba(254, 161, 22, 1)',
+                    borderWidth: 1,
+                    pointRadius: 5,
+                    pointHoverRadius: 8
+                },
+                {
+                    label: 'Bot Messages',
+                    data: [
+                        {% for is_user in message_types %}
+                            {% if is_user == 'bot' %}1{% else %}null{% endif %},
+                        {% endfor %}
+                    ],
+                    backgroundColor: 'rgba(108, 117, 125, 0.5)',
+                    borderColor: 'rgba(108, 117, 125, 1)',
+                    borderWidth: 1,
+                    pointRadius: 5,
+                    pointHoverRadius: 8
+                }
+            ]
+        };
+        
+        // Create the message timeline chart
+        var timelineCtx = document.getElementById('messageTimelineChart').getContext('2d');
+        var timelineChart = new Chart(timelineCtx, {
+            type: 'line',
+            data: messageTimelineData,
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 1.5,
+                        ticks: {
+                            stepSize: 1,
+                            callback: function(value, index, values) {
+                                if (value === 1) return 'Message';
+                                return '';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Send message form
+        const sendMessageForm = document.getElementById('sendMessageForm');
+        if (sendMessageForm) {
+            sendMessageForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const messageInput = document.getElementById('messageInput');
+                const message = messageInput.value.trim();
+                
+                if (!message) return;
+                
+                // In a real implementation, this would make an AJAX request to send the message
+                console.log('Sending message:', message);
+                
+                // Clear input
+                messageInput.value = '';
+                
+                // For demo purposes, just add the message to the chat
+                const now = new Date();
+                const timeString = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+                
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'chat-message bot';
+                messageDiv.style = 'margin-bottom: 15px; display: flex; justify-content: flex-start;';
+                
+                messageDiv.innerHTML = `
+                    <div class="message-content" style="max-width: 70%; padding: 10px 15px; border-radius: 18px; position: relative; background-color: #e9ecef; color: #212529; border-bottom-left-radius: 5px;">
+                        ${message.replace(/\n/g, '<br>')}
+                        <div class="message-time" style="font-size: 0.75rem; color: #6c757d; margin-top: 5px; text-align: left;">
+                            ${timeString}
+                        </div>
+                    </div>
+                `;
+                
+                chatContainer.appendChild(messageDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                
+                // Show success message
+                alert('Message sent successfully! In a real implementation, this would send the message to the user.');
+            });
+        }
+        
+        // Close conversation button
+        const closeButton = document.getElementById('closeConversation');
+        if (closeButton) {
+            closeButton.addEventListener('click', function() {
+                if (confirm('Are you sure you want to close this conversation?')) {
+                    // In a real implementation, this would make an AJAX request to close the conversation
+                    console.log('Closing conversation');
+                    
+                    // Show success message
+                    alert('Conversation closed successfully! In a real implementation, this would update the conversation status in the database.');
+                    
+                    // Reload page to show updated status
+                    window.location.reload();
+                }
+            });
+        }
+        
+        // Reopen conversation button
+        const reopenButton = document.getElementById('reopenConversation');
+        if (reopenButton) {
+            reopenButton.addEventListener('click', function() {
+                if (confirm('Are you sure you want to reopen this conversation?')) {
+                    // In a real implementation, this would make an AJAX request to reopen the conversation
+                    console.log('Reopening conversation');
+                    
+                    // Show success message
+                    alert('Conversation reopened successfully! In a real implementation, this would update the conversation status in the database.');
+                    
+                    // Reload page to show updated status
+                    window.location.reload();
+                }
+            });
+        }
+        
+        // Delete conversation button
+        const deleteButton = document.getElementById('deleteConversation');
+        if (deleteButton) {
+            deleteButton.addEventListener('click', function() {
+                if (confirm('Are you sure you want to delete this conversation? This action cannot be undone.')) {
+                    // In a real implementation, this would make an AJAX request to delete the conversation
+                    console.log('Deleting conversation');
+                    
+                    // Show success message
+                    alert('Conversation deleted successfully! In a real implementation, this would delete the conversation from the database.');
+                    
+                    // Redirect to conversations list
+                    window.location.href = "{% url 'admin_panel:ai_conversations' %}";
+                }
+            });
+        }
+        
+        // Export conversation button
+        const exportButton = document.getElementById('exportConversation');
+        if (exportButton) {
+            exportButton.addEventListener('click', function() {
+                // In a real implementation, this would generate a file for download
+                console.log('Exporting conversation');
+                
+                // For demo purposes, just show a success message
+                alert('Conversation exported successfully! In a real implementation, this would generate a file for download.');
+            });
+        }
+    });
+</script>
+{% endblock %}

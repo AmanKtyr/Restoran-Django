@@ -452,6 +452,38 @@
                 </a>
             </li>
 
+            <div class="sidebar-category">AI Features</div>
+            <li class="nav-item">
+                <a class="nav-link {% if 'ai/dashboard' in request.path %}active{% endif %}" href="{% url 'admin_panel:ai_dashboard' %}">
+                    <i class="fas fa-robot" style="color: #6f42c1;"></i>
+                    <span>AI Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'ai/recommendations' in request.path %}active{% endif %}" href="{% url 'admin_panel:ai_recommendations' %}">
+                    <i class="fas fa-magic" style="color: #e83e8c;"></i>
+                    <span>Recommendations</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'ai/interactions' in request.path %}active{% endif %}" href="{% url 'admin_panel:ai_interactions' %}">
+                    <i class="fas fa-chart-pie" style="color: #fd7e14;"></i>
+                    <span>User Interactions</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'ai/conversations' in request.path %}active{% endif %}" href="{% url 'admin_panel:ai_conversations' %}">
+                    <i class="fas fa-comments" style="color: #20c997;"></i>
+                    <span>Chatbot Conversations</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'ai/food-analyses' in request.path %}active{% endif %}" href="{% url 'admin_panel:ai_food_analyses' %}">
+                    <i class="fas fa-microscope" style="color: #17a2b8;"></i>
+                    <span>Food Analyses</span>
+                </a>
+            </li>
+
             <div class="sidebar-category">Reports & Analytics</div>
             <li class="nav-item">
                 <a class="nav-link {% if 'analytics/dashboard' in request.path %}active{% endif %}" href="{% url 'admin_panel:analytics_dashboard' %}">

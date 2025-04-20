@@ -1,0 +1,351 @@
+{% extends 'ai_features/base.html' %}
+{% load static %}
+
+{% block title %}AI Chatbot - Restoran{% endblock %}
+
+{% block ai_feature_title %}Restaurant Assistant{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-container {
+        height: 500px;
+        overflow-y: auto;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .chat-message {
+        margin-bottom: 15px;
+        display: flex;
+    }
+    
+    .chat-message.user {
+        justify-content: flex-end;
+    }
+    
+    .chat-message.bot {
+        justify-content: flex-start;
+    }
+    
+    .message-content {
+        max-width: 70%;
+        padding: 10px 15px;
+        border-radius: 18px;
+        position: relative;
+    }
+    
+    .user .message-content {
+        background-color: var(--primary);
+        color: white;
+        border-bottom-right-radius: 5px;
+    }
+    
+    .bot .message-content {
+        background-color: #e9ecef;
+        color: #212529;
+        border-bottom-left-radius: 5px;
+    }
+    
+    .message-time {
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-top: 5px;
+        text-align: right;
+    }
+    
+    .bot .message-time {
+        text-align: left;
+    }
+    
+    .chat-input {
+        display: flex;
+        margin-top: 20px;
+    }
+    
+    .chat-input input {
+        flex-grow: 1;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+    
+    .chat-input button {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+    
+    .typing-indicator {
+        display: none;
+        align-items: center;
+        margin-top: 10px;
+    }
+    
+    .typing-indicator span {
+        height: 8px;
+        width: 8px;
+        background-color: #6c757d;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+        animation: typing 1s infinite;
+    }
+    
+    .typing-indicator span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+    
+    .typing-indicator span:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+    
+    @keyframes typing {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+        100% { transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block ai_feature_content %}
+<div class="row g-4">
+    <div class="col-lg-12">
+        <div class="bg-light rounded p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="mb-0"><i class="fa fa-robot text-primary me-2"></i> AI Restaurant Assistant</h4>
+                <button id="resetChat" class="btn btn-sm btn-outline-secondary">
+                    <i class="fa fa-redo me-1"></i> Reset Chat
+                </button>
+            </div>
+            
+            <div class="chat-container" id="chatContainer">
+                {% for message in messages %}
+                <div class="chat-message {{ message.message_type }}">
+                    <div class="message-content">
+                        {{ message.content|linebreaks }}
+                        <div class="message-time">{{ message.timestamp|time:"g:i A" }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="typing-indicator" id="typingIndicator">
+                <span></span>
+                <span></span>
+                <span></span>
+                <small class="ms-2">Assistant is typing...</small>
+            </div>
+            
+            <div class="chat-input">
+                <input type="text" class="form-control" id="messageInput" placeholder="Type your message here...">
+                <button class="btn btn-primary" id="sendMessage">
+                    <i class="fa fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-lg-12">
+        <div class="bg-light rounded p-4">
+            <h4 class="mb-3">What can I help you with?</h4>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 btn-square bg-primary rounded-circle me-3">
+                            <i class="fa fa-utensils text-white"></i>
+                        </div>
+                        <h6 class="mb-0">Menu Recommendations</h6>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 btn-square bg-primary rounded-circle me-3">
+                            <i class="fa fa-calendar-alt text-white"></i>
+                        </div>
+                        <h6 class="mb-0">Reservation Assistance</h6>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 btn-square bg-primary rounded-circle me-3">
+                            <i class="fa fa-map-marker-alt text-white"></i>
+                        </div>
+                        <h6 class="mb-0">Location & Hours</h6>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 btn-square bg-primary rounded-circle me-3">
+                            <i class="fa fa-leaf text-white"></i>
+                        </div>
+                        <h6 class="mb-0">Dietary Information</h6>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 btn-square bg-primary rounded-circle me-3">
+                            <i class="fa fa-star text-white"></i>
+                        </div>
+                        <h6 class="mb-0">Popular Dishes</h6>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 btn-square bg-primary rounded-circle me-3">
+                            <i class="fa fa-question-circle text-white"></i>
+                        </div>
+                        <h6 class="mb-0">General Inquiries</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatContainer = document.getElementById('chatContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendMessage');
+        const resetButton = document.getElementById('resetChat');
+        const typingIndicator = document.getElementById('typingIndicator');
+        
+        // Scroll to bottom of chat
+        function scrollToBottom() {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Initial scroll
+        scrollToBottom();
+        
+        // Format timestamp
+        function formatTime(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        }
+        
+        // Add message to chat
+        function addMessage(content, type, timestamp) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${type}`;
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            
+            // Replace newlines with <br>
+            messageContent.innerHTML = content.replace(/\n/g, '<br>');
+            
+            const messageTime = document.createElement('div');
+            messageTime.className = 'message-time';
+            messageTime.textContent = formatTime(timestamp || new Date());
+            
+            messageContent.appendChild(messageTime);
+            messageDiv.appendChild(messageContent);
+            chatContainer.appendChild(messageDiv);
+            
+            scrollToBottom();
+        }
+        
+        // Show typing indicator
+        function showTypingIndicator() {
+            typingIndicator.style.display = 'flex';
+            scrollToBottom();
+        }
+        
+        // Hide typing indicator
+        function hideTypingIndicator() {
+            typingIndicator.style.display = 'none';
+        }
+        
+        // Send message
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+            
+            // Clear input
+            messageInput.value = '';
+            
+            // Add user message to chat
+            const now = new Date();
+            addMessage(message, 'user', now);
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            try {
+                // Send message to server
+                const response = await fetch('{% url "ai_features:chatbot_message" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message }),
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
+                const data = await response.json();
+                
+                // Hide typing indicator
+                hideTypingIndicator();
+                
+                // Add bot response to chat
+                addMessage(data.bot_message.content, 'bot', data.bot_message.timestamp);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                hideTypingIndicator();
+                addMessage('Sorry, there was an error processing your request. Please try again.', 'bot', new Date());
+            }
+        }
+        
+        // Reset chat
+        async function resetChat() {
+            if (!confirm('Are you sure you want to reset the conversation?')) return;
+            
+            try {
+                const response = await fetch('{% url "ai_features:chatbot_reset" %}', {
+                    method: 'POST',
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
+                // Reload the page
+                window.location.reload();
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('There was an error resetting the chat. Please try again.');
+            }
+        }
+        
+        // Event listeners
+        sendButton.addEventListener('click', sendMessage);
+        
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        resetButton.addEventListener('click', resetChat);
+        
+        // Quick suggestion buttons
+        document.querySelectorAll('.col-md-4').forEach(col => {
+            col.addEventListener('click', function() {
+                const topic = this.querySelector('h6').textContent;
+                messageInput.value = `Tell me about ${topic}`;
+                messageInput.focus();
+            });
+        });
+    });
+</script>
+{% endblock %}

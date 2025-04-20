@@ -1,0 +1,155 @@
+{% extends 'ai_features/base.html' %}
+{% load static %}
+
+{% block title %}Popular Items - Restoran{% endblock %}
+
+{% block ai_feature_title %}AI-Curated Popular Items{% endblock %}
+
+{% block ai_feature_content %}
+<div class="row g-4">
+    <div class="col-lg-12">
+        <div class="bg-light rounded p-4 mb-4">
+            <h4 class="mb-4">Top-Rated Dishes</h4>
+            <p class="text-muted mb-4">
+                Our AI has analyzed thousands of customer orders and reviews to identify these popular dishes.
+                Each item has been rated for presentation, taste, and overall customer satisfaction.
+            </p>
+            
+            <div class="row g-4">
+                {% for item in popular_items %}
+                <div class="col-lg-3 col-md-6">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="position-relative">
+                            {% if item.image %}
+                            <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.name }}" style="height: 200px; object-fit: cover;">
+                            {% else %}
+                            <img src="{% static 'img/menu-1.jpg' %}" class="card-img-top" alt="{{ item.name }}" style="height: 200px; object-fit: cover;">
+                            {% endif %}
+                            
+                            {% if item.ai_analysis %}
+                            <div class="position-absolute top-0 end-0 bg-primary text-white rounded-pill m-2 px-3 py-1">
+                                <i class="fa fa-star me-1"></i> {{ item.ai_analysis.presentation_score|floatformat:1 }}/10
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="card-body">
+                            <h5 class="card-title">{{ item.name }}</h5>
+                            <p class="card-text text-primary mb-2">{{ currency_symbol|default:"$" }}{{ item.price }}</p>
+                            <p class="card-text small text-muted mb-3">{{ item.description|truncatechars:80 }}</p>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    {% if item.is_vegetarian %}
+                                    <span class="badge bg-success me-1" title="Vegetarian"><i class="fa fa-leaf"></i></span>
+                                    {% endif %}
+                                    {% if item.is_vegan %}
+                                    <span class="badge bg-success me-1" title="Vegan"><i class="fa fa-seedling"></i></span>
+                                    {% endif %}
+                                    {% if item.is_gluten_free %}
+                                    <span class="badge bg-warning me-1" title="Gluten-Free"><i class="fa fa-wheat-alt"></i></span>
+                                    {% endif %}
+                                    {% if item.spice_level > 0 %}
+                                    <span class="badge bg-danger" title="{{ item.get_spice_level_display }}">
+                                        <i class="fa fa-pepper-hot"></i> {{ item.spice_level }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                <a href="{% url 'menu:menu_item_detail' item.id %}" class="btn btn-sm btn-outline-primary">View Details</a>
+                            </div>
+                            
+                            {% if item.ai_analysis %}
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <i class="fa fa-thumbs-up text-primary me-1"></i> 
+                                    {{ item.ai_analysis.visual_attributes.presentation|title }} presentation
+                                </small>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <p>No popular items found.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-lg-12">
+        <div class="bg-light rounded p-4">
+            <h4 class="mb-3"><i class="fa fa-info-circle text-primary me-2"></i> How We Determine Popularity</h4>
+            <p class="mb-3">
+                Our AI system analyzes multiple factors to determine the popularity of menu items:
+            </p>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 btn-square bg-primary rounded-circle me-3">
+                            <i class="fa fa-shopping-cart text-white"></i>
+                        </div>
+                        <h6 class="mb-0">Order Frequency</h6>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 btn-square bg-primary rounded-circle me-3">
+                            <i class="fa fa-star text-white"></i>
+                        </div>
+                        <h6 class="mb-0">Customer Ratings</h6>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 btn-square bg-primary rounded-circle me-3">
+                            <i class="fa fa-eye text-white"></i>
+                        </div>
+                        <h6 class="mb-0">Visual Appeal</h6>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 btn-square bg-primary rounded-circle me-3">
+                            <i class="fa fa-comment text-white"></i>
+                        </div>
+                        <h6 class="mb-0">Review Sentiment</h6>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 btn-square bg-primary rounded-circle me-3">
+                            <i class="fa fa-share-alt text-white"></i>
+                        </div>
+                        <h6 class="mb-0">Social Media Mentions</h6>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 btn-square bg-primary rounded-circle me-3">
+                            <i class="fa fa-calendar-alt text-white"></i>
+                        </div>
+                        <h6 class="mb-0">Seasonal Trends</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-lg-12">
+        <div class="text-center">
+            <a href="{% url 'menu:menu_list' %}" class="btn btn-primary py-3 px-5">
+                <i class="fa fa-utensils me-2"></i> Browse Full Menu
+            </a>
+            <a href="{% url 'ai_features:user_recommendations' %}" class="btn btn-outline-primary py-3 px-5 ms-2">
+                <i class="fa fa-magic me-2"></i> Get Personalized Recommendations
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

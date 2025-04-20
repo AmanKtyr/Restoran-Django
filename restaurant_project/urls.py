@@ -33,6 +33,7 @@ urlpatterns = [
     path('staffing/', include('staffing.urls')),  # Staff management system
     path('analytics/', include('analytics.urls')),  # Analytics dashboard
     path('loyalty/', include('loyalty.urls')),  # Loyalty program management
+    path('ai/', include('ai_features.urls')),  # AI features
 ]
 
 # Serve static and media files during development

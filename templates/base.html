@@ -33,10 +33,13 @@
     <!-- Template Stylesheet -->
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
 
+    <!-- AI Features Stylesheet -->
+    <link href="{% static 'css/ai-features.css' %}" rel="stylesheet">
+
     {% block extra_css %}{% endblock %}
 </head>
 
-<body>
+<body class="ai-features-enabled">
     <div class="container-xxl bg-white p-0">
         <!-- Spinner Start -->
         <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
@@ -62,6 +65,17 @@
                         <a href="{% url 'core:about' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}">About</a>
                         <a href="{% url 'core:service' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'service' %}active{% endif %}">Service</a>
                         <a href="{% url 'menu:menu_list' %}" class="nav-item nav-link {% if 'menu' in request.path %}active{% endif %}">Menu</a>
+                        <div class="nav-item dropdown">
+                            <a href="#" class="nav-link dropdown-toggle {% if 'ai' in request.path %}active{% endif %}" data-bs-toggle="dropdown"><i class="fa fa-robot me-1"></i> AI Features</a>
+                            <div class="dropdown-menu m-0">
+                                <a href="{% url 'ai_features:user_recommendations' %}" class="dropdown-item"><i class="fa fa-magic me-2"></i> Smart Recommendations</a>
+                                <a href="{% url 'ai_features:chatbot' %}" class="dropdown-item"><i class="fa fa-comment me-2"></i> AI Chatbot</a>
+                                <a href="{% url 'ai_features:voice_order' %}" class="dropdown-item"><i class="fa fa-microphone me-2"></i> Voice Ordering</a>
+                                {% if user.is_authenticated %}
+                                <a href="{% url 'ai_features:user_preferences' %}" class="dropdown-item"><i class="fa fa-sliders-h me-2"></i> Your Preferences</a>
+                                {% endif %}
+                            </div>
+                        </div>
                         <div class="nav-item dropdown">
                             <a href="#" class="nav-link dropdown-toggle {% if 'booking' in request.path or 'team' in request.path or 'testimonial' in request.path %}active{% endif %}" data-bs-toggle="dropdown">Pages</a>
                             <div class="dropdown-menu m-0">
@@ -198,7 +212,134 @@
 
         <!-- Back to Top -->
         <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+        <!-- Floating Chatbot -->
+        <div id="floating-chatbot-button" class="floating-chatbot-button">
+            <i class="fa fa-comment"></i>
+        </div>
+
+        <div id="floating-chatbot-container" class="floating-chatbot-container">
+            <div class="floating-chatbot-header">
+                <h5 class="mb-0"><i class="fa fa-robot me-2"></i> AI Assistant</h5>
+                <button type="button" class="btn-close btn-close-white" id="close-chatbot"></button>
+            </div>
+            <div class="floating-chatbot-body" id="floating-chatbot-messages">
+                <div class="chat-message bot">
+                    <div class="message-content">
+                        Hello! I'm your AI assistant. How can I help you today?
+                        <div class="message-time">Just now</div>
+                    </div>
+                </div>
+            </div>
+            <div class="floating-chatbot-footer">
+                <input type="text" class="form-control" id="floating-chatbot-input" placeholder="Type your message...">
+                <button class="btn btn-primary" id="floating-chatbot-send">
+                    <i class="fa fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Floating chatbot functionality
+            const chatbotButton = document.getElementById('floating-chatbot-button');
+            const chatbotContainer = document.getElementById('floating-chatbot-container');
+            const closeButton = document.getElementById('close-chatbot');
+            const chatInput = document.getElementById('floating-chatbot-input');
+            const sendButton = document.getElementById('floating-chatbot-send');
+            const messagesContainer = document.getElementById('floating-chatbot-messages');
+
+            if (chatbotButton && chatbotContainer) {
+                // Toggle chatbot visibility
+                chatbotButton.addEventListener('click', function() {
+                    chatbotContainer.classList.toggle('show');
+                    if (chatbotContainer.classList.contains('show')) {
+                        chatInput.focus();
+                    }
+                });
+
+                // Close chatbot
+                closeButton.addEventListener('click', function() {
+                    chatbotContainer.classList.remove('show');
+                });
+
+                // Send message on button click
+                sendButton.addEventListener('click', sendMessage);
+
+                // Send message on Enter key
+                chatInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        sendMessage();
+                    }
+                });
+
+                // Function to send message
+                function sendMessage() {
+                    const message = chatInput.value.trim();
+                    if (!message) return;
+
+                    // Clear input
+                    chatInput.value = '';
+
+                    // Add user message to chat
+                    addMessage(message, 'user');
+
+                    // Simulate typing indicator
+                    const typingIndicator = document.createElement('div');
+                    typingIndicator.className = 'typing-indicator';
+                    typingIndicator.innerHTML = '<span></span><span></span><span></span><small class="ms-2">Assistant is typing...</small>';
+                    typingIndicator.style.display = 'flex';
+                    messagesContainer.appendChild(typingIndicator);
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+                    // Simulate AI response (in a real implementation, this would call your backend API)
+                    setTimeout(() => {
+                        // Remove typing indicator
+                        messagesContainer.removeChild(typingIndicator);
+
+                        // Generate a simple response
+                        let response;
+                        if (message.toLowerCase().includes('menu') || message.toLowerCase().includes('food')) {
+                            response = "You can view our full menu by clicking on the Menu link in the navigation bar. Would you like me to recommend something?";
+                        } else if (message.toLowerCase().includes('book') || message.toLowerCase().includes('reservation')) {
+                            response = "You can book a table by clicking on the 'Book A Table' button or visiting our Booking page. Would you like me to help you with that?";
+                        } else if (message.toLowerCase().includes('location') || message.toLowerCase().includes('address')) {
+                            response = "We are located at 123 Main Street, Anytown. You can find directions on our Contact page.";
+                        } else if (message.toLowerCase().includes('hour') || message.toLowerCase().includes('open')) {
+                            response = "We are open Monday to Saturday from 9AM to 9PM, and Sunday from 10AM to 8PM.";
+                        } else {
+                            response = "Thank you for your message. How else can I assist you with our restaurant services?";
+                        }
+
+                        // Add AI response to chat
+                        addMessage(response, 'bot');
+                    }, 1000);
+                }
+
+                // Function to add message to chat
+                function addMessage(content, type) {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `chat-message ${type}`;
+
+                    const messageContent = document.createElement('div');
+                    messageContent.className = 'message-content';
+                    messageContent.innerHTML = content;
+
+                    const messageTime = document.createElement('div');
+                    messageTime.className = 'message-time';
+                    messageTime.textContent = 'Just now';
+
+                    messageContent.appendChild(messageTime);
+                    messageDiv.appendChild(messageContent);
+                    messagesContainer.appendChild(messageDiv);
+
+                    // Scroll to bottom
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+            }
+        });
+    </script>
 
     <!-- JavaScript Libraries -->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
@@ -214,6 +355,9 @@
 
     <!-- Template Javascript -->
     <script src="{% static 'js/main.js' %}"></script>
+
+    <!-- AI Features Javascript -->
+    <script src="{% static 'js/ai-features.js' %}"></script>
 
     {% block extra_js %}{% endblock %}
 </body>

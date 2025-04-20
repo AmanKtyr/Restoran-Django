@@ -1,0 +1,119 @@
+{% extends 'ai_features/base.html' %}
+{% load static %}
+
+{% block title %}Your Preferences - Restoran{% endblock %}
+
+{% block ai_feature_title %}Your Taste Preferences{% endblock %}
+
+{% block ai_feature_content %}
+<div class="row g-4">
+    <div class="col-lg-12">
+        <div class="bg-light rounded p-4 mb-4">
+            <h4 class="mb-4">Customize Your Dining Experience</h4>
+            <p class="text-muted mb-4">
+                Tell us about your preferences so our AI can recommend dishes you'll love. 
+                The more information you provide, the better our recommendations will be!
+            </p>
+            
+            <form action="{% url 'ai_features:update_preferences' %}" method="post">
+                {% csrf_token %}
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="fa fa-utensils me-2"></i> Dietary Preferences</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="dietary_vegetarian" name="dietary_vegetarian" {% if preferences.dietary_vegetarian %}checked{% endif %}>
+                                        <label class="form-check-label" for="dietary_vegetarian">
+                                            <i class="fa fa-leaf text-success me-1"></i> Vegetarian
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="dietary_vegan" name="dietary_vegan" {% if preferences.dietary_vegan %}checked{% endif %}>
+                                        <label class="form-check-label" for="dietary_vegan">
+                                            <i class="fa fa-seedling text-success me-1"></i> Vegan
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="dietary_gluten_free" name="dietary_gluten_free" {% if preferences.dietary_gluten_free %}checked{% endif %}>
+                                        <label class="form-check-label" for="dietary_gluten_free">
+                                            <i class="fa fa-wheat-alt text-warning me-1"></i> Gluten-Free
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="spice_preference" class="form-label">Spice Preference</label>
+                                    <select class="form-select" id="spice_preference" name="spice_preference">
+                                        {% for value, label in spice_levels %}
+                                        <option value="{{ value }}" {% if preferences.spice_preference == value %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="price_sensitivity" class="form-label">Price Range</label>
+                                    <select class="form-select" id="price_sensitivity" name="price_sensitivity">
+                                        {% for value, label in price_levels %}
+                                        <option value="{{ value }}" {% if preferences.price_sensitivity == value %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="fa fa-list me-2"></i> Favorite Categories</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted mb-3">Select the food categories you enjoy the most:</p>
+                                
+                                <div class="mb-3" style="max-height: 250px; overflow-y: auto;">
+                                    {% for category in categories %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="category_{{ category.id }}" name="favorite_categories" value="{{ category.id }}" 
+                                            {% if category in preferences.favorite_categories.all %}checked{% endif %}>
+                                        <label class="form-check-label" for="category_{{ category.id }}">
+                                            <i class="fa {{ category.icon_class }} text-primary me-1"></i> {{ category.name }}
+                                        </label>
+                                    </div>
+                                    {% empty %}
+                                    <p class="text-muted">No categories available.</p>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-12 text-center mt-4">
+                        <button type="submit" class="btn btn-primary py-3 px-5">
+                            <i class="fa fa-save me-2"></i> Save Preferences
+                        </button>
+                        <a href="{% url 'ai_features:user_recommendations' %}" class="btn btn-outline-secondary py-3 px-5 ms-2">
+                            <i class="fa fa-times me-2"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-lg-12">
+        <div class="bg-light rounded p-4">
+            <h4 class="mb-3"><i class="fa fa-lock text-primary me-2"></i> Privacy Information</h4>
+            <p class="mb-0">
+                Your preference data is used only to provide personalized recommendations and enhance your dining experience.
+                We do not share this information with third parties. You can update or delete your preferences at any time.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

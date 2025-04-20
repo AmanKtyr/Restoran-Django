@@ -37,12 +37,16 @@ def menu_list(request):
     for category in categories:
         category_counts[category.id] = menu_items.filter(category=category).count()
 
+    # Get popular items for AI recommendations
+    popular_items = MenuItem.objects.filter(is_active=True, is_popular=True).order_by('?')[:8]
+
     context = {
         'categories': categories,
         'menu_items': menu_items,
         'category_counts': category_counts,
         'filter_count': menu_items.count(),
         'total_count': MenuItem.objects.filter(is_active=True).count(),
+        'popular_items': popular_items,
     }
     return render(request, 'menu/menu.html', context)
 
@@ -72,6 +76,20 @@ def menu_item_detail(request, item_id):
         Q(category=menu_item.category) | Q(is_popular=True),
         is_active=True
     ).exclude(id=menu_item.id).distinct()[:4]
+
+    # Track this view for AI recommendations if user is authenticated
+    if request.user.is_authenticated:
+        try:
+            from ai_features.models import UserInteraction
+            UserInteraction.objects.create(
+                user=request.user,
+                menu_item=menu_item,
+                interaction_type='view',
+                interaction_data={'source': 'detail_page'}
+            )
+        except ImportError:
+            # AI features app might not be installed
+            pass
 
     # Check if user has already reviewed this item
     user_review = None

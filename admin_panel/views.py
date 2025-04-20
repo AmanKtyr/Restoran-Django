@@ -1435,3 +1435,155 @@ def analytics_sales(request):
         'end_date': end_date,
     }
     return render(request, 'admin_panel/analytics/sales.html', context)
+
+# AI Features Views
+
+@login_required
+@user_passes_test(is_admin)
+def ai_dashboard(request):
+    """AI features dashboard"""
+    # Import AI models
+    try:
+        from ai_features.models import (
+            UserPreference, UserInteraction, AIRecommendation,
+            AIFoodAnalysis, ChatbotConversation, ChatbotMessage, AISettings
+        )
+
+        # Get counts for dashboard
+        recommendation_count = AIRecommendation.objects.count()
+        interaction_count = UserInteraction.objects.count()
+        conversation_count = ChatbotConversation.objects.count()
+        analysis_count = AIFoodAnalysis.objects.count()
+
+        # Get interaction counts by type
+        interaction_view_count = UserInteraction.objects.filter(interaction_type='view').count()
+        interaction_order_count = UserInteraction.objects.filter(interaction_type='order').count()
+        interaction_favorite_count = UserInteraction.objects.filter(interaction_type='favorite').count()
+        interaction_review_count = UserInteraction.objects.filter(interaction_type='review').count()
+        interaction_recommend_click_count = UserInteraction.objects.filter(interaction_type='recommend_click').count()
+
+        # Get recommendation counts
+        personalized_count = AIRecommendation.objects.filter(is_personalized=True).count()
+        non_personalized_count = AIRecommendation.objects.filter(is_personalized=False).count()
+
+        # Get recent conversations
+        recent_conversations = ChatbotConversation.objects.order_by('-last_updated')[:5]
+
+        # Get AI settings
+        ai_settings = AISettings.get_settings()
+
+    except ImportError:
+        # AI features app might not be installed
+        recommendation_count = 0
+        interaction_count = 0
+        conversation_count = 0
+        analysis_count = 0
+        interaction_view_count = 0
+        interaction_order_count = 0
+        interaction_favorite_count = 0
+        interaction_review_count = 0
+        interaction_recommend_click_count = 0
+        personalized_count = 0
+        non_personalized_count = 0
+        recent_conversations = []
+        ai_settings = None
+
+    context = {
+        'title': 'AI Features Dashboard',
+        'recommendation_count': recommendation_count,
+        'interaction_count': interaction_count,
+        'conversation_count': conversation_count,
+        'analysis_count': analysis_count,
+        'interaction_view_count': interaction_view_count,
+        'interaction_order_count': interaction_order_count,
+        'interaction_favorite_count': interaction_favorite_count,
+        'interaction_review_count': interaction_review_count,
+        'interaction_recommend_click_count': interaction_recommend_click_count,
+        'personalized_count': personalized_count,
+        'non_personalized_count': non_personalized_count,
+        'recent_conversations': recent_conversations,
+        'ai_settings': ai_settings,
+    }
+    return render(request, 'admin_panel/ai_features/dashboard.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def ai_recommendations(request):
+    """AI recommendations management"""
+    # Placeholder for AI recommendations view
+    context = {
+        'title': 'AI Recommendations',
+    }
+    return render(request, 'admin_panel/ai_features/recommendations.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def ai_interactions(request):
+    """AI user interactions management"""
+    # Placeholder for AI interactions view
+    context = {
+        'title': 'AI Interactions',
+    }
+    return render(request, 'admin_panel/ai_features/interactions.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def ai_conversations(request):
+    """AI chatbot conversations management"""
+    # Placeholder for AI conversations view
+    context = {
+        'title': 'AI Conversations',
+    }
+    return render(request, 'admin_panel/ai_features/conversations.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def ai_conversation_detail(request, pk):
+    """AI chatbot conversation detail"""
+    # Placeholder for AI conversation detail view
+    context = {
+        'title': 'Conversation Detail',
+        'conversation_id': pk,
+    }
+    return render(request, 'admin_panel/ai_features/conversation_detail.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def ai_food_analyses(request):
+    """AI food analyses management"""
+    # Placeholder for AI food analyses view
+    context = {
+        'title': 'AI Food Analyses',
+    }
+    return render(request, 'admin_panel/ai_features/food_analyses.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def ai_settings_update(request):
+    """Update AI settings"""
+    if request.method == 'POST':
+        try:
+            from ai_features.models import AISettings
+
+            # Get AI settings
+            ai_settings = AISettings.get_settings()
+
+            # Update settings from form
+            ai_settings.recommendation_algorithm = request.POST.get('recommendation_algorithm', 'collaborative_filtering')
+            ai_settings.recommendation_freshness_weight = float(request.POST.get('recommendation_freshness_weight', 0.3))
+            ai_settings.recommendation_diversity_weight = float(request.POST.get('recommendation_diversity_weight', 0.2))
+            ai_settings.chatbot_enabled = 'chatbot_enabled' in request.POST
+            ai_settings.image_analysis_enabled = 'image_analysis_enabled' in request.POST
+            ai_settings.voice_recognition_enabled = 'voice_recognition_enabled' in request.POST
+
+            # Save settings
+            ai_settings.save()
+
+            messages.success(request, 'AI settings updated successfully.')
+        except ImportError:
+            # AI features app might not be installed
+            messages.error(request, 'AI features app is not installed.')
+        except Exception as e:
+            messages.error(request, f'Error updating AI settings: {str(e)}')
+
+    return redirect('admin_panel:ai_dashboard')

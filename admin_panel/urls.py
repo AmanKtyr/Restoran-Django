@@ -86,4 +86,13 @@ urlpatterns = [
     path('analytics/dashboard/', views.analytics_dashboard, name='analytics_dashboard'),
     path('analytics/reports/', views.analytics_reports, name='analytics_reports'),
     path('analytics/sales/', views.analytics_sales, name='analytics_sales'),
+
+    # AI Features
+    path('ai/dashboard/', views.ai_dashboard, name='ai_dashboard'),
+    path('ai/recommendations/', views.ai_recommendations, name='ai_recommendations'),
+    path('ai/interactions/', views.ai_interactions, name='ai_interactions'),
+    path('ai/conversations/', views.ai_conversations, name='ai_conversations'),
+    path('ai/conversation/<int:pk>/', views.ai_conversation_detail, name='ai_conversation_detail'),
+    path('ai/food-analyses/', views.ai_food_analyses, name='ai_food_analyses'),
+    path('ai/settings/update/', views.ai_settings_update, name='ai_settings_update'),
 ]

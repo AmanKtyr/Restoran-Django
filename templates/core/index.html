@@ -29,13 +29,17 @@
 <!-- Service Start -->
 <div class="container-xxl py-5">
     <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+            <h5 class="section-title ff-secondary text-center text-primary fw-normal">Our Services</h5>
+            <h1 class="mb-5">Explore Our Services</h1>
+        </div>
         <div class="row g-4">
             <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.1s">
                 <div class="service-item rounded pt-3">
                     <div class="p-4">
                         <i class="fa fa-3x fa-user-tie text-primary mb-4"></i>
                         <h5>Master Chefs</h5>
-                        <p>Diam elitr kasd sed at elitr sed ipsum justo dolor sed clita amet diam</p>
+                        <p>Our team of expert chefs creates culinary masterpieces with passion and precision</p>
                     </div>
                 </div>
             </div>
@@ -44,7 +48,7 @@
                     <div class="p-4">
                         <i class="fa fa-3x fa-utensils text-primary mb-4"></i>
                         <h5>Quality Food</h5>
-                        <p>Diam elitr kasd sed at elitr sed ipsum justo dolor sed clita amet diam</p>
+                        <p>We use only the freshest ingredients to ensure exceptional quality in every dish</p>
                     </div>
                 </div>
             </div>
@@ -53,7 +57,7 @@
                     <div class="p-4">
                         <i class="fa fa-3x fa-cart-plus text-primary mb-4"></i>
                         <h5>Online Order</h5>
-                        <p>Diam elitr kasd sed at elitr sed ipsum justo dolor sed clita amet diam</p>
+                        <p>Convenient online ordering system for takeout and delivery right to your doorstep</p>
                     </div>
                 </div>
             </div>
@@ -62,7 +66,7 @@
                     <div class="p-4">
                         <i class="fa fa-3x fa-headset text-primary mb-4"></i>
                         <h5>24/7 Service</h5>
-                        <p>Diam elitr kasd sed at elitr sed ipsum justo dolor sed clita amet diam</p>
+                        <p>Our customer support team is always available to assist you with any questions</p>
                     </div>
                 </div>
             </div>
@@ -70,6 +74,55 @@
     </div>
 </div>
 <!-- Service End -->
+
+<!-- AI Features Start -->
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+            <h5 class="section-title ff-secondary text-center text-primary fw-normal">Smart Dining</h5>
+            <h1 class="mb-5">AI-Powered Features</h1>
+        </div>
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
+                <div class="service-item rounded pt-3 h-100">
+                    <div class="p-4 text-center">
+                        <i class="fa fa-3x fa-magic text-primary mb-4"></i>
+                        <h5>Smart Recommendations</h5>
+                        <p class="mb-4">Our AI analyzes your preferences and dining history to suggest dishes you'll love</p>
+                        <a href="{% url 'ai_features:user_recommendations' %}" class="btn btn-primary py-2 px-4">
+                            <i class="fa fa-arrow-right me-1"></i> Try It Now
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
+                <div class="service-item rounded pt-3 h-100">
+                    <div class="p-4 text-center">
+                        <i class="fa fa-3x fa-robot text-primary mb-4"></i>
+                        <h5>AI Chatbot Assistant</h5>
+                        <p class="mb-4">Get instant answers about our menu, hours, location, and dietary information</p>
+                        <a href="{% url 'ai_features:chatbot' %}" class="btn btn-primary py-2 px-4">
+                            <i class="fa fa-comment me-1"></i> Chat Now
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.5s">
+                <div class="service-item rounded pt-3 h-100">
+                    <div class="p-4 text-center">
+                        <i class="fa fa-3x fa-microphone text-primary mb-4"></i>
+                        <h5>Voice Ordering</h5>
+                        <p class="mb-4">Order your favorite dishes using just your voice - fast, convenient, and hands-free</p>
+                        <a href="{% url 'ai_features:voice_order' %}" class="btn btn-primary py-2 px-4">
+                            <i class="fa fa-microphone me-1"></i> Order by Voice
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- AI Features End -->
 
 <!-- About Start -->
 <div class="container-xxl py-5">

@@ -1,0 +1,312 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}AI Features Dashboard - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">AI Features Dashboard</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active">AI Features</li>
+    </ol>
+    
+    <div class="row">
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-primary text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="small">Total Recommendations</div>
+                            <div class="h3 mb-0">{{ recommendation_count }}</div>
+                        </div>
+                        <div>
+                            <i class="fas fa-magic fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{% url 'admin_panel:ai_recommendations' %}">View Details</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-success text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="small">User Interactions</div>
+                            <div class="h3 mb-0">{{ interaction_count }}</div>
+                        </div>
+                        <div>
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{% url 'admin_panel:ai_interactions' %}">View Details</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-warning text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="small">Chatbot Conversations</div>
+                            <div class="h3 mb-0">{{ conversation_count }}</div>
+                        </div>
+                        <div>
+                            <i class="fas fa-comments fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{% url 'admin_panel:ai_conversations' %}">View Details</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-danger text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="small">Food Analyses</div>
+                            <div class="h3 mb-0">{{ analysis_count }}</div>
+                        </div>
+                        <div>
+                            <i class="fas fa-chart-pie fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{% url 'admin_panel:ai_food_analyses' %}">View Details</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-xl-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-bar me-1"></i>
+                    User Interactions by Type
+                </div>
+                <div class="card-body">
+                    <canvas id="interactionTypeChart" width="100%" height="40"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-pie me-1"></i>
+                    Recommendation Distribution
+                </div>
+                <div class="card-body">
+                    <canvas id="recommendationChart" width="100%" height="40"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-cogs me-1"></i>
+                    AI Settings
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'admin_panel:ai_settings_update' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="recommendation_algorithm" class="form-label">Recommendation Algorithm</label>
+                            <select class="form-select" id="recommendation_algorithm" name="recommendation_algorithm">
+                                <option value="collaborative_filtering" {% if ai_settings.recommendation_algorithm == 'collaborative_filtering' %}selected{% endif %}>Collaborative Filtering</option>
+                                <option value="content_based" {% if ai_settings.recommendation_algorithm == 'content_based' %}selected{% endif %}>Content-Based Filtering</option>
+                                <option value="hybrid" {% if ai_settings.recommendation_algorithm == 'hybrid' %}selected{% endif %}>Hybrid Approach</option>
+                            </select>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="recommendation_freshness_weight" class="form-label">Freshness Weight</label>
+                                <input type="range" class="form-range" min="0" max="1" step="0.1" id="recommendation_freshness_weight" name="recommendation_freshness_weight" value="{{ ai_settings.recommendation_freshness_weight }}">
+                                <div class="text-center"><span id="freshness_value">{{ ai_settings.recommendation_freshness_weight }}</span></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="recommendation_diversity_weight" class="form-label">Diversity Weight</label>
+                                <input type="range" class="form-range" min="0" max="1" step="0.1" id="recommendation_diversity_weight" name="recommendation_diversity_weight" value="{{ ai_settings.recommendation_diversity_weight }}">
+                                <div class="text-center"><span id="diversity_value">{{ ai_settings.recommendation_diversity_weight }}</span></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="chatbot_enabled" name="chatbot_enabled" {% if ai_settings.chatbot_enabled %}checked{% endif %}>
+                                <label class="form-check-label" for="chatbot_enabled">Enable Chatbot</label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="image_analysis_enabled" name="image_analysis_enabled" {% if ai_settings.image_analysis_enabled %}checked{% endif %}>
+                                <label class="form-check-label" for="image_analysis_enabled">Enable Image Analysis</label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="voice_recognition_enabled" name="voice_recognition_enabled" {% if ai_settings.voice_recognition_enabled %}checked{% endif %}>
+                                <label class="form-check-label" for="voice_recognition_enabled">Enable Voice Recognition</label>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Save Settings</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-robot me-1"></i>
+                    Recent Chatbot Conversations
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Started</th>
+                                    <th>Messages</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for conversation in recent_conversations %}
+                                <tr>
+                                    <td>
+                                        {% if conversation.user %}
+                                            {{ conversation.user.username }}
+                                        {% else %}
+                                            Anonymous
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ conversation.started_at|date:"M d, Y" }}</td>
+                                    <td>{{ conversation.messages.count }}</td>
+                                    <td>
+                                        {% if conversation.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Closed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'admin_panel:ai_conversation_detail' conversation.id %}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No conversations yet</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Update range input values
+        document.getElementById('recommendation_freshness_weight').addEventListener('input', function() {
+            document.getElementById('freshness_value').textContent = this.value;
+        });
+        
+        document.getElementById('recommendation_diversity_weight').addEventListener('input', function() {
+            document.getElementById('diversity_value').textContent = this.value;
+        });
+        
+        // Interaction Type Chart
+        var interactionCtx = document.getElementById('interactionTypeChart').getContext('2d');
+        var interactionChart = new Chart(interactionCtx, {
+            type: 'bar',
+            data: {
+                labels: ['View', 'Order', 'Favorite', 'Review', 'Recommendation Click'],
+                datasets: [{
+                    label: 'Number of Interactions',
+                    data: [
+                        {{ interaction_view_count }}, 
+                        {{ interaction_order_count }}, 
+                        {{ interaction_favorite_count }}, 
+                        {{ interaction_review_count }}, 
+                        {{ interaction_recommend_click_count }}
+                    ],
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        // Recommendation Distribution Chart
+        var recommendationCtx = document.getElementById('recommendationChart').getContext('2d');
+        var recommendationChart = new Chart(recommendationCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Personalized', 'Non-Personalized'],
+                datasets: [{
+                    label: 'Recommendations',
+                    data: [{{ personalized_count }}, {{ non_personalized_count }}],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            }
+        });
+    });
+</script>
+{% endblock %}

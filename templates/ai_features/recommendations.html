@@ -1,0 +1,137 @@
+{% extends 'ai_features/base.html' %}
+{% load static %}
+
+{% block title %}AI Recommendations - Restoran{% endblock %}
+
+{% block ai_feature_title %}Personalized Recommendations{% endblock %}
+
+{% block ai_feature_content %}
+<div class="row g-4">
+    <div class="col-lg-12">
+        <div class="bg-light rounded p-4 mb-4">
+            {% if is_personalized %}
+                <h4 class="mb-4">Your Personalized Recommendations</h4>
+                <p class="text-muted mb-4">
+                    Our AI has analyzed your preferences and past orders to recommend dishes you might enjoy.
+                    <a href="{% url 'ai_features:user_preferences' %}" class="text-primary">Update your preferences</a> to get even better recommendations!
+                </p>
+                
+                <div class="row g-4">
+                    {% for recommendation in recommendations %}
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card h-100 border-0 shadow-sm">
+                            {% if recommendation.menu_item.image %}
+                            <img src="{{ recommendation.menu_item.image.url }}" class="card-img-top" alt="{{ recommendation.menu_item.name }}" style="height: 200px; object-fit: cover;">
+                            {% else %}
+                            <img src="{% static 'img/menu-1.jpg' %}" class="card-img-top" alt="{{ recommendation.menu_item.name }}" style="height: 200px; object-fit: cover;">
+                            {% endif %}
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h5 class="card-title mb-0">{{ recommendation.menu_item.name }}</h5>
+                                    <span class="badge bg-primary rounded-pill">{{ recommendation.score|floatformat:2 }}</span>
+                                </div>
+                                <p class="card-text text-primary mb-2">{{ currency_symbol|default:"$" }}{{ recommendation.menu_item.price }}</p>
+                                <p class="card-text small text-muted mb-3">{{ recommendation.menu_item.description|truncatechars:80 }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        {% if recommendation.menu_item.is_vegetarian %}
+                                        <span class="badge bg-success me-1" title="Vegetarian"><i class="fa fa-leaf"></i></span>
+                                        {% endif %}
+                                        {% if recommendation.menu_item.is_vegan %}
+                                        <span class="badge bg-success me-1" title="Vegan"><i class="fa fa-seedling"></i></span>
+                                        {% endif %}
+                                        {% if recommendation.menu_item.is_gluten_free %}
+                                        <span class="badge bg-warning me-1" title="Gluten-Free"><i class="fa fa-wheat-alt"></i></span>
+                                        {% endif %}
+                                        {% if recommendation.menu_item.spice_level > 0 %}
+                                        <span class="badge bg-danger" title="{{ recommendation.menu_item.get_spice_level_display }}">
+                                            <i class="fa fa-pepper-hot"></i> {{ recommendation.menu_item.spice_level }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    <a href="{% url 'menu:menu_item_detail' recommendation.menu_item.id %}" class="btn btn-sm btn-outline-primary">View Details</a>
+                                </div>
+                                <div class="mt-3">
+                                    <small class="text-muted"><i class="fa fa-magic text-primary me-1"></i> {{ recommendation.reason }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12 text-center py-5">
+                        <p class="mb-3">We don't have enough information to make personalized recommendations yet.</p>
+                        <a href="{% url 'ai_features:user_preferences' %}" class="btn btn-primary">Set Your Preferences</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <h4 class="mb-4">Popular Recommendations</h4>
+                <p class="text-muted mb-4">
+                    Here are some of our most popular dishes. 
+                    <a href="{% url 'accounts:login' %}?next={% url 'ai_features:user_preferences' %}" class="text-primary">Sign in</a> to get personalized recommendations!
+                </p>
+                
+                <div class="row g-4">
+                    {% for item in popular_items %}
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card h-100 border-0 shadow-sm">
+                            {% if item.image %}
+                            <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.name }}" style="height: 200px; object-fit: cover;">
+                            {% else %}
+                            <img src="{% static 'img/menu-1.jpg' %}" class="card-img-top" alt="{{ item.name }}" style="height: 200px; object-fit: cover;">
+                            {% endif %}
+                            <div class="card-body">
+                                <h5 class="card-title">{{ item.name }}</h5>
+                                <p class="card-text text-primary mb-2">{{ currency_symbol|default:"$" }}{{ item.price }}</p>
+                                <p class="card-text small text-muted mb-3">{{ item.description|truncatechars:80 }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        {% if item.is_vegetarian %}
+                                        <span class="badge bg-success me-1" title="Vegetarian"><i class="fa fa-leaf"></i></span>
+                                        {% endif %}
+                                        {% if item.is_vegan %}
+                                        <span class="badge bg-success me-1" title="Vegan"><i class="fa fa-seedling"></i></span>
+                                        {% endif %}
+                                        {% if item.is_gluten_free %}
+                                        <span class="badge bg-warning me-1" title="Gluten-Free"><i class="fa fa-wheat-alt"></i></span>
+                                        {% endif %}
+                                        {% if item.spice_level > 0 %}
+                                        <span class="badge bg-danger" title="{{ item.get_spice_level_display }}">
+                                            <i class="fa fa-pepper-hot"></i> {{ item.spice_level }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    <a href="{% url 'menu:menu_item_detail' item.id %}" class="btn btn-sm btn-outline-primary">View Details</a>
+                                </div>
+                                <div class="mt-3">
+                                    <small class="text-muted"><i class="fa fa-star text-warning me-1"></i> Customer favorite</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12 text-center py-5">
+                        <p>No popular items found.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-lg-12">
+        <div class="text-center">
+            <a href="{% url 'menu:menu_list' %}" class="btn btn-primary py-3 px-5">
+                <i class="fa fa-utensils me-2"></i> Browse Full Menu
+            </a>
+            {% if is_personalized %}
+            <a href="{% url 'ai_features:user_preferences' %}" class="btn btn-outline-primary py-3 px-5 ms-2">
+                <i class="fa fa-sliders-h me-2"></i> Update Preferences
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

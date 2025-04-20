@@ -1,0 +1,73 @@
+{% extends 'ai_features/base.html' %}
+{% load static %}
+
+{% block title %}Chatbot Unavailable - Restoran{% endblock %}
+
+{% block ai_feature_title %}Chatbot Temporarily Unavailable{% endblock %}
+
+{% block ai_feature_content %}
+<div class="row g-4">
+    <div class="col-lg-12">
+        <div class="bg-light rounded p-4 mb-4 text-center">
+            <img src="{% static 'img/robot-offline.png' %}" alt="Chatbot Offline" class="img-fluid mb-4" style="max-height: 200px;">
+            
+            <h4 class="mb-3">Our AI Assistant is Currently Unavailable</h4>
+            <p class="text-muted mb-4">
+                We're sorry, but our AI chatbot is temporarily disabled. Our team is working to bring this feature back online as soon as possible.
+            </p>
+            
+            <div class="mt-4">
+                <a href="{% url 'core:contact' %}" class="btn btn-primary py-3 px-5">
+                    <i class="fa fa-envelope me-2"></i> Contact Us Directly
+                </a>
+                <a href="{% url 'menu:menu_list' %}" class="btn btn-outline-primary py-3 px-5 ms-2">
+                    <i class="fa fa-utensils me-2"></i> Browse Our Menu
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-lg-12">
+        <div class="bg-light rounded p-4">
+            <h4 class="mb-3">Alternative Ways to Reach Us</h4>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 btn-square bg-primary rounded-circle me-3">
+                            <i class="fa fa-phone text-white"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0">Phone</h6>
+                            <p class="mb-0 text-muted">+123 456 7890</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 btn-square bg-primary rounded-circle me-3">
+                            <i class="fa fa-envelope text-white"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0">Email</h6>
+                            <p class="mb-0 text-muted">info@restoran.com</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 btn-square bg-primary rounded-circle me-3">
+                            <i class="fa fa-map-marker-alt text-white"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0">Location</h6>
+                            <p class="mb-0 text-muted">123 Main St, Anytown</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

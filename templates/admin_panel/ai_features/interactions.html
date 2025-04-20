@@ -1,0 +1,392 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}AI User Interactions - Admin Panel{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'admin_panel:ai_dashboard' %}">AI Features</a></li>
+<li class="breadcrumb-item active">User Interactions</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">AI User Interactions</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'admin_panel:ai_dashboard' %}">AI Features</a></li>
+        <li class="breadcrumb-item active">User Interactions</li>
+    </ol>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-chart-pie me-1"></i>
+                    User Interactions
+                </div>
+                <div>
+                    <button class="btn btn-sm btn-outline-primary" id="refreshData">
+                        <i class="fas fa-sync-alt me-1"></i> Refresh Data
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="interactionTypeFilter">Interaction Type</label>
+                        <select class="form-select" id="interactionTypeFilter">
+                            <option value="">All Types</option>
+                            <option value="view">View</option>
+                            <option value="order">Order</option>
+                            <option value="favorite">Favorite</option>
+                            <option value="review">Review</option>
+                            <option value="recommend_click">Recommendation Click</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="dateRangeFilter">Date Range</label>
+                        <select class="form-select" id="dateRangeFilter">
+                            <option value="all">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="yesterday">Yesterday</option>
+                            <option value="last7days">Last 7 Days</option>
+                            <option value="last30days" selected>Last 30 Days</option>
+                            <option value="thismonth">This Month</option>
+                            <option value="lastmonth">Last Month</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="userFilter">User</label>
+                        <select class="form-select" id="userFilter">
+                            <option value="">All Users</option>
+                            {% for user in users %}
+                            <option value="{{ user.id }}">{{ user.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="itemFilter">Menu Item</label>
+                        <select class="form-select" id="itemFilter">
+                            <option value="">All Items</option>
+                            {% for item in menu_items %}
+                            <option value="{{ item.id }}">{{ item.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="interactionsTable">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Menu Item</th>
+                            <th>Interaction Type</th>
+                            <th>Timestamp</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for interaction in interactions %}
+                        <tr>
+                            <td>
+                                {% if interaction.user %}
+                                    {{ interaction.user.username }}
+                                {% else %}
+                                    Anonymous
+                                {% endif %}
+                            </td>
+                            <td>{{ interaction.menu_item.name }}</td>
+                            <td>
+                                {% if interaction.interaction_type == 'view' %}
+                                    <span class="badge bg-info">View</span>
+                                {% elif interaction.interaction_type == 'order' %}
+                                    <span class="badge bg-success">Order</span>
+                                {% elif interaction.interaction_type == 'favorite' %}
+                                    <span class="badge bg-warning">Favorite</span>
+                                {% elif interaction.interaction_type == 'review' %}
+                                    <span class="badge bg-primary">Review</span>
+                                {% elif interaction.interaction_type == 'recommend_click' %}
+                                    <span class="badge bg-secondary">Recommendation Click</span>
+                                {% else %}
+                                    <span class="badge bg-dark">{{ interaction.interaction_type }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ interaction.timestamp|date:"M d, Y H:i:s" }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-info view-details" data-bs-toggle="modal" data-bs-target="#interactionDetailsModal" data-interaction-id="{{ interaction.id }}">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No interactions found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div>
+                    Showing <span id="shownCount">{{ interactions|length }}</span> of <span id="totalCount">{{ total_interactions }}</span> interactions
+                </div>
+                <nav aria-label="Page navigation">
+                    <ul class="pagination">
+                        <li class="page-item {% if not interactions.has_previous %}disabled{% endif %}">
+                            <a class="page-link" href="?page=1" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item {% if not interactions.has_previous %}disabled{% endif %}">
+                            <a class="page-link" href="?page={% if interactions.has_previous %}{{ interactions.previous_page_number }}{% else %}1{% endif %}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        
+                        {% for i in interactions.paginator.page_range %}
+                            {% if interactions.number == i %}
+                                <li class="page-item active"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                            {% elif i > interactions.number|add:"-3" and i < interactions.number|add:"3" %}
+                                <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        <li class="page-item {% if not interactions.has_next %}disabled{% endif %}">
+                            <a class="page-link" href="?page={% if interactions.has_next %}{{ interactions.next_page_number }}{% else %}{{ interactions.paginator.num_pages }}{% endif %}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item {% if not interactions.has_next %}disabled{% endif %}">
+                            <a class="page-link" href="?page={{ interactions.paginator.num_pages }}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-xl-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-bar me-1"></i>
+                    Interactions by Type
+                </div>
+                <div class="card-body">
+                    <canvas id="interactionTypeChart" width="100%" height="40"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-line me-1"></i>
+                    Interactions Over Time
+                </div>
+                <div class="card-body">
+                    <canvas id="interactionTimeChart" width="100%" height="40"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Interaction Details Modal -->
+<div class="modal fade" id="interactionDetailsModal" tabindex="-1" aria-labelledby="interactionDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="interactionDetailsModalLabel">Interaction Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <strong>User:</strong> <span id="modalUser">-</span>
+                </div>
+                <div class="mb-3">
+                    <strong>Menu Item:</strong> <span id="modalMenuItem">-</span>
+                </div>
+                <div class="mb-3">
+                    <strong>Interaction Type:</strong> <span id="modalInteractionType">-</span>
+                </div>
+                <div class="mb-3">
+                    <strong>Timestamp:</strong> <span id="modalTimestamp">-</span>
+                </div>
+                <div class="mb-3">
+                    <strong>Additional Data:</strong>
+                    <pre id="modalInteractionData" class="bg-light p-2 mt-2" style="max-height: 200px; overflow-y: auto;">-</pre>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Sample data for charts - in a real implementation, this would come from the server
+        const interactionTypeData = {
+            labels: ['View', 'Order', 'Favorite', 'Review', 'Recommendation Click'],
+            datasets: [{
+                label: 'Number of Interactions',
+                data: [
+                    {{ interaction_view_count|default:0 }}, 
+                    {{ interaction_order_count|default:0 }}, 
+                    {{ interaction_favorite_count|default:0 }}, 
+                    {{ interaction_review_count|default:0 }}, 
+                    {{ interaction_recommend_click_count|default:0 }}
+                ],
+                backgroundColor: [
+                    'rgba(23, 162, 184, 0.2)',
+                    'rgba(40, 167, 69, 0.2)',
+                    'rgba(255, 193, 7, 0.2)',
+                    'rgba(0, 123, 255, 0.2)',
+                    'rgba(108, 117, 125, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(23, 162, 184, 1)',
+                    'rgba(40, 167, 69, 1)',
+                    'rgba(255, 193, 7, 1)',
+                    'rgba(0, 123, 255, 1)',
+                    'rgba(108, 117, 125, 1)'
+                ],
+                borderWidth: 1
+            }]
+        };
+        
+        // Create the interaction type chart
+        var interactionTypeCtx = document.getElementById('interactionTypeChart').getContext('2d');
+        var interactionTypeChart = new Chart(interactionTypeCtx, {
+            type: 'bar',
+            data: interactionTypeData,
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        // Sample data for time chart - in a real implementation, this would come from the server
+        const timeLabels = [
+            {% for date in date_labels %}
+                '{{ date }}',
+            {% endfor %}
+        ];
+        
+        const interactionTimeData = {
+            labels: timeLabels,
+            datasets: [{
+                label: 'Interactions',
+                data: [
+                    {% for count in date_counts %}
+                        {{ count }},
+                    {% endfor %}
+                ],
+                fill: false,
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        };
+        
+        // Create the interaction time chart
+        var interactionTimeCtx = document.getElementById('interactionTimeChart').getContext('2d');
+        var interactionTimeChart = new Chart(interactionTimeCtx, {
+            type: 'line',
+            data: interactionTimeData,
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        // Filter functionality
+        const interactionTypeFilter = document.getElementById('interactionTypeFilter');
+        const dateRangeFilter = document.getElementById('dateRangeFilter');
+        const userFilter = document.getElementById('userFilter');
+        const itemFilter = document.getElementById('itemFilter');
+        const refreshButton = document.getElementById('refreshData');
+        
+        // Apply filters when changed
+        interactionTypeFilter.addEventListener('change', applyFilters);
+        dateRangeFilter.addEventListener('change', applyFilters);
+        userFilter.addEventListener('change', applyFilters);
+        itemFilter.addEventListener('change', applyFilters);
+        refreshButton.addEventListener('click', refreshData);
+        
+        function applyFilters() {
+            // In a real implementation, this would make an AJAX request to filter the data
+            console.log('Applying filters:');
+            console.log('Type:', interactionTypeFilter.value);
+            console.log('Date Range:', dateRangeFilter.value);
+            console.log('User:', userFilter.value);
+            console.log('Item:', itemFilter.value);
+            
+            // For demo purposes, just show a loading indicator
+            document.body.style.cursor = 'wait';
+            setTimeout(() => {
+                document.body.style.cursor = 'default';
+                alert('Filters applied! In a real implementation, this would update the table and charts.');
+            }, 500);
+        }
+        
+        function refreshData() {
+            // In a real implementation, this would refresh the data from the server
+            document.body.style.cursor = 'wait';
+            setTimeout(() => {
+                document.body.style.cursor = 'default';
+                alert('Data refreshed! In a real implementation, this would fetch the latest data.');
+            }, 500);
+        }
+        
+        // Modal functionality for interaction details
+        const detailButtons = document.querySelectorAll('.view-details');
+        detailButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const interactionId = this.getAttribute('data-interaction-id');
+                
+                // In a real implementation, this would fetch the interaction details from the server
+                // For demo purposes, we'll just populate with placeholder data
+                document.getElementById('modalUser').textContent = this.closest('tr').cells[0].textContent.trim();
+                document.getElementById('modalMenuItem').textContent = this.closest('tr').cells[1].textContent.trim();
+                document.getElementById('modalInteractionType').textContent = this.closest('tr').cells[2].textContent.trim();
+                document.getElementById('modalTimestamp').textContent = this.closest('tr').cells[3].textContent.trim();
+                
+                // Sample interaction data
+                const sampleData = {
+                    "source": "menu_page",
+                    "session_id": "abc123xyz789",
+                    "device": "desktop",
+                    "browser": "Chrome",
+                    "time_spent": "45 seconds"
+                };
+                
+                document.getElementById('modalInteractionData').textContent = JSON.stringify(sampleData, null, 2);
+            });
+        });
+    });
+</script>
+{% endblock %}

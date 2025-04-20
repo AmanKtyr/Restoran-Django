@@ -1,0 +1,304 @@
+{% extends 'ai_features/base.html' %}
+{% load static %}
+
+{% block title %}AI Food Analysis - {{ menu_item.name }} - Restoran{% endblock %}
+
+{% block ai_feature_title %}AI Food Analysis{% endblock %}
+
+{% block extra_css %}
+<style>
+    .color-swatch {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 10px;
+        border: 1px solid rgba(0,0,0,0.1);
+    }
+    
+    .progress-bar-container {
+        height: 8px;
+        background-color: #e9ecef;
+        border-radius: 4px;
+        margin-bottom: 5px;
+        overflow: hidden;
+    }
+    
+    .progress-bar {
+        height: 100%;
+        border-radius: 4px;
+    }
+    
+    .nutrition-chart {
+        height: 250px;
+    }
+    
+    .ingredient-tag {
+        display: inline-block;
+        padding: 5px 10px;
+        background-color: #e9ecef;
+        border-radius: 20px;
+        margin-right: 8px;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+    }
+    
+    .ingredient-tag.main {
+        background-color: var(--primary);
+        color: white;
+    }
+    
+    .presentation-score {
+        font-size: 3rem;
+        font-weight: bold;
+        color: var(--primary);
+    }
+</style>
+{% endblock %}
+
+{% block ai_feature_content %}
+<div class="row g-4">
+    <div class="col-lg-12">
+        <div class="bg-light rounded p-4 mb-4">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="position-relative h-100">
+                        {% if menu_item.image %}
+                        <img class="img-fluid rounded w-100" src="{{ menu_item.image.url }}" alt="{{ menu_item.name }}" style="object-fit: cover;">
+                        {% else %}
+                        <img class="img-fluid rounded w-100" src="{% static 'img/menu-1.jpg' %}" alt="{{ menu_item.name }}" style="object-fit: cover;">
+                        {% endif %}
+                        <div class="position-absolute top-0 end-0 bg-primary text-white rounded-pill m-2 px-3 py-1">
+                            <i class="fa fa-robot me-1"></i> AI Analyzed
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <h3 class="mb-3">{{ menu_item.name }}</h3>
+                    <div class="d-flex mb-3">
+                        <span class="text-primary me-2">Category:</span>
+                        <span>{{ menu_item.category.name }}</span>
+                    </div>
+                    <div class="d-flex mb-3">
+                        <span class="text-primary me-2">Price:</span>
+                        <span>{{ currency_symbol|default:"$" }}{{ menu_item.price }}</span>
+                    </div>
+                    <p class="mb-4">{{ menu_item.description }}</p>
+                    
+                    <div class="mb-4">
+                        {% for tag in menu_item.get_dietary_tags %}
+                        <span class="badge bg-light text-dark border me-2 mb-2 py-2 px-3">
+                            {% if tag == 'Vegetarian' %}
+                                <i class="fa fa-leaf text-success me-1"></i>
+                            {% elif tag == 'Vegan' %}
+                                <i class="fa fa-seedling text-success me-1"></i>
+                            {% elif tag == 'Gluten-Free' %}
+                                <i class="fa fa-wheat-alt text-warning me-1"></i>
+                            {% elif 'Spicy' in tag %}
+                                <i class="fa fa-pepper-hot text-danger me-1"></i>
+                            {% endif %}
+                            {{ tag }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="d-flex">
+                        <a href="{% url 'menu:menu_item_detail' menu_item.id %}" class="btn btn-primary py-2 px-4">
+                            <i class="fa fa-info-circle me-1"></i> View Details
+                        </a>
+                        <a href="{% url 'menu:menu_list' %}" class="btn btn-outline-secondary py-2 px-4 ms-2">
+                            <i class="fa fa-arrow-left me-1"></i> Back to Menu
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="bg-light rounded p-4 h-100">
+            <h4 class="mb-4"><i class="fa fa-eye text-primary me-2"></i> Visual Analysis</h4>
+            
+            <div class="mb-4">
+                <h5 class="mb-3">Presentation Score</h5>
+                <div class="text-center">
+                    <span class="presentation-score">{{ analysis.presentation_score|floatformat:1 }}</span>
+                    <span class="text-muted">/10</span>
+                </div>
+                <p class="text-center text-muted">
+                    {% if analysis.presentation_score >= 9 %}
+                    Exceptional presentation with excellent visual appeal
+                    {% elif analysis.presentation_score >= 8 %}
+                    Excellent presentation with great visual appeal
+                    {% elif analysis.presentation_score >= 7 %}
+                    Very good presentation with good visual appeal
+                    {% elif analysis.presentation_score >= 6 %}
+                    Good presentation with decent visual appeal
+                    {% else %}
+                    Average presentation with room for improvement
+                    {% endif %}
+                </p>
+            </div>
+            
+            <div class="mb-4">
+                <h5 class="mb-3">Visual Attributes</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Colors:</strong> 
+                            {% for color in analysis.visual_attributes.colors %}
+                            <span class="badge bg-light text-dark border me-1">{{ color }}</span>
+                            {% endfor %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Textures:</strong> 
+                            {% for texture in analysis.visual_attributes.textures %}
+                            <span class="badge bg-light text-dark border me-1">{{ texture }}</span>
+                            {% endfor %}
+                        </p>
+                    </div>
+                </div>
+                <p><strong>Presentation Style:</strong> {{ analysis.visual_attributes.presentation|title }}</p>
+                {% if analysis.visual_attributes.garnishes %}
+                <p><strong>Garnishes:</strong> 
+                    {% for garnish in analysis.visual_attributes.garnishes %}
+                    <span class="badge bg-light text-dark border me-1">{{ garnish }}</span>
+                    {% endfor %}
+                </p>
+                {% endif %}
+            </div>
+            
+            <div class="mb-4">
+                <h5 class="mb-3">Color Palette</h5>
+                <div class="d-flex flex-wrap">
+                    {% for color_data in analysis.color_palette %}
+                    <div class="me-3 mb-3 text-center">
+                        <div class="color-swatch" style="background-color: {{ color_data.color }};"></div>
+                        <div class="progress-bar-container mt-1">
+                            <div class="progress-bar" style="width: {{ color_data.percentage|floatformat:2|multiply:100 }}%; background-color: {{ color_data.color }};"></div>
+                        </div>
+                        <small class="text-muted">{{ color_data.percentage|floatformat:0|multiply:100 }}%</small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="bg-light rounded p-4 h-100">
+            <h4 class="mb-4"><i class="fa fa-chart-pie text-primary me-2"></i> Nutritional Analysis</h4>
+            
+            <div class="mb-4">
+                <h5 class="mb-3">Estimated Nutritional Information</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <p class="mb-1"><strong>Calories:</strong> {{ analysis.nutritional_estimate.calories }} kcal</p>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar bg-primary" style="width: {{ analysis.nutritional_estimate.calories|divide:2000|multiply:100 }}%;"></div>
+                            </div>
+                            <small class="text-muted">% of 2000 kcal daily intake</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <p class="mb-1"><strong>Protein:</strong> {{ analysis.nutritional_estimate.protein }}g</p>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar bg-success" style="width: {{ analysis.nutritional_estimate.protein|divide:50|multiply:100 }}%;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <p class="mb-1"><strong>Carbs:</strong> {{ analysis.nutritional_estimate.carbs }}g</p>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar bg-warning" style="width: {{ analysis.nutritional_estimate.carbs|divide:300|multiply:100 }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <p class="mb-1"><strong>Fat:</strong> {{ analysis.nutritional_estimate.fat }}g</p>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar bg-danger" style="width: {{ analysis.nutritional_estimate.fat|divide:65|multiply:100 }}%;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <p class="mb-1"><strong>Fiber:</strong> {{ analysis.nutritional_estimate.fiber }}g</p>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar bg-info" style="width: {{ analysis.nutritional_estimate.fiber|divide:25|multiply:100 }}%;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <p class="mb-1"><strong>Confidence:</strong> {{ analysis.nutritional_estimate.confidence|floatformat:2|multiply:100 }}%</p>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar bg-secondary" style="width: {{ analysis.nutritional_estimate.confidence|multiply:100 }}%;"></div>
+                            </div>
+                            <small class="text-muted">AI confidence in nutritional estimates</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <h5 class="mb-3">Detected Ingredients</h5>
+                <div class="mb-3">
+                    {% for ingredient in analysis.ingredient_detection.ingredients %}
+                    <span class="ingredient-tag {% if ingredient == analysis.ingredient_detection.main_component %}main{% endif %}">
+                        {{ ingredient }}
+                        {% if ingredient == analysis.ingredient_detection.main_component %}
+                        <i class="fa fa-star ms-1" title="Main component"></i>
+                        {% endif %}
+                    </span>
+                    {% endfor %}
+                </div>
+                <p class="text-muted small">
+                    <i class="fa fa-info-circle me-1"></i> 
+                    AI detected these ingredients with {{ analysis.ingredient_detection.confidence|floatformat:0|multiply:100 }}% confidence. 
+                    Actual ingredients may vary.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-lg-12">
+        <div class="bg-light rounded p-4">
+            <h4 class="mb-3"><i class="fa fa-info-circle text-primary me-2"></i> About AI Food Analysis</h4>
+            <p class="mb-0">
+                Our AI system analyzes food images to provide insights about presentation, nutritional content, and ingredients.
+                This technology helps us maintain quality standards and provide better information to our customers.
+                Please note that nutritional estimates are approximate and should not be used for medical purposes.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Custom template filter replacements for the demo
+    document.addEventListener('DOMContentLoaded', function() {
+        // multiply filter
+        document.querySelectorAll('[style*="multiply:"]').forEach(el => {
+            const style = el.getAttribute('style');
+            const regex = /(\d+(?:\.\d+)?)\|multiply:(\d+(?:\.\d+)?)/g;
+            const newStyle = style.replace(regex, (match, num1, num2) => parseFloat(num1) * parseFloat(num2));
+            el.setAttribute('style', newStyle);
+        });
+        
+        // divide filter
+        document.querySelectorAll('[style*="divide:"]').forEach(el => {
+            const style = el.getAttribute('style');
+            const regex = /(\d+(?:\.\d+)?)\|divide:(\d+(?:\.\d+)?)/g;
+            const newStyle = style.replace(regex, (match, num1, num2) => (parseFloat(num1) / parseFloat(num2)) * 100);
+            el.setAttribute('style', newStyle);
+        });
+    });
+</script>
+{% endblock %}

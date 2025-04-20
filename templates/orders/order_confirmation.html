@@ -18,6 +18,15 @@
                         <h5 class="mb-0">Order #{{ order.order_number }}</h5>
                     </div>
                     <p>A confirmation email has been sent to <strong>{{ order.email }}</strong></p>
+
+                    <div class="d-flex justify-content-center gap-3 mt-4">
+                        <a href="{% url 'orders:order_tracker' %}?order_number={{ order.order_number }}" class="btn btn-primary py-3 px-5">
+                            <i class="fa fa-search me-2"></i> Track Your Order
+                        </a>
+                        <a href="{% url 'menu:menu_list' %}" class="btn btn-outline-primary py-3 px-5">
+                            <i class="fa fa-utensils me-2"></i> Continue Shopping
+                        </a>
+                    </div>
                 </div>
 
                 <div class="bg-light rounded p-4 mb-4">

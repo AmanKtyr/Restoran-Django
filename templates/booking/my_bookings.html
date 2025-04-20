@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Reservations - Restoran{% endblock %}
+
+{% block page_title %}My Reservations{% endblock %}
+{% block breadcrumb_active %}My Reservations{% endblock %}
+
+{% block content %}
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+            <h5 class="section-title ff-secondary text-center text-primary fw-normal">Your Reservations</h5>
+            <h1 class="mb-5">Manage Your Bookings</h1>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                {% if bookings %}
+                    <div class="mb-4 text-end">
+                        <a href="{% url 'booking:booking' %}" class="btn btn-primary">
+                            <i class="fa fa-calendar-plus me-2"></i> Make New Reservation
+                        </a>
+                        <a href="{% url 'booking:reservation_tracker' %}" class="btn btn-outline-primary ms-2">
+                            <i class="fa fa-search me-2"></i> Track Reservation
+                        </a>
+                    </div>
+                    
+                    <div class="bg-light rounded p-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Confirmation Code</th>
+                                        <th>Date & Time</th>
+                                        <th>Guests</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for booking in bookings %}
+                                    <tr>
+                                        <td>{{ booking.confirmation_code }}</td>
+                                        <td>{{ booking.date_time|date:"F d, Y - h:i A" }}</td>
+                                        <td>{{ booking.guest_count_adults }} Adults{% if booking.guest_count_children > 0 %}, {{ booking.guest_count_children }} Children{% endif %}</td>
+                                        <td>
+                                            <span class="badge bg-{{ booking.get_status_color }} py-2 px-3">{{ booking.get_status_display }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a href="{% url 'booking:reservation_tracker' %}?code={{ booking.confirmation_code }}" class="btn btn-sm btn-primary">
+                                                    <i class="fa fa-search me-1"></i> Track
+                                                </a>
+                                                <a href="{% url 'booking:booking_detail' booking.confirmation_code %}" class="btn btn-sm btn-info">
+                                                    <i class="fa fa-eye me-1"></i> View
+                                                </a>
+                                                {% if booking.is_cancellable_online %}
+                                                <a href="{% url 'booking:cancel_booking' booking.confirmation_code %}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to cancel this reservation?')">
+                                                    <i class="fa fa-times me-1"></i> Cancel
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <div class="alert alert-info">
+                            <h5 class="mb-3"><i class="fa fa-info-circle me-2"></i> Cancellation Policy</h5>
+                            <p>Reservations can be cancelled online up to {{ settings.cancellation_deadline_hours }} hours before the scheduled time. For last-minute cancellations, please call us directly.</p>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="bg-light rounded p-5 text-center">
+                        <img src="{% static 'img/calendar-empty.png' %}" alt="No Reservations" class="img-fluid mb-4" style="max-height: 150px;">
+                        <h4 class="mb-3">You don't have any reservations yet</h4>
+                        <p class="text-muted mb-4">Make a reservation to secure your table at our restaurant.</p>
+                        <a href="{% url 'booking:booking' %}" class="btn btn-primary py-3 px-5">
+                            <i class="fa fa-calendar-plus me-2"></i> Make a Reservation
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

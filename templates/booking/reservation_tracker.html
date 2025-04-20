@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Reservation Tracker - Restoran{% endblock %}
+
+{% block page_title %}Reservation Tracker{% endblock %}
+{% block breadcrumb_active %}Reservation Tracker{% endblock %}
+
+{% block content %}
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+            <h5 class="section-title ff-secondary text-center text-primary fw-normal">Track Your Reservation</h5>
+            <h1 class="mb-5">Reservation Status</h1>
+        </div>
+
+        {% if booking %}
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="bg-light rounded p-4 mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h3 class="mb-0">Reservation #{{ booking.confirmation_code }}</h3>
+                            <span class="badge bg-{{ booking.get_status_color }} py-2 px-3">{{ booking.get_status_display }}</span>
+                        </div>
+                        
+                        <!-- Reservation Progress Tracker -->
+                        <div class="reservation-tracker mb-5">
+                            <div class="progress-container">
+                                <div class="progress">
+                                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ booking.get_progress_percentage }}%" aria-valuenow="{{ booking.get_progress_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <div class="progress-steps">
+                                    <div class="progress-step {% if booking.status != 'pending' %}completed{% endif %} {% if booking.status == 'pending' %}active{% endif %}">
+                                        <div class="step-icon"><i class="fa fa-calendar-check"></i></div>
+                                        <div class="step-label">Booked</div>
+                                        <div class="step-time">{{ booking.created_at|date:"M d, H:i" }}</div>
+                                    </div>
+                                    <div class="progress-step {% if booking.confirmed_at %}completed{% endif %} {% if booking.status == 'confirmed' and not booking.checked_in_at %}active{% endif %}">
+                                        <div class="step-icon"><i class="fa fa-check-circle"></i></div>
+                                        <div class="step-label">Confirmed</div>
+                                        <div class="step-time">{% if booking.confirmed_at %}{{ booking.confirmed_at|date:"M d, H:i" }}{% else %}-{% endif %}</div>
+                                    </div>
+                                    <div class="progress-step {% if booking.checked_in_at %}completed{% endif %} {% if booking.status == 'checked_in' and not booking.seated_at %}active{% endif %}">
+                                        <div class="step-icon"><i class="fa fa-user-check"></i></div>
+                                        <div class="step-label">Checked In</div>
+                                        <div class="step-time">{% if booking.checked_in_at %}{{ booking.checked_in_at|date:"M d, H:i" }}{% else %}-{% endif %}</div>
+                                    </div>
+                                    <div class="progress-step {% if booking.seated_at %}completed{% endif %} {% if booking.status == 'seated' and not booking.completed_at %}active{% endif %}">
+                                        <div class="step-icon"><i class="fa fa-chair"></i></div>
+                                        <div class="step-label">Seated</div>
+                                        <div class="step-time">{% if booking.seated_at %}{{ booking.seated_at|date:"M d, H:i" }}{% else %}-{% endif %}</div>
+                                    </div>
+                                    <div class="progress-step {% if booking.completed_at %}completed{% endif %} {% if booking.status == 'completed' %}active{% endif %}">
+                                        <div class="step-icon"><i class="fa fa-utensils"></i></div>
+                                        <div class="step-label">Completed</div>
+                                        <div class="step-time">{% if booking.completed_at %}{{ booking.completed_at|date:"M d, H:i" }}{% else %}-{% endif %}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Reservation Details -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h5 class="mb-3">Reservation Details</h5>
+                                <p><strong>Name:</strong> {{ booking.name }}</p>
+                                <p><strong>Date & Time:</strong> {{ booking.date_time|date:"F d, Y - h:i A" }}</p>
+                                <p><strong>Guests:</strong> {{ booking.guest_count_adults }} Adults{% if booking.guest_count_children > 0 %}, {{ booking.guest_count_children }} Children{% endif %}{% if booking.guest_count_infants > 0 %}, {{ booking.guest_count_infants }} Infants{% endif %}</p>
+                                <p><strong>Occasion:</strong> {{ booking.occasion|default:"Not specified" }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h5 class="mb-3">Contact Information</h5>
+                                <p><strong>Email:</strong> {{ booking.email }}</p>
+                                <p><strong>Phone:</strong> {{ booking.phone }}</p>
+                                <p><strong>Preferred Seating:</strong> {{ booking.get_preferred_seating_area_display }}</p>
+                                <p><strong>Special Requests:</strong> {{ booking.special_request|default:"None" }}</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Table Assignment (if any) -->
+                        {% if booking.tables.exists %}
+                        <div class="mb-4">
+                            <h5 class="mb-3">Table Assignment</h5>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Table Number</th>
+                                            <th>Capacity</th>
+                                            <th>Location</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for table in booking.tables.all %}
+                                        <tr>
+                                            <td>{{ table.table_number }}</td>
+                                            <td>{{ table.capacity }} seats</td>
+                                            <td>{{ table.get_location_display }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Actions -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'booking:my_bookings' %}" class="btn btn-outline-primary">
+                                <i class="fa fa-arrow-left me-2"></i> Back to My Reservations
+                            </a>
+                            {% if booking.is_cancellable_online %}
+                            <a href="{% url 'booking:cancel_booking' booking.confirmation_code %}" class="btn btn-danger" onclick="return confirm('Are you sure you want to cancel this reservation?')">
+                                <i class="fa fa-times me-2"></i> Cancel Reservation
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="bg-light rounded p-5 text-center">
+                        <h4 class="mb-4">Enter Your Reservation Code</h4>
+                        <p class="text-muted mb-4">Please enter your reservation confirmation code to track the status of your booking.</p>
+                        
+                        <form method="get" action="{% url 'booking:reservation_tracker' %}">
+                            <div class="input-group mb-4 w-75 mx-auto">
+                                <input type="text" name="code" class="form-control" placeholder="e.g. RES-230501-ABC123" required>
+                                <button class="btn btn-primary" type="submit">Track</button>
+                            </div>
+                        </form>
+                        
+                        {% if error_message %}
+                        <div class="alert alert-danger mt-4">
+                            {{ error_message }}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mt-4">
+                            <p>Don't have a reservation yet?</p>
+                            <a href="{% url 'booking:booking' %}" class="btn btn-outline-primary">
+                                <i class="fa fa-calendar-plus me-2"></i> Make a Reservation
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .reservation-tracker {
+        margin: 40px 0;
+    }
+    
+    .progress-container {
+        position: relative;
+        padding: 30px 0;
+    }
+    
+    .progress {
+        height: 6px;
+        background-color: #e9ecef;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .progress-steps {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        margin-top: -18px;
+    }
+    
+    .progress-step {
+        text-align: center;
+        position: relative;
+        z-index: 2;
+        width: 80px;
+    }
+    
+    .step-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #e9ecef;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        font-size: 16px;
+        border: 2px solid #fff;
+    }
+    
+    .step-label {
+        font-weight: 600;
+        font-size: 14px;
+        color: #6c757d;
+    }
+    
+    .step-time {
+        font-size: 12px;
+        color: #adb5bd;
+    }
+    
+    .progress-step.active .step-icon {
+        background-color: #FEA116;
+        color: #fff;
+    }
+    
+    .progress-step.active .step-label {
+        color: #FEA116;
+    }
+    
+    .progress-step.completed .step-icon {
+        background-color: #0F172B;
+        color: #fff;
+    }
+    
+    .progress-step.completed .step-label {
+        color: #0F172B;
+    }
+</style>
+{% endblock %}

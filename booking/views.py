@@ -43,6 +43,8 @@ def booking(request):
                 booking.mark_as_confirmed()
 
             messages.success(request, f'Your booking has been submitted successfully! Your confirmation code is {booking.confirmation_code}')
+            # Store booking ID in session for the success page
+            request.session['last_booking_id'] = booking.id
             return redirect('booking:booking_success')
     else:
         form = BookingForm()
@@ -58,7 +60,18 @@ def booking(request):
     return render(request, 'booking/booking.html', context)
 
 def booking_success(request):
-    return render(request, 'booking/booking_success.html')
+    # Get the booking from session or most recent for the user
+    booking = None
+    booking_id = request.session.get('last_booking_id')
+
+    if booking_id:
+        booking = Booking.objects.filter(id=booking_id).first()
+        # Clear the session variable
+        del request.session['last_booking_id']
+    elif request.user.is_authenticated:
+        booking = Booking.objects.filter(user=request.user).order_by('-created_at').first()
+
+    return render(request, 'booking/booking_success.html', {'booking': booking})
 
 @login_required
 def my_bookings(request):
@@ -111,6 +124,26 @@ def cancel_booking(request, confirmation_code):
         return redirect('booking:my_bookings')
 
     return render(request, 'booking/cancel_booking.html', {'booking': booking})
+
+def reservation_tracker(request):
+    """View for tracking reservation status"""
+    confirmation_code = request.GET.get('code')
+    error_message = None
+    booking = None
+
+    if confirmation_code:
+        # Try to find the booking
+        booking = Booking.objects.filter(confirmation_code=confirmation_code).first()
+
+        if not booking:
+            error_message = "We couldn't find a reservation with that confirmation code. Please check and try again."
+
+    context = {
+        'booking': booking,
+        'error_message': error_message
+    }
+
+    return render(request, 'booking/reservation_tracker.html', context)
 
 def get_available_time_slots(request):
     """API endpoint to get available time slots for a specific date"""

@@ -73,9 +73,14 @@
                                         </td>
                                         <td>${{ order.total }}</td>
                                         <td>
-                                            <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-sm btn-outline-primary">
-                                                View Details
-                                            </a>
+                                            <div class="btn-group">
+                                                <a href="{% url 'orders:order_tracker' %}?order_number={{ order.order_number }}" class="btn btn-sm btn-primary">
+                                                    <i class="fa fa-search me-1"></i> Track
+                                                </a>
+                                                <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fa fa-eye me-1"></i> Details
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
                                     {% endfor %}

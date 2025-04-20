@@ -264,6 +264,33 @@ class Booking(models.Model):
             # Default to allowing cancellation if settings aren't available
             return True
 
+    def get_status_color(self):
+        """Get the Bootstrap color class for the current status"""
+        status_colors = {
+            'pending': 'warning',
+            'confirmed': 'info',
+            'checked_in': 'primary',
+            'seated': 'success',
+            'completed': 'success',
+            'cancelled': 'danger',
+            'no_show': 'secondary'
+        }
+        return status_colors.get(self.status, 'secondary')
+
+    def get_progress_percentage(self):
+        """Calculate the percentage of completion for the reservation process"""
+        # Define the stages and their weights
+        stages = {
+            'pending': 0,
+            'confirmed': 25,
+            'checked_in': 50,
+            'seated': 75,
+            'completed': 100,
+            'cancelled': 0,
+            'no_show': 0
+        }
+        return stages.get(self.status, 0)
+
     def get_duration_minutes(self):
         """Calculate the reservation duration in minutes"""
         if not self.end_time:

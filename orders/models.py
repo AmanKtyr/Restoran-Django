@@ -126,8 +126,12 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     confirmed_at = models.DateTimeField(null=True, blank=True)
+    preparation_started_at = models.DateTimeField(null=True, blank=True)
+    ready_for_pickup_at = models.DateTimeField(null=True, blank=True)
+    out_for_delivery_at = models.DateTimeField(null=True, blank=True)
     estimated_delivery_time = models.DateTimeField(null=True, blank=True)
     actual_delivery_time = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
     preparation_time_minutes = models.PositiveIntegerField(null=True, blank=True, help_text="Actual preparation time in minutes")
 
     # Delivery/fulfillment information
@@ -165,14 +169,62 @@ class Order(models.Model):
         # Update status timestamps
         if self.status == 'confirmed' and not self.confirmed_at:
             self.confirmed_at = timezone.now()
+        elif self.status == 'preparing' and not self.preparation_started_at:
+            self.preparation_started_at = timezone.now()
+        elif self.status == 'ready' and not self.ready_for_pickup_at and self.order_type == 'pickup':
+            self.ready_for_pickup_at = timezone.now()
+        elif self.status == 'on_the_way' and not self.out_for_delivery_at and self.order_type == 'delivery':
+            self.out_for_delivery_at = timezone.now()
         elif self.status == 'delivered' and not self.actual_delivery_time:
             self.actual_delivery_time = timezone.now()
+            self.completed_at = timezone.now()
+        elif self.status == 'completed' and not self.completed_at:
+            self.completed_at = timezone.now()
 
         # Update payment timestamp
         if self.payment_status == 'paid' and not self.payment_date:
             self.payment_date = timezone.now()
 
         super().save(*args, **kwargs)
+
+    def get_status_color(self):
+        """Get the Bootstrap color class for the current status"""
+        status_colors = {
+            'pending': 'secondary',
+            'confirmed': 'info',
+            'preparing': 'primary',
+            'ready': 'warning',
+            'on_the_way': 'warning',
+            'delivered': 'success',
+            'completed': 'success',
+            'cancelled': 'danger'
+        }
+        return status_colors.get(self.status, 'secondary')
+
+    def get_progress_percentage(self):
+        """Calculate the percentage of completion for the order process"""
+        # Define the stages and their weights based on order type
+        if self.order_type == 'delivery':
+            stages = {
+                'pending': 0,
+                'confirmed': 20,
+                'preparing': 40,
+                'ready': 60,
+                'on_the_way': 80,
+                'delivered': 100,
+                'completed': 100,
+                'cancelled': 0
+            }
+        else:  # pickup or dine_in
+            stages = {
+                'pending': 0,
+                'confirmed': 25,
+                'preparing': 50,
+                'ready': 75,
+                'completed': 100,
+                'cancelled': 0
+            }
+        return stages.get(self.status, 0)
 
     def get_subtotal(self):
         """Calculate the subtotal of all order items"""

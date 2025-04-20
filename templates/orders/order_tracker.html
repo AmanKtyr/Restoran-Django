@@ -1,0 +1,426 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Order Tracker - Restoran{% endblock %}
+
+{% block page_title %}Order Tracker{% endblock %}
+{% block breadcrumb_active %}Order Tracker{% endblock %}
+
+{% block content %}
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+            <h5 class="section-title ff-secondary text-center text-primary fw-normal">Track Your Order</h5>
+            <h1 class="mb-5">Order Status</h1>
+        </div>
+
+        {% if order %}
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="bg-light rounded p-4 mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h3 class="mb-0">Order #{{ order.order_number }}</h3>
+                            <span class="badge bg-{{ order.get_status_color }} py-2 px-3">{{ order.get_status_display }}</span>
+                        </div>
+                        
+                        <!-- Order Progress Tracker -->
+                        <div class="order-tracker mb-5">
+                            <div class="progress-container">
+                                <div class="progress">
+                                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ order.get_progress_percentage }}%" aria-valuenow="{{ order.get_progress_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <div class="progress-steps">
+                                    <div class="progress-step {% if order.status != 'pending' %}completed{% endif %} {% if order.status == 'pending' %}active{% endif %}">
+                                        <div class="step-icon"><i class="fa fa-shopping-cart"></i></div>
+                                        <div class="step-label">Ordered</div>
+                                        <div class="step-time">{{ order.created_at|date:"M d, H:i" }}</div>
+                                    </div>
+                                    <div class="progress-step {% if order.confirmed_at %}completed{% endif %} {% if order.status == 'confirmed' and not order.preparation_started_at %}active{% endif %}">
+                                        <div class="step-icon"><i class="fa fa-check-circle"></i></div>
+                                        <div class="step-label">Confirmed</div>
+                                        <div class="step-time">{% if order.confirmed_at %}{{ order.confirmed_at|date:"M d, H:i" }}{% else %}-{% endif %}</div>
+                                    </div>
+                                    <div class="progress-step {% if order.preparation_started_at %}completed{% endif %} {% if order.status == 'preparing' %}active{% endif %}">
+                                        <div class="step-icon"><i class="fa fa-utensils"></i></div>
+                                        <div class="step-label">Preparing</div>
+                                        <div class="step-time">{% if order.preparation_started_at %}{{ order.preparation_started_at|date:"M d, H:i" }}{% else %}-{% endif %}</div>
+                                    </div>
+                                    {% if order.order_type == 'delivery' %}
+                                    <div class="progress-step {% if order.out_for_delivery_at %}completed{% endif %} {% if order.status == 'out_for_delivery' %}active{% endif %}">
+                                        <div class="step-icon"><i class="fa fa-truck"></i></div>
+                                        <div class="step-label">Out for Delivery</div>
+                                        <div class="step-time">{% if order.out_for_delivery_at %}{{ order.out_for_delivery_at|date:"M d, H:i" }}{% else %}-{% endif %}</div>
+                                    </div>
+                                    {% elif order.order_type == 'pickup' %}
+                                    <div class="progress-step {% if order.ready_for_pickup_at %}completed{% endif %} {% if order.status == 'ready' %}active{% endif %}">
+                                        <div class="step-icon"><i class="fa fa-box"></i></div>
+                                        <div class="step-label">Ready for Pickup</div>
+                                        <div class="step-time">{% if order.ready_for_pickup_at %}{{ order.ready_for_pickup_at|date:"M d, H:i" }}{% else %}-{% endif %}</div>
+                                    </div>
+                                    {% endif %}
+                                    <div class="progress-step {% if order.completed_at %}completed{% endif %} {% if order.status == 'completed' or order.status == 'delivered' %}active{% endif %}">
+                                        <div class="step-icon"><i class="fa fa-check-double"></i></div>
+                                        <div class="step-label">{% if order.order_type == 'delivery' %}Delivered{% else %}Completed{% endif %}</div>
+                                        <div class="step-time">{% if order.completed_at %}{{ order.completed_at|date:"M d, H:i" }}{% else %}-{% endif %}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if order.order_type == 'delivery' and order.status == 'out_for_delivery' %}
+                        <!-- Delivery Map (only shown for delivery orders that are out for delivery) -->
+                        <div class="delivery-map-container mb-4">
+                            <h5 class="mb-3">Live Delivery Tracking</h5>
+                            <div class="delivery-map" id="deliveryMap" style="height: 300px; border-radius: 8px;"></div>
+                            <div class="delivery-info mt-3">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Estimated Arrival:</strong> <span id="estimatedArrival">{{ order.estimated_delivery_time|date:"h:i A" }}</span></p>
+                                        <p><strong>Driver:</strong> {{ order.driver_name|default:"Assigned Driver" }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Distance Remaining:</strong> <span id="distanceRemaining">Calculating...</span></p>
+                                        <p><strong>Current Status:</strong> <span id="deliveryStatus">On the way</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Order Details -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h5 class="mb-3">Order Details</h5>
+                                <p><strong>Order Type:</strong> {{ order.get_order_type_display }}</p>
+                                <p><strong>Order Date:</strong> {{ order.created_at|date:"F d, Y - h:i A" }}</p>
+                                <p><strong>Payment Method:</strong> {{ order.get_payment_method_display }}</p>
+                                {% if order.estimated_delivery_time %}
+                                <p><strong>Estimated {% if order.order_type == 'delivery' %}Delivery{% else %}Pickup{% endif %} Time:</strong> {{ order.estimated_delivery_time|date:"h:i A" }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <h5 class="mb-3">Contact Information</h5>
+                                <p><strong>Name:</strong> {{ order.name }}</p>
+                                <p><strong>Email:</strong> {{ order.email }}</p>
+                                <p><strong>Phone:</strong> {{ order.phone }}</p>
+                                {% if order.order_type == 'delivery' %}
+                                <p><strong>Delivery Address:</strong> {{ order.address }}, {{ order.city }}, {{ order.state }} {{ order.zip_code }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Order Items -->
+                        <div class="mb-4">
+                            <h5 class="mb-3">Order Items</h5>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Item</th>
+                                            <th>Quantity</th>
+                                            <th>Price</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in order.items.all %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    {% if item.menu_item.image %}
+                                                    <img src="{{ item.menu_item.image.url }}" alt="{{ item.menu_item.name }}" class="img-fluid rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                                    {% endif %}
+                                                    <div>
+                                                        <h6 class="mb-0">{{ item.menu_item.name }}</h6>
+                                                        {% if item.special_instructions %}
+                                                        <small class="text-muted">{{ item.special_instructions }}</small>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>{{ item.quantity }}</td>
+                                            <td>₹{{ item.price }}</td>
+                                            <td>₹{{ item.get_total_price }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                            <td>₹{{ order.subtotal }}</td>
+                                        </tr>
+                                        {% if order.delivery_fee > 0 %}
+                                        <tr>
+                                            <td colspan="3" class="text-end"><strong>Delivery Fee:</strong></td>
+                                            <td>₹{{ order.delivery_fee }}</td>
+                                        </tr>
+                                        {% endif %}
+                                        <tr>
+                                            <td colspan="3" class="text-end"><strong>Tax:</strong></td>
+                                            <td>₹{{ order.tax }}</td>
+                                        </tr>
+                                        {% if order.discount_amount > 0 %}
+                                        <tr>
+                                            <td colspan="3" class="text-end"><strong>Discount:</strong></td>
+                                            <td>-₹{{ order.discount_amount }}</td>
+                                        </tr>
+                                        {% endif %}
+                                        <tr>
+                                            <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                            <td><strong>₹{{ order.total }}</strong></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'orders:order_history' %}" class="btn btn-outline-primary">
+                                <i class="fa fa-arrow-left me-2"></i> Back to My Orders
+                            </a>
+                            {% if order.status == 'delivered' or order.status == 'completed' %}
+                            <a href="#" class="btn btn-primary">
+                                <i class="fa fa-star me-2"></i> Rate Your Order
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="bg-light rounded p-5 text-center">
+                        <h4 class="mb-4">Enter Your Order Number</h4>
+                        <p class="text-muted mb-4">Please enter your order number to track the status of your order.</p>
+                        
+                        <form method="get" action="{% url 'orders:order_tracker' %}">
+                            <div class="input-group mb-4 w-75 mx-auto">
+                                <input type="text" name="order_number" class="form-control" placeholder="e.g. ORD-123456" required>
+                                <button class="btn btn-primary" type="submit">Track</button>
+                            </div>
+                        </form>
+                        
+                        {% if error_message %}
+                        <div class="alert alert-danger mt-4">
+                            {{ error_message }}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mt-4">
+                            <p>Don't have an order yet?</p>
+                            <a href="{% url 'menu:menu_list' %}" class="btn btn-outline-primary">
+                                <i class="fa fa-utensils me-2"></i> Browse Our Menu
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .order-tracker {
+        margin: 40px 0;
+    }
+    
+    .progress-container {
+        position: relative;
+        padding: 30px 0;
+    }
+    
+    .progress {
+        height: 6px;
+        background-color: #e9ecef;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .progress-steps {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        margin-top: -18px;
+    }
+    
+    .progress-step {
+        text-align: center;
+        position: relative;
+        z-index: 2;
+        width: 80px;
+    }
+    
+    .step-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #e9ecef;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        font-size: 16px;
+        border: 2px solid #fff;
+    }
+    
+    .step-label {
+        font-weight: 600;
+        font-size: 14px;
+        color: #6c757d;
+    }
+    
+    .step-time {
+        font-size: 12px;
+        color: #adb5bd;
+    }
+    
+    .progress-step.active .step-icon {
+        background-color: #FEA116;
+        color: #fff;
+    }
+    
+    .progress-step.active .step-label {
+        color: #FEA116;
+    }
+    
+    .progress-step.completed .step-icon {
+        background-color: #0F172B;
+        color: #fff;
+    }
+    
+    .progress-step.completed .step-label {
+        color: #0F172B;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+{% if order.order_type == 'delivery' and order.status == 'out_for_delivery' %}
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap" async defer></script>
+<script>
+    // Initialize the map
+    function initMap() {
+        // Restaurant location (starting point)
+        const restaurantLocation = { lat: 40.7128, lng: -74.0060 }; // Example: New York
+        
+        // Delivery address (destination)
+        const deliveryLocation = { lat: 40.7282, lng: -73.9942 }; // Example: Slightly different location
+        
+        // Current driver location (will be updated via API in real implementation)
+        const driverLocation = { lat: 40.7200, lng: -74.0000 }; // Example: Somewhere between
+        
+        // Create the map centered on the driver
+        const map = new google.maps.Map(document.getElementById("deliveryMap"), {
+            zoom: 13,
+            center: driverLocation,
+        });
+        
+        // Add markers
+        const restaurantMarker = new google.maps.Marker({
+            position: restaurantLocation,
+            map: map,
+            icon: {
+                url: "{% static 'img/restaurant-marker.png' %}",
+                scaledSize: new google.maps.Size(40, 40)
+            },
+            title: "Restaurant"
+        });
+        
+        const deliveryMarker = new google.maps.Marker({
+            position: deliveryLocation,
+            map: map,
+            icon: {
+                url: "{% static 'img/home-marker.png' %}",
+                scaledSize: new google.maps.Size(40, 40)
+            },
+            title: "Delivery Address"
+        });
+        
+        const driverMarker = new google.maps.Marker({
+            position: driverLocation,
+            map: map,
+            icon: {
+                url: "{% static 'img/delivery-marker.png' %}",
+                scaledSize: new google.maps.Size(40, 40)
+            },
+            title: "Delivery Driver"
+        });
+        
+        // Draw route
+        const directionsService = new google.maps.DirectionsService();
+        const directionsRenderer = new google.maps.DirectionsRenderer({
+            map: map,
+            suppressMarkers: true, // We'll use our custom markers
+            polylineOptions: {
+                strokeColor: "#FEA116",
+                strokeWeight: 5
+            }
+        });
+        
+        // Calculate and display route
+        directionsService.route(
+            {
+                origin: restaurantLocation,
+                destination: deliveryLocation,
+                waypoints: [{location: driverLocation, stopover: false}],
+                travelMode: google.maps.TravelMode.DRIVING,
+            },
+            (response, status) => {
+                if (status === "OK") {
+                    directionsRenderer.setDirections(response);
+                    
+                    // Calculate remaining distance and time
+                    const route = response.routes[0];
+                    let remainingDistance = 0;
+                    let remainingTime = 0;
+                    
+                    // In a real implementation, you would calculate the remaining distance
+                    // based on the driver's current position
+                    remainingDistance = route.legs[0].distance.text;
+                    remainingTime = route.legs[0].duration.text;
+                    
+                    // Update the UI
+                    document.getElementById("distanceRemaining").textContent = remainingDistance;
+                    document.getElementById("estimatedArrival").textContent = "{{ order.estimated_delivery_time|date:'h:i A' }}";
+                    document.getElementById("deliveryStatus").textContent = "On the way - " + remainingTime + " remaining";
+                }
+            }
+        );
+        
+        // In a real implementation, you would update the driver's position periodically
+        // using a WebSocket or polling an API
+        function updateDriverPosition() {
+            // Simulate driver movement
+            const newLat = driverLocation.lat + (Math.random() - 0.5) * 0.001;
+            const newLng = driverLocation.lng + (Math.random() - 0.5) * 0.001;
+            const newPosition = { lat: newLat, lng: newLng };
+            
+            driverMarker.setPosition(newPosition);
+            
+            // Recalculate route
+            directionsService.route(
+                {
+                    origin: restaurantLocation,
+                    destination: deliveryLocation,
+                    waypoints: [{location: newPosition, stopover: false}],
+                    travelMode: google.maps.TravelMode.DRIVING,
+                },
+                (response, status) => {
+                    if (status === "OK") {
+                        directionsRenderer.setDirections(response);
+                    }
+                }
+            );
+        }
+        
+        // Update driver position every 5 seconds
+        setInterval(updateDriverPosition, 5000);
+    }
+</script>
+{% endif %}
+{% endblock %}

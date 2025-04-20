@@ -9,5 +9,6 @@ urlpatterns = [
     path('my-bookings/', views.my_bookings, name='my_bookings'),
     path('booking/<str:confirmation_code>/', views.booking_detail, name='booking_detail'),
     path('booking/<str:confirmation_code>/cancel/', views.cancel_booking, name='cancel_booking'),
+    path('track/', views.reservation_tracker, name='reservation_tracker'),
     path('api/available-time-slots/', views.get_available_time_slots, name='available_time_slots'),
 ]

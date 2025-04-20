@@ -202,3 +202,23 @@ def order_detail(request, order_id):
         'order_items': order.items.all(),
     }
     return render(request, 'orders/order_detail.html', context)
+
+def order_tracker(request):
+    """View for tracking order status"""
+    order_number = request.GET.get('order_number')
+    error_message = None
+    order = None
+
+    if order_number:
+        # Try to find the order
+        order = Order.objects.filter(order_number=order_number).first()
+
+        if not order:
+            error_message = "We couldn't find an order with that number. Please check and try again."
+
+    context = {
+        'order': order,
+        'error_message': error_message
+    }
+
+    return render(request, 'orders/order_tracker.html', context)

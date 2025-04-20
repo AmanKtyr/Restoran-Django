@@ -17,6 +17,7 @@ urlpatterns = [
     path('menu/items/', views.menu_item_list, name='menu_item_list'),
     path('menu/items/add/', views.menu_item_add, name='menu_item_add'),
     path('menu/items/edit/<int:pk>/', views.menu_item_edit, name='menu_item_edit'),
+    path('menu/items/duplicate/<int:pk>/', views.menu_item_duplicate, name='menu_item_duplicate'),
     path('menu/items/delete/<int:pk>/', views.menu_item_delete, name='menu_item_delete'),
 
     # Booking management

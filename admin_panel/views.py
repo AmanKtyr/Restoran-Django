@@ -334,6 +334,54 @@ def menu_item_edit(request, pk):
 
 @login_required
 @user_passes_test(is_admin)
+def menu_item_duplicate(request, pk):
+    # Get the original menu item
+    original_item = get_object_or_404(MenuItem, pk=pk)
+
+    # Create a copy of the menu item with a modified name
+    new_item = MenuItem.objects.create(
+        name=f"Copy of {original_item.name}",
+        category=original_item.category,
+        price=original_item.price,
+        cost_price=original_item.cost_price,
+        description=original_item.description,
+        is_vegetarian=original_item.is_vegetarian,
+        is_vegan=original_item.is_vegan,
+        is_gluten_free=original_item.is_gluten_free,
+        spice_level=original_item.spice_level,
+        calories=original_item.calories,
+        ingredients=original_item.ingredients,
+        allergens=original_item.allergens,
+        is_popular=original_item.is_popular,
+        is_featured=original_item.is_featured,
+        is_seasonal=original_item.is_seasonal,
+        is_active=original_item.is_active
+    )
+
+    # Copy the image if it exists
+    if original_item.image:
+        # Import required modules
+        from django.core.files.base import ContentFile
+        import os
+
+        # Get the file extension
+        _, ext = os.path.splitext(original_item.image.name)
+
+        # Read the original image content
+        original_item.image.open()
+        content = ContentFile(original_item.image.read())
+        original_item.image.close()
+
+        # Save the image to the new item with a new filename
+        new_item.image.save(f"copy_of_{os.path.basename(original_item.image.name)}", content, save=True)
+
+    messages.success(request, f"Menu item '{original_item.name}' duplicated successfully!")
+
+    # Redirect to edit the new item
+    return redirect('admin_panel:menu_item_edit', pk=new_item.id)
+
+@login_required
+@user_passes_test(is_admin)
 def menu_item_delete(request, pk):
     menu_item = get_object_or_404(MenuItem, pk=pk)
     menu_item.delete()

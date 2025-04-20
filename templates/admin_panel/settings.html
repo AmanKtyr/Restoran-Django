@@ -85,10 +85,11 @@
                                 <div class="mb-3">
                                     <label for="currency" class="form-label">Currency</label>
                                     <select class="form-select" id="currency" name="currency">
-                                        <option value="USD" {% if settings.currency == 'USD' %}selected{% endif %}>USD</option>
-                                        <option value="EUR" {% if settings.currency == 'EUR' %}selected{% endif %}>EUR</option>
-                                        <option value="GBP" {% if settings.currency == 'GBP' %}selected{% endif %}>GBP</option>
-                                        <option value="JPY" {% if settings.currency == 'JPY' %}selected{% endif %}>JPY</option>
+                                        <option value="USD" {% if settings.currency == 'USD' %}selected{% endif %}>USD (US Dollar)</option>
+                                        <option value="INR" {% if settings.currency == 'INR' %}selected{% endif %}>INR (Indian Rupee)</option>
+                                        <option value="EUR" {% if settings.currency == 'EUR' %}selected{% endif %}>EUR (Euro)</option>
+                                        <option value="GBP" {% if settings.currency == 'GBP' %}selected{% endif %}>GBP (British Pound)</option>
+                                        <option value="JPY" {% if settings.currency == 'JPY' %}selected{% endif %}>JPY (Japanese Yen)</option>
                                     </select>
                                 </div>
                                 <div class="mb-3">
@@ -549,4 +550,42 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-update currency symbol when currency is changed
+        const currencySelect = document.getElementById('currency');
+        const currencySymbolInput = document.getElementById('currency_symbol');
+
+        if (currencySelect && currencySymbolInput) {
+            currencySelect.addEventListener('change', function() {
+                const currency = this.value;
+                let symbol = '$';
+
+                // Set default symbol based on currency
+                switch (currency) {
+                    case 'USD':
+                        symbol = '$';
+                        break;
+                    case 'INR':
+                        symbol = '₹';
+                        break;
+                    case 'EUR':
+                        symbol = '€';
+                        break;
+                    case 'GBP':
+                        symbol = '£';
+                        break;
+                    case 'JPY':
+                        symbol = '¥';
+                        break;
+                }
+
+                currencySymbolInput.value = symbol;
+            });
+        }
+    });
+</script>
 {% endblock %}

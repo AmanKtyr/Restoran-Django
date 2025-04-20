@@ -15,7 +15,7 @@
             <i class="fas fa-plus"></i> Add Menu Item
         </a>
     </div>
-    
+
     <div class="card">
         <div class="card-header">
             <div class="row">
@@ -70,20 +70,20 @@
                             </td>
                             <td>{{ item.name }}</td>
                             <td>{{ item.category.name }}</td>
-                            <td>${{ item.price }}</td>
+                            <td>{{ currency_symbol|default:"$" }}{{ item.price }}</td>
                             <td>
                                 {% if item.is_vegetarian %}
                                 <span class="badge bg-success">Vegetarian</span>
                                 {% endif %}
-                                
+
                                 {% if item.is_vegan %}
                                 <span class="badge bg-success">Vegan</span>
                                 {% endif %}
-                                
+
                                 {% if item.is_gluten_free %}
                                 <span class="badge bg-success">Gluten-Free</span>
                                 {% endif %}
-                                
+
                                 {% if item.spice_level > 0 %}
                                 <span class="badge bg-danger">
                                     {% if item.spice_level == 1 %}
@@ -104,15 +104,15 @@
                                 {% else %}
                                 <span class="badge bg-secondary">Inactive</span>
                                 {% endif %}
-                                
+
                                 {% if item.is_popular %}
                                 <span class="badge bg-primary">Popular</span>
                                 {% endif %}
-                                
+
                                 {% if item.is_featured %}
                                 <span class="badge bg-info">Featured</span>
                                 {% endif %}
-                                
+
                                 {% if item.is_seasonal %}
                                 <span class="badge bg-warning">Seasonal</span>
                                 {% endif %}
@@ -152,21 +152,21 @@
         const statusFilter = document.getElementById('statusFilter');
         const table = document.getElementById('menuItemsTable');
         const rows = table.querySelectorAll('tbody tr');
-        
+
         function filterTable() {
             const searchTerm = searchInput.value.toLowerCase();
             const categoryValue = categoryFilter.value.toLowerCase();
             const statusValue = statusFilter.value.toLowerCase();
-            
+
             rows.forEach(row => {
                 const name = row.cells[1].textContent.toLowerCase();
                 const category = row.cells[2].textContent.toLowerCase();
                 const statusCell = row.cells[5].textContent.toLowerCase();
-                
+
                 const matchesSearch = name.includes(searchTerm);
                 const matchesCategory = categoryValue === '' || category === categoryValue;
                 const matchesStatus = statusValue === '' || statusCell.includes(statusValue);
-                
+
                 if (matchesSearch && matchesCategory && matchesStatus) {
                     row.style.display = '';
                 } else {
@@ -174,7 +174,7 @@
                 }
             });
         }
-        
+
         searchInput.addEventListener('input', filterTable);
         categoryFilter.addEventListener('change', filterTable);
         statusFilter.addEventListener('change', filterTable);

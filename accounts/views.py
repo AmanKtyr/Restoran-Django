@@ -5,12 +5,12 @@ from django.contrib import messages
 from django.db import transaction
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import PasswordChangeForm
-from django.db.models import Count, Sum, Avg, Q
+from django.db.models import Q
 from django.utils import timezone
 from django.http import JsonResponse, Http404
 from django.conf import settings
 from django.urls import reverse
-from datetime import timedelta
+
 
 from .forms import CustomUserCreationForm, CustomAuthenticationForm, UserProfileForm, UserForm, UserAddressForm
 from .models import UserProfile, UserActivity, UserAddress, UserFavorite, EmailVerificationToken, ReferralBonus
@@ -135,14 +135,9 @@ def logout_view(request):
     return redirect('core:home')
 
 @login_required
-def profile_view(request):
-    # Check if user has a profile, create one if not
-    try:
-        request.user.profile
-    except User.profile.RelatedObjectDoesNotExist:
-        UserProfile.objects.create(user=request.user)
-
-    return render(request, 'accounts/profile.html')
+def profile_view(_):
+    """Redirect to dashboard with profile tab"""
+    return redirect('accounts:dashboard')
 
 @login_required
 @transaction.atomic
@@ -170,7 +165,7 @@ def edit_profile(request):
             )
 
             messages.success(request, 'Your profile was successfully updated!')
-            return redirect('accounts:profile')
+            return redirect('accounts:dashboard')
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
@@ -191,14 +186,37 @@ def dashboard_view(request):
     except User.profile.RelatedObjectDoesNotExist:
         profile = UserProfile.objects.create(user=request.user)
 
-    # Get user activities for dashboard
-    activities = UserActivity.objects.filter(user=request.user).order_by('-timestamp')[:10]
+    # Get all user activities for dashboard (not just recent ones)
+    activities = UserActivity.objects.filter(user=request.user).order_by('-timestamp')
 
     # Get user addresses
     addresses = UserAddress.objects.filter(user=request.user)
 
     # Get user favorites
-    user_favorites = UserFavorite.objects.filter(user=request.user).order_by('-created_at')
+    favorites = UserFavorite.objects.filter(user=request.user).order_by('-created_at')
+
+    # Get actual objects for each favorite
+    favorites_with_objects = []
+    for favorite in favorites:
+        obj = None
+        if favorite.content_type == 'menu_item':
+            try:
+                from menu.models import MenuItem
+                obj = MenuItem.objects.filter(id=favorite.object_id).first()
+            except (ImportError, Exception):
+                pass
+        elif favorite.content_type == 'category':
+            try:
+                from menu.models import Category
+                obj = Category.objects.filter(id=favorite.object_id).first()
+            except (ImportError, Exception):
+                pass
+
+        if obj:
+            favorites_with_objects.append({
+                'favorite': favorite,
+                'object': obj
+            })
 
     # Get referrals made by the user
     referrals = User.objects.filter(profile__referred_by=request.user).select_related('profile')
@@ -213,16 +231,81 @@ def dashboard_view(request):
         reverse('accounts:register_with_referral', kwargs={'referral_code': profile.referral_code})
     )
 
+    # Get user orders
+    try:
+        from orders.models import Order
+        orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    except (ImportError, Exception):
+        orders = []
+
+    # Get user bookings
+    try:
+        from booking.models import Booking
+        bookings = Booking.objects.filter(user=request.user).order_by('-created_at')
+    except (ImportError, Exception):
+        bookings = []
+
+    # Get user reviews
+    try:
+        from reviews.models import Review
+        reviews = Review.objects.filter(user=request.user).order_by('-created_at')
+    except (ImportError, Exception):
+        reviews = []
+
+    # Get loyalty account if exists
+    try:
+        from loyalty.models import LoyaltyAccount, LoyaltyTier
+        loyalty_account = LoyaltyAccount.objects.filter(user=request.user).first()
+
+        # Calculate tier progress
+        tier_progress_percentage = 0
+        points_needed_for_next_tier = 0
+        next_tier = None
+
+        if loyalty_account and loyalty_account.tier:
+            current_tier = loyalty_account.tier
+            try:
+                next_tier = LoyaltyTier.objects.filter(
+                    points_threshold__gt=current_tier.points_threshold
+                ).order_by('points_threshold').first()
+
+                if next_tier:
+                    points_range = next_tier.points_threshold - current_tier.points_threshold
+                    points_earned = loyalty_account.points_balance - current_tier.points_threshold
+                    tier_progress_percentage = min(100, int((points_earned / points_range) * 100))
+                    points_needed_for_next_tier = next_tier.points_threshold - loyalty_account.points_balance
+                else:
+                    # Already at highest tier
+                    tier_progress_percentage = 100
+            except Exception:
+                pass
+    except (ImportError, Exception):
+        loyalty_account = None
+        tier_progress_percentage = 0
+        points_needed_for_next_tier = 0
+        next_tier = None
+
     # Initialize context with user and profile
     context = {
         'user': request.user,
         'profile': profile,
         'activities': activities,
         'addresses': addresses,
+        'favorites': favorites_with_objects,
         'referrals': referrals,
         'referral_bonuses': referral_bonuses,
         'referral_url': referral_url,
         'referral_points_reward': getattr(settings, 'REFERRAL_POINTS_REWARD', 100),
+        'orders': orders,
+        'bookings': bookings,
+        'reviews': reviews,
+        'loyalty_account': loyalty_account,
+        'tier_progress_percentage': tier_progress_percentage,
+        'points_needed_for_next_tier': points_needed_for_next_tier,
+        'next_tier': next_tier,
+        'order_count': len(orders) if orders else 0,
+        'booking_count': len(bookings) if bookings else 0,
+        'review_count': len(reviews) if reviews else 0,
     }
 
     # Get order statistics if orders app is installed
@@ -370,30 +453,16 @@ def change_password(request):
     })
 
 @login_required
-def activity_history(request):
-    """View for displaying user activity history"""
-    # Get user activities
-    activities = UserActivity.objects.filter(user=request.user).order_by('-timestamp')
-
-    # Pagination
-    page = request.GET.get('page', 1)
-    from django.core.paginator import Paginator
-    paginator = Paginator(activities, 20)  # Show 20 activities per page
-    activities_page = paginator.get_page(page)
-
-    return render(request, 'accounts/activity_history.html', {
-        'activities': activities_page
-    })
+def activity_history(_):
+    """Redirect to dashboard with activity history tab"""
+    return redirect('accounts:dashboard')
 
 
 # Address Management Views
 @login_required
-def address_list(request):
-    """View for displaying user addresses"""
-    addresses = UserAddress.objects.filter(user=request.user)
-    return render(request, 'accounts/address_list.html', {
-        'addresses': addresses
-    })
+def address_list(_):
+    """Redirect to dashboard with addresses tab"""
+    return redirect('accounts:dashboard')
 
 @login_required
 def add_address(request):
@@ -414,7 +483,7 @@ def add_address(request):
             )
 
             messages.success(request, 'Address added successfully!')
-            return redirect('accounts:address_list')
+            return redirect('accounts:dashboard')
     else:
         form = UserAddressForm()
 
@@ -442,7 +511,7 @@ def edit_address(request, address_id):
             )
 
             messages.success(request, 'Address updated successfully!')
-            return redirect('accounts:address_list')
+            return redirect('accounts:dashboard')
     else:
         form = UserAddressForm(instance=address)
 
@@ -470,12 +539,12 @@ def delete_address(request, address_id):
         )
 
         messages.success(request, 'Address deleted successfully!')
-        return redirect('accounts:address_list')
+        return redirect('accounts:dashboard')
 
     return render(request, 'accounts/confirm_delete.html', {
         'object': address,
         'object_name': f'{address.name} ({address.get_address_type_display()})',
-        'cancel_url': 'accounts:address_list'
+        'cancel_url': 'accounts:dashboard'
     })
 
 @login_required
@@ -489,42 +558,15 @@ def set_default_address(request, address_id):
 
     messages.success(request, f'{address.name} set as your default address.')
 
-    # Redirect back to the address list
-    return redirect('accounts:address_list')
+    # Redirect back to the dashboard
+    return redirect('accounts:dashboard')
 
 
 # Favorites Management Views
 @login_required
-def favorites_list(request):
-    """View for displaying user favorites"""
-    favorites = UserFavorite.objects.filter(user=request.user).order_by('-created_at')
-
-    # Get actual objects for each favorite
-    favorites_with_objects = []
-    for favorite in favorites:
-        obj = None
-        if favorite.content_type == 'menu_item':
-            try:
-                from menu.models import MenuItem
-                obj = MenuItem.objects.filter(id=favorite.object_id).first()
-            except (ImportError, Exception):
-                pass
-        elif favorite.content_type == 'category':
-            try:
-                from menu.models import Category
-                obj = Category.objects.filter(id=favorite.object_id).first()
-            except (ImportError, Exception):
-                pass
-
-        if obj:
-            favorites_with_objects.append({
-                'favorite': favorite,
-                'object': obj
-            })
-
-    return render(request, 'accounts/favorites_list.html', {
-        'favorites': favorites_with_objects
-    })
+def favorites_list(_):
+    """Redirect to dashboard with favorites tab"""
+    return redirect('accounts:dashboard')
 
 @login_required
 def add_favorite(request, content_type, object_id):
@@ -548,7 +590,7 @@ def add_favorite(request, content_type, object_id):
         raise Http404("Object not found")
 
     # Create favorite if it doesn't exist
-    favorite, created = UserFavorite.objects.get_or_create(
+    _, created = UserFavorite.objects.get_or_create(
         user=request.user,
         content_type=content_type,
         object_id=object_id
@@ -572,8 +614,8 @@ def add_favorite(request, content_type, object_id):
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return JsonResponse({'status': 'success', 'created': created})
 
-    # Otherwise redirect back to the referring page or favorites list
-    next_url = request.META.get('HTTP_REFERER', 'accounts:favorites_list')
+    # Otherwise redirect back to the referring page or dashboard
+    next_url = request.META.get('HTTP_REFERER', 'accounts:dashboard')
     return redirect(next_url)
 
 @login_required
@@ -603,8 +645,8 @@ def remove_favorite(request, favorite_id):
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return JsonResponse({'status': 'success'})
 
-    # Otherwise redirect back to the favorites list
-    return redirect('accounts:favorites_list')
+    # Otherwise redirect back to the dashboard
+    return redirect('accounts:dashboard')
 
 
 # Email Verification Views
@@ -667,28 +709,9 @@ def resend_verification(request):
 
 # Referral Views
 @login_required
-def referrals_view(request):
-    """View for displaying user referrals and referral code"""
-    # Get referrals made by the user
-    referrals = User.objects.filter(profile__referred_by=request.user).select_related('profile')
-
-    # Get referral bonuses
-    bonuses = ReferralBonus.objects.filter(
-        Q(referrer=request.user) | Q(referred=request.user)
-    ).select_related('referrer', 'referred')
-
-    # Generate referral URL
-    referral_url = request.build_absolute_uri(
-        reverse('accounts:register_with_referral', kwargs={'referral_code': request.user.profile.referral_code})
-    )
-
-    return render(request, 'accounts/referrals.html', {
-        'referrals': referrals,
-        'bonuses': bonuses,
-        'referral_url': referral_url,
-        'referral_code': request.user.profile.referral_code,
-        'points_reward': settings.REFERRAL_POINTS_REWARD
-    })
+def referrals_view(_):
+    """Redirect to dashboard with referrals tab"""
+    return redirect('accounts:dashboard')
 
 
 @login_required

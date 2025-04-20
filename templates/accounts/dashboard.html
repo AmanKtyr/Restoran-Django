@@ -459,7 +459,7 @@
                                         </a>
                                     </div>
                                     <div class="col-md-4 col-6">
-                                        <a href="{% url 'accounts:activity_history' %}" class="quick-action-btn bg-gradient-activity d-block">
+                                        <a href="javascript:void(0)" class="quick-action-btn bg-gradient-activity d-block" data-bs-toggle="modal" data-bs-target="#activityHistoryModal">
                                             <div class="quick-action-icon">
                                                 <i class="fa fa-history"></i>
                                             </div>
@@ -471,41 +471,120 @@
                         </div>
 
                         <div class="card profile-card mb-4">
-                            <div class="card-header">
-                                <h5 class="mb-0"><i class="fa fa-history me-2"></i> Recent Activity</h5>
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="fa fa-history me-2"></i> Activity History</h5>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#activityCollapse" aria-expanded="true" aria-controls="activityCollapse">
+                                        <i class="fa fa-chevron-down"></i>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="card-body p-0">
-                                {% if activities %}
-                                    <div class="list-group list-group-flush">
-                                        {% for activity in activities %}
-                                            <div class="activity-item d-flex align-items-start">
-                                                <div class="activity-icon">
-                                                    {% if activity.type == 'order' %}
-                                                        <i class="fa fa-shopping-bag text-primary"></i>
-                                                    {% elif activity.type == 'booking' %}
-                                                        <i class="fa fa-calendar-check text-success"></i>
-                                                    {% elif activity.type == 'review' %}
-                                                        <i class="fa fa-star text-warning"></i>
-                                                    {% elif activity.type == 'loyalty' %}
-                                                        <i class="fa fa-crown text-info"></i>
-                                                    {% else %}
-                                                        <i class="fa fa-check-circle text-secondary"></i>
-                                                    {% endif %}
+                            <div class="collapse show" id="activityCollapse">
+                                <div class="card-body p-0">
+                                    {% if activities %}
+                                        <div class="list-group list-group-flush">
+                                            {% for activity in activities|slice:":10" %}
+                                                <div class="activity-item d-flex align-items-start">
+                                                    <div class="activity-icon">
+                                                        {% if activity.type == 'order' %}
+                                                            <i class="fa fa-shopping-bag text-primary"></i>
+                                                        {% elif activity.type == 'booking' %}
+                                                            <i class="fa fa-calendar-check text-success"></i>
+                                                        {% elif activity.type == 'review' %}
+                                                            <i class="fa fa-star text-warning"></i>
+                                                        {% elif activity.type == 'loyalty' %}
+                                                            <i class="fa fa-crown text-info"></i>
+                                                        {% elif activity.type == 'favorite' %}
+                                                            <i class="fa fa-heart text-danger"></i>
+                                                        {% elif activity.type == 'address_added' or activity.type == 'address_updated' or activity.type == 'address_removed' %}
+                                                            <i class="fa fa-map-marker-alt text-success"></i>
+                                                        {% elif activity.type == 'password_change' %}
+                                                            <i class="fa fa-lock text-warning"></i>
+                                                        {% elif activity.type == 'email_verified' %}
+                                                            <i class="fa fa-envelope-open text-info"></i>
+                                                        {% else %}
+                                                            <i class="fa fa-check-circle text-secondary"></i>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="activity-content">
+                                                        <p class="mb-1">{{ activity.description }}</p>
+                                                        <p class="activity-time mb-0">{{ activity.timestamp|date:"F d, Y, g:i A" }}</p>
+                                                    </div>
                                                 </div>
-                                                <div class="activity-content">
-                                                    <p class="mb-1">{{ activity.description }}</p>
-                                                    <p class="activity-time mb-0">{{ activity.timestamp|date:"F d, Y, g:i A" }}</p>
-                                                </div>
+                                            {% endfor %}
+                                        </div>
+
+                                        {% if activities.count > 10 %}
+                                            <div class="card-footer bg-light text-center">
+                                                <button class="btn btn-link" type="button" data-bs-toggle="modal" data-bs-target="#activityHistoryModal">
+                                                    View All Activity History
+                                                </button>
                                             </div>
-                                        {% endfor %}
+                                        {% endif %}
+                                    {% else %}
+                                        <div class="text-center py-5">
+                                            <i class="fa fa-history fa-3x text-muted mb-3"></i>
+                                            <h5>No Activity Yet</h5>
+                                            <p class="text-muted">Your activity history will appear here.</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Activity History Modal -->
+                        <div class="modal fade" id="activityHistoryModal" tabindex="-1" aria-labelledby="activityHistoryModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="activityHistoryModalLabel"><i class="fa fa-history me-2"></i> Complete Activity History</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
-                                {% else %}
-                                    <div class="text-center py-5">
-                                        <i class="fa fa-history fa-3x text-muted mb-3"></i>
-                                        <h5>No Recent Activity</h5>
-                                        <p class="text-muted">Your recent activities will appear here.</p>
+                                    <div class="modal-body p-0">
+                                        {% if activities %}
+                                            <div class="list-group list-group-flush">
+                                                {% for activity in activities %}
+                                                    <div class="activity-item d-flex align-items-start p-3">
+                                                        <div class="activity-icon">
+                                                            {% if activity.type == 'order' %}
+                                                                <i class="fa fa-shopping-bag text-primary"></i>
+                                                            {% elif activity.type == 'booking' %}
+                                                                <i class="fa fa-calendar-check text-success"></i>
+                                                            {% elif activity.type == 'review' %}
+                                                                <i class="fa fa-star text-warning"></i>
+                                                            {% elif activity.type == 'loyalty' %}
+                                                                <i class="fa fa-crown text-info"></i>
+                                                            {% elif activity.type == 'favorite' %}
+                                                                <i class="fa fa-heart text-danger"></i>
+                                                            {% elif activity.type == 'address_added' or activity.type == 'address_updated' or activity.type == 'address_removed' %}
+                                                                <i class="fa fa-map-marker-alt text-success"></i>
+                                                            {% elif activity.type == 'password_change' %}
+                                                                <i class="fa fa-lock text-warning"></i>
+                                                            {% elif activity.type == 'email_verified' %}
+                                                                <i class="fa fa-envelope-open text-info"></i>
+                                                            {% else %}
+                                                                <i class="fa fa-check-circle text-secondary"></i>
+                                                            {% endif %}
+                                                        </div>
+                                                        <div class="activity-content">
+                                                            <p class="mb-1">{{ activity.description }}</p>
+                                                            <p class="activity-time mb-0">{{ activity.timestamp|date:"F d, Y, g:i A" }}</p>
+                                                        </div>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <div class="text-center py-5">
+                                                <i class="fa fa-history fa-3x text-muted mb-3"></i>
+                                                <h5>No Activity Yet</h5>
+                                                <p class="text-muted">Your activity history will appear here.</p>
+                                            </div>
+                                        {% endif %}
                                     </div>
-                                {% endif %}
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -559,7 +638,7 @@
                                 <a href="{% url 'orders:order_history' %}" class="btn btn-sm btn-outline-primary">View All</a>
                             </div>
                             <div class="card-body p-0">
-                                {% if recent_orders %}
+                                {% if orders %}
                                     <div class="table-responsive">
                                         <table class="table table-hover mb-0">
                                             <thead class="table-light">
@@ -572,11 +651,11 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {% for order in recent_orders %}
+                                                {% for order in orders|slice:":5" %}
                                                     <tr>
                                                         <td>{{ order.order_number }}</td>
                                                         <td>{{ order.created_at|date:"M d, Y" }}</td>
-                                                        <td>{{ currency_symbol|default:"$" }}{{ order.total }}</td>
+                                                        <td>{{ currency_symbol|default:"₹" }}{{ order.total }}</td>
                                                         <td>
                                                             <span class="badge bg-{{ order.get_status_color }}">
                                                                 {{ order.get_status_display }}
@@ -589,6 +668,11 @@
                                                 {% endfor %}
                                             </tbody>
                                         </table>
+                                        {% if orders.count > 5 %}
+                                        <div class="card-footer bg-light text-center">
+                                            <a href="{% url 'orders:order_history' %}" class="btn btn-link">View All Orders</a>
+                                        </div>
+                                        {% endif %}
                                     </div>
                                 {% else %}
                                     <div class="text-center py-5">
@@ -610,7 +694,7 @@
                                 <a href="{% url 'booking:my_bookings' %}" class="btn btn-sm btn-outline-primary">View All</a>
                             </div>
                             <div class="card-body p-0">
-                                {% if recent_bookings %}
+                                {% if bookings %}
                                     <div class="table-responsive">
                                         <table class="table table-hover mb-0">
                                             <thead class="table-light">
@@ -623,7 +707,7 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {% for booking in recent_bookings %}
+                                                {% for booking in bookings|slice:":5" %}
                                                     <tr>
                                                         <td>{{ booking.confirmation_code }}</td>
                                                         <td>{{ booking.date_time|date:"M d, Y, g:i A" }}</td>
@@ -640,6 +724,11 @@
                                                 {% endfor %}
                                             </tbody>
                                         </table>
+                                        {% if bookings.count > 5 %}
+                                        <div class="card-footer bg-light text-center">
+                                            <a href="{% url 'booking:my_bookings' %}" class="btn btn-link">View All Reservations</a>
+                                        </div>
+                                        {% endif %}
                                     </div>
                                 {% else %}
                                     <div class="text-center py-5">
@@ -662,8 +751,8 @@
                             <div class="card-body">
                                 {% if favorites %}
                                     <div class="row">
-                                        {% for favorite in favorites %}
-                                            {% with item=favorite.menu_item %}
+                                        {% for favorite_item in favorites %}
+                                            {% with item=favorite_item.object favorite=favorite_item.favorite %}
                                             <div class="col-md-6 mb-3">
                                                 <div class="card recommendation-card">
                                                     {% if item.image %}
@@ -677,10 +766,10 @@
                                                         <h6 class="card-title">{{ item.name }}</h6>
                                                         <p class="card-text small text-muted">{{ item.description|truncatechars:60 }}</p>
                                                         <div class="d-flex justify-content-between align-items-center">
-                                                            <span class="text-primary">{{ currency_symbol|default:"$" }}{{ item.price }}</span>
+                                                            <span class="text-primary">{{ currency_symbol|default:"₹" }}{{ item.price }}</span>
                                                             <div>
                                                                 <a href="{% url 'menu:menu_item_detail' item.id %}" class="btn btn-sm btn-outline-primary me-1">View</a>
-                                                                <button class="btn btn-sm btn-outline-danger remove-favorite" data-item-id="{{ item.id }}">
+                                                                <button class="btn btn-sm btn-outline-danger remove-favorite" data-item-id="{{ favorite.id }}">
                                                                     <i class="fa fa-heart-broken"></i>
                                                                 </button>
                                                             </div>
@@ -964,7 +1053,9 @@
                                         </div>
                                     </div>
                                     <div class="col-md-4 text-center">
-                                        <img src="{% static 'img/referral.png' %}" alt="Referral" class="img-fluid" style="max-height: 150px;">
+                                        <div class="d-flex align-items-center justify-content-center h-100">
+                                            <i class="fas fa-users-cog fa-5x" style="color: #FEA116;"></i>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1101,7 +1192,7 @@
                 const itemId = this.getAttribute('data-item-id');
 
                 // Send AJAX request to remove favorite
-                fetch(`/accounts/favorites/remove/${itemId}/`, {
+                fetch(`/accounts/profile/favorites/remove/${itemId}/`, {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': getCookie('csrftoken'),
@@ -1131,6 +1222,23 @@
                 });
             });
         });
+
+        // Function to copy referral URL
+        window.copyReferralUrl = function() {
+            var copyText = document.getElementById("referralUrl");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); /* For mobile devices */
+            document.execCommand("copy");
+
+            // Show a tooltip or some indication that the text was copied
+            var copyButton = copyText.nextElementSibling;
+            var originalText = copyButton.innerHTML;
+            copyButton.innerHTML = '<i class="fa fa-check me-1"></i> Copied!';
+
+            setTimeout(function() {
+                copyButton.innerHTML = originalText;
+            }, 2000);
+        };
 
         // Function to get CSRF token from cookies
         function getCookie(name) {

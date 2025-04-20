@@ -1,0 +1,166 @@
+/**
+ * Custom Navbar Styles
+ * Enhanced styles for a more professional and industry-ready navigation bar
+ */
+
+/* Enhanced Navbar Styles */
+.navbar-dark {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    animation: navbarFadeIn 0.5s ease-out;
+}
+
+@keyframes navbarFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+    transform: translateY(-2px);
+}
+
+.navbar-dark .navbar-brand h1 {
+    letter-spacing: 1px;
+}
+
+/* Enhanced Button Styles */
+.btn {
+    border-radius: 4px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-primary {
+    background: linear-gradient(to right, var(--primary), #ffb347);
+    border: none;
+}
+
+.btn-outline-primary {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.btn-outline-primary:hover {
+    background: linear-gradient(to right, var(--primary), #ffb347);
+    border-color: transparent;
+}
+
+.btn-outline-light {
+    border-color: rgba(255, 255, 255, 0.5);
+    color: #fff;
+}
+
+.btn-outline-light:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: #fff;
+    color: #fff;
+}
+
+.btn-dark {
+    background: linear-gradient(to right, var(--dark), #2c3e50);
+    border: none;
+}
+
+/* Dropdown Enhancements */
+.dropdown-menu {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    min-width: 220px;
+}
+
+.dropdown-item {
+    border-radius: 4px;
+    padding: 8px 15px;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(254, 161, 22, 0.1);
+    color: var(--primary);
+    transform: translateX(3px);
+}
+
+.dropdown-item.active {
+    background-color: var(--primary);
+}
+
+.dropdown-divider {
+    margin: 0.5rem 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Account Dropdown Special Styling */
+.nav-item.dropdown:hover .dropdown-menu {
+    display: block;
+    animation: fadeInMenu 0.3s ease-out;
+}
+
+@keyframes fadeInMenu {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Admin Login Button Special Styling */
+.admin-login-btn {
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background-color: rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+.admin-login-btn:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 991.98px) {
+    .navbar-dark .navbar-nav .nav-link {
+        padding: 12px 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .navbar-dark .navbar-nav .nav-link:hover {
+        transform: none;
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .dropdown-menu {
+        background-color: rgba(0, 0, 0, 0.2);
+        border: none;
+        box-shadow: none;
+    }
+
+    .btn {
+        margin: 5px 0;
+        display: block;
+        width: 100%;
+    }
+}

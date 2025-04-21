@@ -72,8 +72,13 @@ Restoran-Django/
 
 1. Access the website at http://127.0.0.1:8000/
 2. Access the admin panel at http://127.0.0.1:8000/admin/
+Id : amna
+pass : Aman@#12
 3. Use the admin panel to manage the menu, bookings, team members, testimonials, and more.
 
 ## License
 
 This project is licensed under the terms of the license included in the repository.
+
+
+page to make it more professional and industry-ready

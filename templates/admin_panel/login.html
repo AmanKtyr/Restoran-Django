@@ -3,162 +3,758 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - Restaurant</title>
-    
+    <title>Admin Login - {{ restaurant_settings.restaurant_name|default:"Restaurant" }}</title>
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Pacifico&display=swap" rel="stylesheet">
+
     <style>
         :root {
-            --primary-color: #FEA116;
-            --secondary-color: #0F172B;
+            --primary-color: {{ restaurant_settings.primary_color|default:"#FEA116" }};
+            --secondary-color: {{ restaurant_settings.secondary_color|default:"#0F172B" }};
+            --light-color: #F1F8FF;
+            --dark-color: #0F172B;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --accent-color: #FF6B6B;
+            --accent-color-2: #4ECDC4;
         }
-        
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
         body {
-            font-family: 'Nunito', sans-serif;
+            font-family: '{{ restaurant_settings.font_family|default:"Nunito" }}', sans-serif;
             background-color: var(--secondary-color);
-            height: 100vh;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(254, 161, 22, 0.1) 0%, rgba(15, 23, 43, 0.1) 90%),
+                linear-gradient(135deg, rgba(15, 23, 43, 0.85), rgba(15, 23, 43, 0.95)),
+                url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8cmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fDB8fA%3D%3D&w=1000&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-        
-        .login-container {
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            position: relative;
             overflow: hidden;
-            width: 900px;
-            max-width: 100%;
         }
-        
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(254, 161, 22, 0.1) 0%, rgba(254, 161, 22, 0) 70%);
+            z-index: 0;
+            animation: pulse 15s infinite alternate;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            bottom: -50%;
+            left: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(79, 205, 196, 0.1) 0%, rgba(79, 205, 196, 0) 70%);
+            z-index: 0;
+            animation: pulse 20s infinite alternate-reverse;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.5); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 0.5; }
+        }
+
+        .login-container {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            width: 1000px;
+            max-width: 90%;
+            margin: 0 auto;
+            animation: fadeIn 0.8s ease-out;
+            position: relative;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color-2), var(--accent-color), var(--primary-color));
+            z-index: -1;
+            border-radius: 25px;
+            background-size: 400% 400%;
+            animation: gradientBorder 15s ease infinite;
+            opacity: 0.7;
+            filter: blur(10px);
+        }
+
+        @keyframes gradientBorder {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .login-row {
             display: flex;
             flex-wrap: wrap;
         }
-        
+
         .login-image {
             flex: 1;
-            background-image: url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8cmVzdGF1cmFudHxlbnwwfHwwfHw%3D&w=1000&q=80');
+            background-image: url('https://images.unsplash.com/photo-1552566626-52f8b828add9?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8OHx8cmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fDB8fA%3D%3D&w=1000&q=80');
             background-size: cover;
             background-position: center;
-            min-height: 500px;
+            min-height: 550px;
+            position: relative;
         }
-        
+
+        .login-image::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(254, 161, 22, 0.3), rgba(15, 23, 43, 0.6));
+        }
+
         .login-form {
             flex: 1;
             padding: 50px;
+            position: relative;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.8));
         }
-        
+
+        .login-form::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23FEA116' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+            opacity: 0.5;
+            z-index: 0;
+        }
+
         .login-logo {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 1;
         }
-        
+
+        .login-logo .logo-icon {
+            font-size: 3.5rem;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            display: inline-block;
+            position: relative;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .login-logo .logo-icon::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 10px;
+            background: radial-gradient(ellipse at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 70%);
+            border-radius: 50%;
+            animation: shadow 3s ease-in-out infinite;
+        }
+
+        @keyframes shadow {
+            0% { transform: translateX(-50%) scale(1); opacity: 0.4; }
+            50% { transform: translateX(-50%) scale(0.8); opacity: 0.2; }
+            100% { transform: translateX(-50%) scale(1); opacity: 0.4; }
+        }
+
         .login-logo h1 {
             color: var(--primary-color);
-            font-weight: bold;
-            margin-bottom: 0;
+            font-weight: 800;
+            margin-bottom: 5px;
+            font-size: 2.2rem;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
         }
-        
+
         .login-logo p {
             color: var(--secondary-color);
-            font-size: 1rem;
+            font-size: 1.1rem;
+            opacity: 0.8;
+            position: relative;
         }
-        
+
+        .form-label {
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin-bottom: 8px;
+        }
+
         .form-control {
-            height: 50px;
-            border-radius: 5px;
-            margin-bottom: 20px;
+            height: 55px;
+            border-radius: 12px;
+            border: 2px solid rgba(224, 224, 224, 0.5);
+            padding-left: 15px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: none;
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            position: relative;
+            z-index: 1;
         }
-        
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 15px rgba(254, 161, 22, 0.25);
+            background-color: rgba(255, 255, 255, 0.95);
+            transform: translateY(-2px);
+        }
+
+        .form-control::placeholder {
+            color: rgba(108, 117, 125, 0.6);
+            font-style: italic;
+        }
+
+        .input-group-text {
+            background-color: rgba(241, 248, 255, 0.8);
+            border: 2px solid rgba(224, 224, 224, 0.5);
+            border-right: none;
+            color: var(--primary-color);
+            width: 55px;
+            justify-content: center;
+            border-top-left-radius: 12px !important;
+            border-bottom-left-radius: 12px !important;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .input-group:focus-within .input-group-text {
+            border-color: var(--primary-color);
+            background-color: rgba(254, 161, 22, 0.1);
+            color: var(--primary-color);
+        }
+
+        .input-group {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .input-group:focus-within {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #6c757d;
+            z-index: 10;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .password-toggle:hover {
+            background-color: rgba(254, 161, 22, 0.1);
+            color: var(--primary-color);
+        }
+
         .btn-login {
+            background: linear-gradient(45deg, var(--primary-color), #ff9800);
+            border: none;
+            color: #fff;
+            height: 60px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            box-shadow: 0 10px 20px rgba(254, 161, 22, 0.3);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .btn-login::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #ff9800, var(--accent-color));
+            transition: all 0.5s ease;
+            z-index: -1;
+        }
+
+        .btn-login:hover::before {
+            left: 0;
+        }
+
+        .btn-login:hover {
+            color: #fff;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(254, 161, 22, 0.4);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+            box-shadow: 0 5px 15px rgba(254, 161, 22, 0.3);
+        }
+
+        .form-check-label {
+            color: #6c757d;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            position: relative;
+            padding-left: 5px;
+        }
+
+        .form-check-input {
+            border: 2px solid rgba(224, 224, 224, 0.8);
+            width: 18px;
+            height: 18px;
+            margin-top: 0.2em;
+            transition: all 0.3s ease;
+        }
+
+        .form-check-input:checked {
             background-color: var(--primary-color);
             border-color: var(--primary-color);
-            color: #fff;
-            height: 50px;
-            border-radius: 5px;
-            font-weight: bold;
-            font-size: 1rem;
+            box-shadow: 0 0 10px rgba(254, 161, 22, 0.3);
         }
-        
-        .btn-login:hover {
-            background-color: #e09015;
-            border-color: #e09015;
-            color: #fff;
+
+        .form-check:hover .form-check-label {
+            color: var(--primary-color);
         }
-        
+
+        .forgot-password {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 5px 10px;
+            border-radius: 8px;
+        }
+
+        .forgot-password:hover {
+            color: var(--accent-color);
+            background-color: rgba(254, 161, 22, 0.1);
+        }
+
+        .forgot-password::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 10px;
+            width: calc(100% - 20px);
+            height: 1px;
+            background: linear-gradient(90deg, var(--primary-color), transparent);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .forgot-password:hover::after {
+            transform: scaleX(1);
+        }
+
         .login-footer {
             text-align: center;
-            margin-top: 30px;
+            margin-top: 40px;
             color: #6c757d;
+            font-size: 1rem;
+            position: relative;
+            padding-top: 20px;
         }
-        
+
+        .login-footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+        }
+
         .login-footer a {
             color: var(--primary-color);
             text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 3px 8px;
+            border-radius: 6px;
         }
-        
+
+        .login-footer a:hover {
+            color: var(--accent-color);
+            background-color: rgba(254, 161, 22, 0.1);
+        }
+
+        .login-footer a::after {
+            content: '→';
+            margin-left: 5px;
+            opacity: 0;
+            transform: translateX(-5px);
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .login-footer a:hover::after {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .alert {
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+            border-width: 0.15em;
+            margin-right: 0.5rem;
+            display: none;
+        }
+
+        /* Food Icons Animation */
+        .food-icon {
+            position: absolute;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            opacity: 0.2;
+            z-index: 5;
+            filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.1));
+            animation: float-icons 8s ease-in-out infinite;
+        }
+
+        .food-icon-1 {
+            top: 20px;
+            right: 20px;
+            font-size: 1.8rem;
+            animation-delay: 0s;
+            transform: rotate(25deg);
+        }
+
+        .food-icon-2 {
+            bottom: 30px;
+            right: 40px;
+            font-size: 1.6rem;
+            animation-delay: 1s;
+            transform: rotate(-15deg);
+        }
+
+        .food-icon-3 {
+            top: 40px;
+            left: 30px;
+            font-size: 1.4rem;
+            animation-delay: 2s;
+            transform: rotate(10deg);
+        }
+
+        .food-icon-4 {
+            bottom: 40px;
+            left: 40px;
+            font-size: 1.5rem;
+            animation-delay: 3s;
+            transform: rotate(-20deg);
+        }
+
+        .food-icon-5 {
+            top: 50%;
+            right: 30px;
+            font-size: 1.7rem;
+            animation-delay: 4s;
+            transform: rotate(15deg);
+        }
+
+        @keyframes float-icons {
+            0% { transform: translateY(0) rotate(var(--rotation)); }
+            50% { transform: translateY(-15px) rotate(var(--rotation)); }
+            100% { transform: translateY(0) rotate(var(--rotation)); }
+        }
+
+        .food-icon-1 { --rotation: 25deg; }
+        .food-icon-2 { --rotation: -15deg; }
+        .food-icon-3 { --rotation: 10deg; }
+        .food-icon-4 { --rotation: -20deg; }
+        .food-icon-5 { --rotation: 15deg; }
+
+        @media (max-width: 991px) {
+            .login-container {
+                width: 750px;
+            }
+        }
+
         @media (max-width: 768px) {
+            body {
+                background-image:
+                    radial-gradient(circle at 10% 20%, rgba(254, 161, 22, 0.1) 0%, rgba(15, 23, 43, 0.1) 90%),
+                    linear-gradient(135deg, rgba(15, 23, 43, 0.9), rgba(15, 23, 43, 0.98)),
+                    url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8cmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fDB8fA%3D%3D&w=1000&q=80');
+                background-size: cover;
+                background-position: center;
+                padding: 20px 0;
+            }
+
             .login-image {
                 display: none;
+            }
+
+            .login-form {
+                padding: 40px 30px;
+                width: 100%;
+            }
+
+            .login-container {
+                max-width: 90%;
+                margin: 0 auto;
+                width: 500px;
+            }
+
+            .login-logo .logo-icon {
+                font-size: 2.5rem;
+            }
+
+            .login-logo h1 {
+                font-size: 1.8rem;
+            }
+
+            .food-icon-2, .food-icon-5 {
+                display: none;
+            }
+
+            .food-icon-1 {
+                top: 15px;
+                right: 15px;
+            }
+
+            .food-icon-3 {
+                top: 15px;
+                left: 15px;
+            }
+
+            .food-icon-4 {
+                bottom: 15px;
+                left: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                width: 100%;
+                max-width: 95%;
+            }
+
+            .login-form {
+                padding: 30px 20px;
+            }
+
+            .food-icon-3 {
+                display: none;
+            }
+
+            .login-logo .logo-icon {
+                font-size: 2.2rem;
+            }
+
+            .login-logo h1 {
+                font-size: 1.6rem;
+            }
+
+            .login-logo p {
+                font-size: 0.9rem;
+            }
+
+            .form-control {
+                height: 50px;
+            }
+
+            .btn-login {
+                height: 55px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="login-container">
-            <div class="login-row">
-                <div class="login-image"></div>
+    <div class="login-container">
+        <!-- Decorative Food Icons -->
+        <div class="food-icon food-icon-1"><i class="fas fa-pizza-slice"></i></div>
+        <div class="food-icon food-icon-2"><i class="fas fa-hamburger"></i></div>
+        <div class="food-icon food-icon-3"><i class="fas fa-coffee"></i></div>
+        <div class="food-icon food-icon-4"><i class="fas fa-ice-cream"></i></div>
+        <div class="food-icon food-icon-5"><i class="fas fa-cocktail"></i></div>
+
+        <div class="login-row">
+                <div class="login-image">
+                    <div class="position-absolute bottom-0 start-0 p-4 text-white" style="z-index: 1;">
+                        <h3 class="mb-0 fw-bold">Welcome Back</h3>
+                        <p class="mb-0 opacity-75">Login to manage your restaurant</p>
+                    </div>
+                </div>
                 <div class="login-form">
                     <div class="login-logo">
-                        <h1>Restaurant Admin</h1>
-                        <p>Control panel for restaurant management</p>
+                        <div class="logo-icon">
+                            <i class="fas fa-utensils"></i>
+                        </div>
+                        <h1>{{ restaurant_settings.restaurant_name|default:"Restaurant" }} Admin</h1>
+                        <p>Professional restaurant management system</p>
                     </div>
-                    
+
                     {% if messages %}
                         <div class="messages mb-4">
                             {% for message in messages %}
                                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} me-2"></i>
                                     {{ message }}
                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                 </div>
                             {% endfor %}
                         </div>
                     {% endif %}
-                    
-                    <form method="post">
+
+                    {% if request.GET.show_reset_info %}
+                        <div class="alert alert-info alert-dismissible fade show mb-4" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Password Reset:</strong> Please contact your system administrator to reset your password.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endif %}
+
+                    <form method="post" id="loginForm">
                         {% csrf_token %}
-                        <div class="mb-3">
+                        <div class="mb-4">
                             <label for="username" class="form-label">Username</label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-user"></i></span>
-                                <input type="text" class="form-control" id="username" name="username" placeholder="Enter your username" required>
+                                <input type="text" class="form-control" id="username" name="username" placeholder="Enter your username" required autocomplete="username">
                             </div>
                         </div>
-                        <div class="mb-4">
+                        <div class="mb-3">
                             <label for="password" class="form-label">Password</label>
-                            <div class="input-group">
+                            <div class="input-group position-relative">
                                 <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                                <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+                                <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required autocomplete="current-password">
+                                <span class="password-toggle" id="passwordToggle">
+                                    <i class="fas fa-eye"></i>
+                                </span>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-login w-100">Login</button>
+
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="rememberMe" name="remember_me">
+                                <label class="form-check-label" for="rememberMe">Remember me</label>
+                            </div>
+                            <a href="{% url 'admin_panel:login' %}?show_reset_info=1" class="forgot-password">Forgot password?</a>
+                        </div>
+
+                        <button type="submit" class="btn btn-login w-100" id="loginButton">
+                            <span class="spinner-border spinner-border-sm" id="loginSpinner" role="status" aria-hidden="true"></span>
+                            Sign In
+                        </button>
                     </form>
-                    
+
                     <div class="login-footer">
-                        <p>Return to <a href="{% url 'core:home' %}">Website</a></p>
+                        <p>Return to <a href="{% url 'core:home' %}">Restaurant Website</a></p>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JS -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Password visibility toggle
+            const passwordToggle = document.getElementById('passwordToggle');
+            const passwordField = document.getElementById('password');
+
+            passwordToggle.addEventListener('click', function() {
+                const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordField.setAttribute('type', type);
+
+                // Toggle eye icon
+                const eyeIcon = passwordToggle.querySelector('i');
+                eyeIcon.classList.toggle('fa-eye');
+                eyeIcon.classList.toggle('fa-eye-slash');
+            });
+
+            // Show loading spinner on form submit
+            const loginForm = document.getElementById('loginForm');
+            const loginButton = document.getElementById('loginButton');
+            const loginSpinner = document.getElementById('loginSpinner');
+
+            loginForm.addEventListener('submit', function() {
+                loginButton.disabled = true;
+                loginSpinner.style.display = 'inline-block';
+            });
+        });
+    </script>
 </body>
 </html>

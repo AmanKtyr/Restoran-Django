@@ -48,15 +48,26 @@ def admin_login(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
+        remember_me = request.POST.get('remember_me') == 'on'
         user = authenticate(request, username=username, password=password)
 
         if user is not None and is_admin(user):
+            # If remember me is not checked, the session will expire when the user closes the browser
+            if not remember_me:
+                request.session.set_expiry(0)
+
             login(request, user)
-            messages.success(request, f'Welcome back, {user.first_name}!')
+
+            # Get user's name for welcome message
+            name = user.get_full_name() or user.username
+            messages.success(request, f'Welcome back, {name}!')
+
+            # Redirect to dashboard
             return redirect('admin_panel:dashboard')
         else:
             messages.error(request, 'Invalid username or password, or insufficient permissions.')
 
+    # Get restaurant settings for branding
     return render(request, 'admin_panel/login.html')
 
 @login_required

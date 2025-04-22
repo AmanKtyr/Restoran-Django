@@ -8,14 +8,10 @@
     <div class="container my-5 py-5">
         <div class="row align-items-center g-5">
             <div class="col-lg-6 text-center text-lg-start">
-                <h1 class="display-3 text-white animated slideInLeft">Enjoy Our<br>Delicious Meal</h1>
-                <p class="text-white animated slideInLeft mb-4 pb-2">Tempor erat elitr rebum at clita. Diam dolor diam ipsum sit. Aliqu diam amet diam et eos. Clita erat ipsum et lorem et sit, sed stet lorem sit clita duo justo magna dolore erat amet</p>
+                <h1 class="display-3 text-white animated slideInLeft">Exquisite Dining<br>Experience</h1>
+                <p class="text-white animated slideInLeft mb-4 pb-2">Welcome to Restoran, where culinary artistry meets warm hospitality. Our award-winning chefs craft each dish with passion, using locally-sourced ingredients to create unforgettable flavors that will transport you to gastronomic bliss.</p>
                 <a href="{% url 'booking:booking' %}" class="btn btn-primary py-sm-3 px-sm-5 me-3 animated slideInLeft">Book A Table</a>
-                {% if user.is_staff or user.is_superuser %}
-                <a href="{% url 'admin_panel:dashboard' %}" class="btn btn-dark py-sm-3 px-sm-5 animated slideInLeft"><i class="fa fa-lock me-2"></i>Admin Panel</a>
-                {% else %}
-                <a href="{% url 'admin_panel:login' %}" class="btn btn-outline-light py-sm-3 px-sm-5 animated slideInLeft"><i class="fa fa-lock me-2"></i>Admin Login</a>
-                {% endif %}
+                <a href="{% url 'menu:menu_list' %}" class="btn btn-success py-sm-3 px-sm-5 animated slideInLeft">Order Online</a>
             </div>
             <div class="col-lg-6 text-center text-lg-end overflow-hidden">
                 <img class="img-fluid" src="{% static 'img/hero.png' %}" alt="">
@@ -30,25 +26,25 @@
 <div class="container-xxl py-5">
     <div class="container">
         <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
-            <h5 class="section-title ff-secondary text-center text-primary fw-normal">Our Services</h5>
-            <h1 class="mb-5">Explore Our Services</h1>
+            <h5 class="section-title ff-secondary text-center text-primary fw-normal">Culinary Excellence</h5>
+            <h1 class="mb-5">The Restoran Experience</h1>
         </div>
         <div class="row g-4">
             <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.1s">
                 <div class="service-item rounded pt-3">
                     <div class="p-4">
                         <i class="fa fa-3x fa-user-tie text-primary mb-4"></i>
-                        <h5>Master Chefs</h5>
-                        <p>Our team of expert chefs creates culinary masterpieces with passion and precision</p>
+                        <h5>Award-Winning Chefs</h5>
+                        <p>Our internationally trained culinary team brings decades of expertise from Michelin-starred restaurants across the globe</p>
                     </div>
                 </div>
             </div>
             <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.3s">
                 <div class="service-item rounded pt-3">
                     <div class="p-4">
-                        <i class="fa fa-3x fa-utensils text-primary mb-4"></i>
-                        <h5>Quality Food</h5>
-                        <p>We use only the freshest ingredients to ensure exceptional quality in every dish</p>
+                        <i class="fa fa-3x fa-leaf text-primary mb-4"></i>
+                        <h5>Farm-to-Table Fresh</h5>
+                        <p>We partner with local farmers and artisanal producers to bring you the freshest seasonal ingredients with unparalleled flavor</p>
                     </div>
                 </div>
             </div>
@@ -56,17 +52,17 @@
                 <div class="service-item rounded pt-3">
                     <div class="p-4">
                         <i class="fa fa-3x fa-cart-plus text-primary mb-4"></i>
-                        <h5>Online Order</h5>
-                        <p>Convenient online ordering system for takeout and delivery right to your doorstep</p>
+                        <h5>Premium Delivery</h5>
+                        <p>Experience our gourmet cuisine at home with our premium delivery service, featuring specialized packaging to maintain perfect temperature and presentation</p>
                     </div>
                 </div>
             </div>
             <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.7s">
                 <div class="service-item rounded pt-3">
                     <div class="p-4">
-                        <i class="fa fa-3x fa-headset text-primary mb-4"></i>
-                        <h5>24/7 Service</h5>
-                        <p>Our customer support team is always available to assist you with any questions</p>
+                        <i class="fa fa-3x fa-glass-cheers text-primary mb-4"></i>
+                        <h5>Private Events</h5>
+                        <p>From intimate gatherings to grand celebrations, our dedicated events team creates bespoke dining experiences tailored to your special occasion</p>
                     </div>
                 </div>
             </div>
@@ -79,18 +75,18 @@
 <div class="container-xxl py-5">
     <div class="container">
         <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
-            <h5 class="section-title ff-secondary text-center text-primary fw-normal">Smart Dining</h5>
-            <h1 class="mb-5">AI-Powered Features</h1>
+            <h5 class="section-title ff-secondary text-center text-primary fw-normal">Innovative Dining</h5>
+            <h1 class="mb-5">Personalized Culinary Journey</h1>
         </div>
         <div class="row g-4">
             <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
                 <div class="service-item rounded pt-3 h-100">
                     <div class="p-4 text-center">
                         <i class="fa fa-3x fa-magic text-primary mb-4"></i>
-                        <h5>Smart Recommendations</h5>
-                        <p class="mb-4">Our AI analyzes your preferences and dining history to suggest dishes you'll love</p>
+                        <h5>Personalized Menu Curation</h5>
+                        <p class="mb-4">Experience a tailored dining journey with our sophisticated recommendation system that learns your taste preferences and dietary requirements to suggest perfect menu pairings</p>
                         <a href="{% url 'ai_features:user_recommendations' %}" class="btn btn-primary py-2 px-4">
-                            <i class="fa fa-arrow-right me-1"></i> Try It Now
+                            <i class="fa fa-arrow-right me-1"></i> Discover Your Menu
                         </a>
                     </div>
                 </div>
@@ -98,11 +94,11 @@
             <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
                 <div class="service-item rounded pt-3 h-100">
                     <div class="p-4 text-center">
-                        <i class="fa fa-3x fa-robot text-primary mb-4"></i>
-                        <h5>AI Chatbot Assistant</h5>
-                        <p class="mb-4">Get instant answers about our menu, hours, location, and dietary information</p>
+                        <i class="fa fa-3x fa-concierge-bell text-primary mb-4"></i>
+                        <h5>Virtual Culinary Concierge</h5>
+                        <p class="mb-4">Our sophisticated digital concierge provides instant assistance with menu exploration, wine pairings, allergen information, and reservation management for a seamless dining experience</p>
                         <a href="{% url 'ai_features:chatbot' %}" class="btn btn-primary py-2 px-4">
-                            <i class="fa fa-comment me-1"></i> Chat Now
+                            <i class="fa fa-comment me-1"></i> Connect Now
                         </a>
                     </div>
                 </div>
@@ -111,10 +107,10 @@
                 <div class="service-item rounded pt-3 h-100">
                     <div class="p-4 text-center">
                         <i class="fa fa-3x fa-microphone text-primary mb-4"></i>
-                        <h5>Voice Ordering</h5>
-                        <p class="mb-4">Order your favorite dishes using just your voice - fast, convenient, and hands-free</p>
+                        <h5>Effortless Voice Ordering</h5>
+                        <p class="mb-4">Experience the convenience of our state-of-the-art voice recognition system that allows you to place orders naturally and intuitively, perfect for busy professionals and accessibility needs</p>
                         <a href="{% url 'ai_features:voice_order' %}" class="btn btn-primary py-2 px-4">
-                            <i class="fa fa-microphone me-1"></i> Order by Voice
+                            <i class="fa fa-microphone me-1"></i> Try Voice Ordering
                         </a>
                     </div>
                 </div>
@@ -145,10 +141,10 @@
                 </div>
             </div>
             <div class="col-lg-6">
-                <h5 class="section-title ff-secondary text-start text-primary fw-normal">About Us</h5>
+                <h5 class="section-title ff-secondary text-start text-primary fw-normal">Our Culinary Heritage</h5>
                 <h1 class="mb-4">Welcome to <i class="fa fa-utensils text-primary me-2"></i>Restoran</h1>
-                <p class="mb-4">Tempor erat elitr rebum at clita. Diam dolor diam ipsum sit. Aliqu diam amet diam et eos erat ipsum et lorem et sit, sed stet lorem sit.</p>
-                <p class="mb-4">Tempor erat elitr rebum at clita. Diam dolor diam ipsum sit. Aliqu diam amet diam et eos. Clita erat ipsum et lorem et sit, sed stet lorem sit clita duo justo magna dolore erat amet</p>
+                <p class="mb-4">Founded in 2008, Restoran has established itself as a culinary landmark, blending traditional techniques with contemporary innovation. Our philosophy centers on celebrating exceptional ingredients through thoughtful preparation that honors their natural flavors.</p>
+                <p class="mb-4">Under the guidance of Executive Chef Alessandra Monteiro, our kitchen has earned critical acclaim for its distinctive approach to modern cuisine. We're committed to sustainable practices, working closely with local producers to create a dining experience that's both luxurious and environmentally conscious.</p>
                 <div class="row g-4 mb-4">
                     <div class="col-sm-6">
                         <div class="d-flex align-items-center border-start border-5 border-primary px-3">
@@ -314,18 +310,19 @@
 <div class="container-xxl pt-5 pb-3">
     <div class="container">
         <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
-            <h5 class="section-title ff-secondary text-center text-primary fw-normal">Team Members</h5>
-            <h1 class="mb-5">Our Master Chefs</h1>
+            <h5 class="section-title ff-secondary text-center text-primary fw-normal">Culinary Artisans</h5>
+            <h1 class="mb-5">Meet Our Executive Team</h1>
         </div>
         <div class="row g-4">
             <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
                 <div class="team-item text-center rounded overflow-hidden">
                     <div class="rounded-circle overflow-hidden m-4">
-                        <img class="img-fluid" src="{% static 'img/team-1.jpg' %}" alt="">
+                        <img class="img-fluid" src="{% static 'img/team-1.jpg' %}" alt="Chef Alessandra Monteiro">
                     </div>
-                    <h5 class="mb-0">Full Name</h5>
-                    <small>Designation</small>
-                    <div class="d-flex justify-content-center mt-3">
+                    <h5 class="mb-0">Alessandra Monteiro</h5>
+                    <small>Executive Chef</small>
+                    <p class="small px-3 mt-2">Award-winning culinary director with experience from Paris, Tokyo, and New York</p>
+                    <div class="d-flex justify-content-center mt-2">
                         <a class="btn btn-square btn-primary mx-1" href=""><i class="fab fa-facebook-f"></i></a>
                         <a class="btn btn-square btn-primary mx-1" href=""><i class="fab fa-twitter"></i></a>
                         <a class="btn btn-square btn-primary mx-1" href=""><i class="fab fa-instagram"></i></a>
@@ -335,11 +332,12 @@
             <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
                 <div class="team-item text-center rounded overflow-hidden">
                     <div class="rounded-circle overflow-hidden m-4">
-                        <img class="img-fluid" src="{% static 'img/team-2.jpg' %}" alt="">
+                        <img class="img-fluid" src="{% static 'img/team-2.jpg' %}" alt="Chef Hiroshi Tanaka">
                     </div>
-                    <h5 class="mb-0">Full Name</h5>
-                    <small>Designation</small>
-                    <div class="d-flex justify-content-center mt-3">
+                    <h5 class="mb-0">Hiroshi Tanaka</h5>
+                    <small>Head of Pastry</small>
+                    <p class="small px-3 mt-2">Internationally acclaimed pastry innovator known for blending Eastern and Western techniques</p>
+                    <div class="d-flex justify-content-center mt-2">
                         <a class="btn btn-square btn-primary mx-1" href=""><i class="fab fa-facebook-f"></i></a>
                         <a class="btn btn-square btn-primary mx-1" href=""><i class="fab fa-twitter"></i></a>
                         <a class="btn btn-square btn-primary mx-1" href=""><i class="fab fa-instagram"></i></a>
@@ -349,11 +347,12 @@
             <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.5s">
                 <div class="team-item text-center rounded overflow-hidden">
                     <div class="rounded-circle overflow-hidden m-4">
-                        <img class="img-fluid" src="{% static 'img/team-3.jpg' %}" alt="">
+                        <img class="img-fluid" src="{% static 'img/team-3.jpg' %}" alt="Sofia Rodriguez">
                     </div>
-                    <h5 class="mb-0">Full Name</h5>
-                    <small>Designation</small>
-                    <div class="d-flex justify-content-center mt-3">
+                    <h5 class="mb-0">Sofia Rodriguez</h5>
+                    <small>Sous Chef</small>
+                    <p class="small px-3 mt-2">Specializing in sustainable seafood and farm-to-table cuisine with Mediterranean influences</p>
+                    <div class="d-flex justify-content-center mt-2">
                         <a class="btn btn-square btn-primary mx-1" href=""><i class="fab fa-facebook-f"></i></a>
                         <a class="btn btn-square btn-primary mx-1" href=""><i class="fab fa-twitter"></i></a>
                         <a class="btn btn-square btn-primary mx-1" href=""><i class="fab fa-instagram"></i></a>
@@ -363,11 +362,12 @@
             <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.7s">
                 <div class="team-item text-center rounded overflow-hidden">
                     <div class="rounded-circle overflow-hidden m-4">
-                        <img class="img-fluid" src="{% static 'img/team-4.jpg' %}" alt="">
+                        <img class="img-fluid" src="{% static 'img/team-4.jpg' %}" alt="Marcus Williams">
                     </div>
-                    <h5 class="mb-0">Full Name</h5>
-                    <small>Designation</small>
-                    <div class="d-flex justify-content-center mt-3">
+                    <h5 class="mb-0">Marcus Williams</h5>
+                    <small>Sommelier</small>
+                    <p class="small px-3 mt-2">Certified Master Sommelier with expertise in boutique vineyards and rare vintage selections</p>
+                    <div class="d-flex justify-content-center mt-2">
                         <a class="btn btn-square btn-primary mx-1" href=""><i class="fab fa-facebook-f"></i></a>
                         <a class="btn btn-square btn-primary mx-1" href=""><i class="fab fa-twitter"></i></a>
                         <a class="btn btn-square btn-primary mx-1" href=""><i class="fab fa-instagram"></i></a>
@@ -383,8 +383,8 @@
 <div class="container-xxl py-5 wow fadeInUp" data-wow-delay="0.1s">
     <div class="container">
         <div class="text-center">
-            <h5 class="section-title ff-secondary text-center text-primary fw-normal">Testimonial</h5>
-            <h1 class="mb-5">Our Clients Say!!!</h1>
+            <h5 class="section-title ff-secondary text-center text-primary fw-normal">Guest Experiences</h5>
+            <h1 class="mb-5">Memorable Dining Moments</h1>
         </div>
         <div class="owl-carousel testimonial-carousel">
             {% for testimonial in testimonials %}
@@ -406,12 +406,34 @@
             {% empty %}
             <div class="testimonial-item bg-transparent border rounded p-4">
                 <i class="fa fa-quote-left fa-2x text-primary mb-3"></i>
-                <p>Dolor et eos labore, stet justo sed est sed. Diam sed sed dolor stet amet eirmod eos labore diam</p>
+                <p>"An extraordinary culinary journey from start to finish. The attention to detail in both presentation and flavor profiles was remarkable. Chef Monteiro's seasonal tasting menu was a revelation—each course told a story of tradition reimagined through modern techniques."</p>
                 <div class="d-flex align-items-center">
                     <img class="img-fluid flex-shrink-0 rounded-circle" src="{% static 'img/testimonial-1.jpg' %}" style="width: 50px; height: 50px;">
                     <div class="ps-3">
-                        <h5 class="mb-1">Client Name</h5>
-                        <small>Profession</small>
+                        <h5 class="mb-1">Emily Richardson</h5>
+                        <small>Food Critic, Culinary Quarterly</small>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-item bg-transparent border rounded p-4">
+                <i class="fa fa-quote-left fa-2x text-primary mb-3"></i>
+                <p>"The sommelier's wine pairings elevated our anniversary dinner to an unforgettable experience. Each selection perfectly complemented the nuances of every dish. The staff's knowledge and attentiveness made us feel like the only guests in the restaurant."</p>
+                <div class="d-flex align-items-center">
+                    <img class="img-fluid flex-shrink-0 rounded-circle" src="{% static 'img/testimonial-2.jpg' %}" style="width: 50px; height: 50px;">
+                    <div class="ps-3">
+                        <h5 class="mb-1">James & Olivia Chen</h5>
+                        <small>Loyal Patrons</small>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-item bg-transparent border rounded p-4">
+                <i class="fa fa-quote-left fa-2x text-primary mb-3"></i>
+                <p>"As someone with complex dietary requirements, dining out is often challenging. Restoran's willingness to create a personalized menu that accommodated my needs without compromising on flavor or creativity was truly exceptional. A rare gem in the fine dining landscape."</p>
+                <div class="d-flex align-items-center">
+                    <img class="img-fluid flex-shrink-0 rounded-circle" src="{% static 'img/testimonial-3.jpg' %}" style="width: 50px; height: 50px;">
+                    <div class="ps-3">
+                        <h5 class="mb-1">Dr. Michael Patel</h5>
+                        <small>Wellness Advocate</small>
                     </div>
                 </div>
             </div>

@@ -68,12 +68,31 @@
                 <div class="collapse navbar-collapse" id="navbarCollapse">
                     <div class="navbar-nav ms-auto py-0 pe-4">
                         <a href="{% url 'core:home' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a>
-                        <a href="{% url 'core:about' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}">About</a>
-                        <a href="{% url 'menu:menu_list' %}" class="nav-item nav-link {% if 'menu' in request.path %}active{% endif %}">Menu</a>
+
                         <div class="nav-item dropdown">
-                            <a href="#" class="nav-link dropdown-toggle {% if 'ai' in request.path %}active{% endif %}" data-bs-toggle="dropdown"><i class="fa fa-robot me-1"></i> AI Features</a>
+                            <a href="{% url 'core:about' %}" class="nav-link dropdown-toggle {% if request.resolver_match.url_name == 'about' or request.resolver_match.url_name == 'testimonial' %}active{% endif %}" data-bs-toggle="dropdown">About</a>
                             <div class="dropdown-menu m-0">
-                                <a href="{% url 'ai_features:user_recommendations' %}" class="dropdown-item"><i class="fa fa-magic me-2"></i> Smart Recommendations</a>
+                                <a href="{% url 'core:about' %}" class="dropdown-item {% if request.resolver_match.url_name == 'about' %}active{% endif %}"><i class="fa fa-building me-2"></i> Our Story</a>
+                                <a href="{% url 'core:team' %}" class="dropdown-item {% if request.resolver_match.url_name == 'team' %}active{% endif %}"><i class="fa fa-users me-2"></i> Our Team</a>
+                                <a href="{% url 'core:testimonial' %}" class="dropdown-item {% if request.resolver_match.url_name == 'testimonial' %}active{% endif %}"><i class="fa fa-quote-left me-2"></i> Testimonials</a>
+                            </div>
+                        </div>
+
+                        <div class="nav-item dropdown">
+                            <a href="#" class="nav-link dropdown-toggle {% if 'menu' in request.path or 'booking' in request.path %}active{% endif %}" data-bs-toggle="dropdown">Dining</a>
+                            <div class="dropdown-menu m-0">
+                                <a href="{% url 'menu:menu_list' %}" class="dropdown-item {% if 'menu' in request.path %}active{% endif %}"><i class="fa fa-utensils me-2"></i> Our Menu</a>
+                                <a href="{% url 'booking:booking' %}" class="dropdown-item {% if request.resolver_match.url_name == 'booking' %}active{% endif %}"><i class="fa fa-calendar-check me-2"></i> Reservations</a>
+                                <a href="{% url 'orders:order_tracker' %}" class="dropdown-item {% if request.resolver_match.url_name == 'order_tracker' %}active{% endif %}"><i class="fa fa-truck me-2"></i> Order Tracking</a>
+                            </div>
+                        </div>
+
+                        <a href="{% url 'core:service' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'service' %}active{% endif %}">Services</a>
+
+                        <div class="nav-item dropdown">
+                            <a href="#" class="nav-link dropdown-toggle {% if 'ai' in request.path %}active{% endif %}" data-bs-toggle="dropdown"><i class="fa fa-robot me-1"></i> Smart Features</a>
+                            <div class="dropdown-menu m-0">
+                                <a href="{% url 'ai_features:user_recommendations' %}" class="dropdown-item"><i class="fa fa-magic me-2"></i> Personalized Menu</a>
                                 <a href="{% url 'ai_features:chatbot' %}" class="dropdown-item"><i class="fa fa-comment me-2"></i> AI Chatbot</a>
                                 <a href="{% url 'ai_features:voice_order' %}" class="dropdown-item"><i class="fa fa-microphone me-2"></i> Voice Ordering</a>
                                 {% if user.is_authenticated %}
@@ -81,25 +100,21 @@
                                 {% endif %}
                             </div>
                         </div>
-                        <div class="nav-item dropdown">
-                            <a href="#" class="nav-link dropdown-toggle {% if 'booking' in request.path or 'team' in request.path or 'testimonial' in request.path or request.resolver_match.url_name == 'service' %}active{% endif %}" data-bs-toggle="dropdown">Pages</a>
-                            <div class="dropdown-menu m-0">
-                                <a href="{% url 'core:service' %}" class="dropdown-item {% if request.resolver_match.url_name == 'service' %}active{% endif %}"><i class="fa fa-concierge-bell me-2"></i> Services</a>
-                                <a href="{% url 'booking:booking' %}" class="dropdown-item {% if request.resolver_match.url_name == 'booking' %}active{% endif %}"><i class="fa fa-calendar-check me-2"></i> Booking</a>
-                                <a href="{% url 'core:team' %}" class="dropdown-item {% if request.resolver_match.url_name == 'team' %}active{% endif %}"><i class="fa fa-users me-2"></i> Our Team</a>
-                                <a href="{% url 'core:testimonial' %}" class="dropdown-item {% if request.resolver_match.url_name == 'testimonial' %}active{% endif %}"><i class="fa fa-quote-left me-2"></i> Testimonial</a>
-                            </div>
-                        </div>
+
                         <a href="{% url 'core:contact' %}" class="nav-item nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}">Contact</a>
                         {% if user.is_authenticated %}
                         <div class="nav-item dropdown">
-                            <a href="#" class="nav-link dropdown-toggle {% if 'accounts' in request.path %}active{% endif %}" data-bs-toggle="dropdown"><i class="fa fa-user me-1"></i> {{ user.get_full_name|default:user.username }}</a>
+                            <a href="#" class="nav-link dropdown-toggle {% if 'accounts' in request.path %}active{% endif %}" data-bs-toggle="dropdown"><i class="fa fa-user-circle me-1"></i> {{ user.get_full_name|default:user.username }}</a>
                             <div class="dropdown-menu m-0">
-                                <a href="{% url 'accounts:dashboard' %}" class="dropdown-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"><i class="fa fa-tachometer-alt me-2"></i> Dashboard</a>
+                                <a href="{% url 'accounts:dashboard' %}" class="dropdown-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"><i class="fa fa-tachometer-alt me-2"></i> My Dashboard</a>
+                                <div class="dropdown-divider"></div>
+                                <h6 class="dropdown-header">Orders & Bookings</h6>
                                 <a href="{% url 'orders:order_history' %}" class="dropdown-item {% if request.resolver_match.url_name == 'order_history' %}active{% endif %}"><i class="fa fa-shopping-bag me-2"></i> My Orders</a>
                                 <a href="{% url 'booking:my_bookings' %}" class="dropdown-item {% if request.resolver_match.url_name == 'my_bookings' %}active{% endif %}"><i class="fa fa-calendar me-2"></i> My Reservations</a>
-                                <a href="{% url 'booking:reservation_tracker' %}" class="dropdown-item {% if request.resolver_match.url_name == 'reservation_tracker' %}active{% endif %}"><i class="fa fa-search me-2"></i> Track Reservation</a>
+                                <div class="dropdown-divider"></div>
+                                <h6 class="dropdown-header">Rewards & Preferences</h6>
                                 <a href="{% url 'loyalty:user_dashboard' %}" class="dropdown-item {% if 'loyalty' in request.path %}active{% endif %}"><i class="fa fa-crown me-2"></i> My Rewards</a>
+                                <a href="{% url 'ai_features:user_preferences' %}" class="dropdown-item {% if request.resolver_match.url_name == 'user_preferences' %}active{% endif %}"><i class="fa fa-sliders-h me-2"></i> My Preferences</a>
                                 <div class="dropdown-divider"></div>
                                 <a href="{% url 'accounts:logout' %}" class="dropdown-item"><i class="fa fa-sign-out-alt me-2"></i> Logout</a>
                             </div>
